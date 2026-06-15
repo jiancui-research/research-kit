@@ -1,10 +1,10 @@
 # speckit-research
 
-Spec-Driven Development for research papers, as Claude Code slash commands.
+Spec-Driven Development for research papers, as slash commands for your AI coding agent — Claude Code, Codex CLI, or GitHub Copilot CLI.
 
 Writing a paper is a lot like building software: you start fuzzy, and quality comes from making each step explicit, reviewable, and traceable to evidence. speckit-research borrows that discipline. Instead of one giant "write my paper" prompt, it gives you a pipeline of small, focused commands - each reads what came before, takes your input, and produces one well-scoped artifact under `./.research/` in your paper repo.
 
-It is just Claude Code slash commands plus Markdown templates and a default research constitution. No Python CLI, no hooks, no build step. Simplicity is the point.
+It is just slash commands plus Markdown templates and a default research constitution. No Python CLI, no hooks, no build step. Simplicity is the point.
 
 ## Pipeline
 
@@ -20,10 +20,35 @@ You don't have to run every stage, and you can re-run any command as your work e
 
 ## Quickstart
 
-```sh
-# 1. Install the commands + stage the bundled templates
-./install.sh
+**Claude Code — install as a plugin (recommended, no script):**
 
+```text
+# 1. Register the marketplace and install the plugin
+/plugin marketplace add jiancui-research/speckit-research
+/plugin install speckit-research@speckit-research
+```
+
+Plugin stages are namespaced with the plugin name, e.g. `/speckit-research:research.idea …`.
+Update later with `/plugin marketplace update` then re-install.
+
+**Any agent — install with the script:**
+
+```sh
+# Installs the commands + stages the bundled templates.
+# Default installs for Claude Code. Pick your agent(s) with flags:
+./install.sh                     # Claude Code (default)
+./install.sh --codex             # Codex CLI
+./install.sh --copilot           # GitHub Copilot CLI
+./install.sh --all               # all of the above
+```
+
+> How you invoke a stage depends on the install method. Via the **plugin** (Claude Code) the
+> stages are namespaced: `/speckit-research:research.idea …`. Via **install.sh** they are plain
+> slash commands in **Claude Code** and **Codex CLI** (`/research.idea …`), and custom agents in
+> **Copilot CLI** (pick with `/agent`, e.g. `research.idea`, then type your input). See
+> [Supported agents](#supported-agents) below.
+
+```sh
 # 2. In your paper repo, copy the templates in (once per repo)
 /research.init
 
@@ -43,9 +68,12 @@ You don't have to run every stage, and you can re-run any command as your work e
 
 Each command reads your free text after the command name, reads its upstream artifacts, and writes its result into `./.research/`. When it finishes it prints the file path and suggests the next command.
 
+> If you installed via the Claude Code **plugin**, prefix every command with the plugin name,
+> e.g. `/speckit-research:research.init` and `/speckit-research:research.idea …`.
+
 ## Commands
 
-All commands are invoked as `/research.<name>` in Claude Code.
+All commands are invoked as `/research.<name>` in Claude Code and Codex CLI (or, after a Claude Code plugin install, as `/speckit-research:research.<name>`).
 
 | Command | What it does |
 | --- | --- |
@@ -61,6 +89,27 @@ All commands are invoked as `/research.<name>` in Claude Code.
 | `/research.review` | Write a fair, specific, actionable peer review of another author's paper. |
 | `/research.proposal` | Turn idea and plan into a proposal or fellowship pitch using NABC and Heilmeier lenses, audience-aware. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
+
+## Supported agents
+
+speckit-research installs the same pipeline for three AI coding agents. Pick one or more at install time; `--all` does every one. The default (no flag) is Claude Code, for backward compatibility. Claude Code can additionally install as a **plugin** from the marketplace.
+
+| Agent | Install | Where it lands | How you invoke a stage |
+| --- | --- | --- | --- |
+| **Claude Code** (plugin) | `/plugin install speckit-research@speckit-research` | Claude Code plugin cache | `/speckit-research:research.idea <text>` |
+| **Claude Code** (script) | `./install.sh` (default) | `~/.claude/commands/research.*.md` | `/research.idea <text>` slash command |
+| **Codex CLI** | `./install.sh --codex` | `~/.codex/prompts/research.*.md` | `/research.idea <text>` slash command |
+| **GitHub Copilot CLI** | `./install.sh --copilot` | `~/.copilot/agents/research.*.agent.md` | `/agent` → pick `research.idea`, then type your input |
+
+A few details:
+
+- **Claude Code, two ways.** The *plugin* path (`/plugin marketplace add jiancui-research/speckit-research` → `/plugin install speckit-research@speckit-research`) needs no script and auto-updates via `/plugin marketplace update`, but stages are namespaced (`/speckit-research:research.idea`). The *script* path (`./install.sh`) drops plain `/research.*` commands into `~/.claude/commands/`. Both ship the same command files and templates; the plugin loads templates from its own bundle (`${CLAUDE_PLUGIN_ROOT}/templates`), the script stages them under `~/.speckit-research`.
+- **Claude Code and Codex CLI** consume the command files verbatim. Both expand the `$ARGUMENTS` placeholder with whatever you type after the command, so the pipeline behaves identically.
+- **Copilot CLI** has no parameterized slash commands, so each stage is installed as a *custom agent* instead. `install.sh` generates one `research.<name>.agent.md` per stage, with a short adapter note at the top that maps the two slash-command idioms onto the agent model: `$ARGUMENTS` becomes "your latest message", and `Next: /research.<x>` becomes "switch to the `research.<x>` agent via `/agent`". The pipeline body is otherwise unchanged.
+- **Honoring `$CODEX_HOME`.** If you set `CODEX_HOME`, Codex prompts install under `$CODEX_HOME/prompts`. You can also override any destination directly with `CLAUDE_COMMANDS_DIR`, `CODEX_PROMPTS_DIR`, or `COPILOT_AGENTS_DIR`.
+- **No install needed for a quick try.** Any agent that can pull a file into context can run a stage directly — e.g. in Copilot CLI, `@commands/research.idea.md <your idea>` reads the command and your input without registering anything. The installers exist so the stages are available everywhere without juggling paths.
+
+`--symlink` (for the script install of Claude Code and Codex CLI) links the command files instead of copying them, so edits to this repo take effect immediately. `--uninstall` removes the script-installed stages from all three agents and deletes the staged templates. Plugin installs are managed with `/plugin` instead — remove with `/plugin uninstall speckit-research@speckit-research`.
 
 ## Working directory
 

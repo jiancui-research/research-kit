@@ -1,0 +1,14 @@
+{
+  "name": "speckit-research",
+  "owner": {
+    "name": "Jian Cui"
+  },
+  "description": "Spec-Driven Development toolkit for research papers.",
+  "plugins": [
+    {
+      "name": "speckit-research",
+      "source": ".",
+      "description": "Chained /research.* pipeline that turns each stage of paper writing into a reviewable artifact on disk."
+    }
+  ]
+}
