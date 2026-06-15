@@ -64,7 +64,7 @@ Command contract:
 2. Read its upstream artifacts (e.g. `plan` reads `idea.md`; `paper` reads `plan.md` + `claims.md`).
 3. Take user input via `$ARGUMENTS`.
 4. Produce or update only its own artifact(s); end by reporting the path(s) and a one-line `Next: /research.<x>`.
-5. Be paper-type aware where relevant (measurement / attack / defense / benchmark) via `templates/paper/<type>.md`.
+5. Be paper-type aware where relevant (measurement / attack / defense / benchmark / systematization (SoK)) via `templates/paper/<type>.md`.
 
 Commands `mkdir -p` as needed and never overwrite user content without saying so.
 
@@ -83,7 +83,7 @@ There is no Python CLI, no daemon, no build step. The model does the work; the f
 
 ## Scope (v1)
 
-Full paper lifecycle: from a rough idea through related work, planning, experiments, drafting, and the self-audit, plus the surrounding academic tasks of rebuttal, peer review, proposal/fellowship writing, and artifact evaluation. Paper-type awareness covers measurement, attack, defense, and benchmark papers.
+Full paper lifecycle: from a rough idea through related work, planning, experiments, drafting, and the self-audit, plus the surrounding academic tasks of rebuttal, peer review, proposal/fellowship writing, and artifact evaluation. Paper-type awareness covers measurement, attack, defense, benchmark, and systematization (SoK) papers, with cross-cutting craft guides for abstract/intro, figures/tables, and venue norms.
 
 ## Non-goals
 

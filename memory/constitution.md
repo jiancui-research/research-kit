@@ -63,7 +63,7 @@ Focus areas: general (set your field, target venue family, and priorities when y
 
 ## Venue norms (a menu, not a template)
 
-- Tailor structure to genre (attack / defense / measurement / benchmark) and to the
+- Tailor structure to genre (attack / defense / measurement / benchmark / systematization) and to the
   target venue. Read 3 recent accepted papers from that venue before fixing structure.
 - Security venues typically expect an explicit, labeled threat/adversary model
   (capabilities, knowledge, goals), a disclosure/ethics paragraph, and a roadmap

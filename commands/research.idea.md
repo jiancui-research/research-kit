@@ -9,7 +9,7 @@ The rough idea arrives via the $ARGUMENTS placeholder. Treat it as raw material,
 ## Steps
 1. Read `./.research/memory/constitution.md` if it exists (research principles + writing voice); skip silently otherwise.
 2. Parse `$ARGUMENTS` into the spine: problem, hinted approach, who cares, any prior work named, any venue hinted.
-3. Make informed guesses for everything missing. Infer the **paper-type** (measurement / attack / defense / benchmark) and a plausible **target venue** from the problem; if a matching `templates/paper/<type>.md` exists, read it for type-specific framing.
+3. Make informed guesses for everything missing. Infer the **paper-type** (measurement / attack / defense / benchmark / systematization (SoK)) and a plausible **target venue** from the problem; consult `templates/venue-norms.md` to choose the venue and inherit its conventions, and if a matching `templates/paper/<type>.md` exists, read it for type-specific framing.
 4. Ask **at most 3** clarifying questions, and ONLY for genuinely critical unknowns that change the whole framing (e.g., the core mechanism, the metric, or the threat model). If the idea is workable without an answer, guess and label it `[ASSUMPTION]` instead of asking.
 5. Write/update `./.research/idea.md`, starting from `templates/idea-template.md`. `mkdir -p ./.research`. If `idea.md` already exists, say so and merge rather than silently overwriting user content.
 

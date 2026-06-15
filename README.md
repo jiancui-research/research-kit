@@ -85,7 +85,7 @@ If no constitution exists, commands fall back to sensible defaults and keep goin
 
 ## Paper types
 
-Several commands are paper-type aware - measurement, attack, defense, and benchmark - and adapt their structure and checklists accordingly. The per-type templates live in `templates/paper/`.
+Several commands are paper-type aware - measurement, attack, defense, benchmark, and systematization (SoK) - and adapt their structure and checklists accordingly. The per-type templates live in `templates/paper/`. Cross-cutting craft guides live in `templates/sections/` (abstract + intro, figures + tables) and `templates/venue-norms.md` (choosing a venue and adapting to its conventions).
 
 ## Contributing
 

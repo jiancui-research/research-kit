@@ -12,13 +12,14 @@ The user request arrives via the $ARGUMENTS placeholder. Treat it as steering no
 1. **Read context.**
    - Read `./.research/memory/constitution.md` if it exists (skip silently otherwise) and honor its principles and writing voice.
    - Read `./.research/idea.md` (required upstream). If it is missing, stop and tell the user to run `/research.idea` first.
-   - From `idea.md`, extract: paper type (measurement / attack / defense / benchmark), target venue, the gap, the contributions, and the research questions.
+   - From `idea.md`, extract: paper type (measurement / attack / defense / benchmark / systematization (SoK)), target venue, the gap, the contributions, and the research questions.
 
 2. **Load the skeleton.** Start from `templates/plan-template.md`, then layer in the matching `templates/paper/<type>.md` so the plan inherits that type's proof obligation:
    - measurement -> defensible dataset + methodology + a surprising finding
    - attack -> a working exploit + evidence it is not a corner case
    - defense -> a mechanism that stops the threat + a quantified cost
    - benchmark -> concrete task tuple + dataset + metrics + 3-5 baselines
+   - systematization (SoK) -> a novel, MECE-ish taxonomy + lessons found in no single prior paper
 
 3. **Draft the plan**, paper-type aware. Cover the sections below; keep each tight and specific (numbers, named artifacts, exact criteria over adjectives).
    - **Methodology / approach.** The core method or attack/defense design or construction pipeline. Show the smallest concrete instance (a worked example, a 3-line POC) before the full machinery.

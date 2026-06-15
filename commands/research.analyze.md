@@ -16,7 +16,7 @@ This is the self-review phase: read the project the way a skeptical reviewer wil
 1. **Read everything (read-only).**
    - Read `./.research/memory/constitution.md` if present (for venue, paper-type, voice); skip silently if absent.
    - Read all artifacts that exist: `./.research/idea.md`, `./.research/plan.md`, `./.research/claims.md`, `./.research/experiments/` (files + `index.md`), `./.research/related-work.md`, and `./.research/paper/`. For any missing artifact, note it as a gap rather than failing.
-   - Determine the paper type (measurement / attack / defense / benchmark) from `idea.md` so type-specific checks apply.
+   - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from `idea.md` so type-specific checks apply.
 
 2. **Contribution → evidence trace.** For each contribution and research question in `idea.md`, find the supporting claim(s) in `claims.md` and the experiment(s) backing those claims. Flag any contribution with **no supporting claim**, or any claim whose verdict in `claims.md` is `pending` / `partial` / `refuted` while the paper states it as settled.
 

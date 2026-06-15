@@ -33,7 +33,7 @@ Thanks for helping improve speckit-research. It is a small, MIT-licensed toolkit
 
 ## Adding a paper-type skeleton
 
-Paper-type-aware commands look for `templates/paper/<type>.md` (measurement, attack, defense, benchmark today).
+Paper-type-aware commands look for `templates/paper/<type>.md` (measurement, attack, defense, benchmark, systematization today).
 
 1. Add `templates/paper/<newtype>.md`. Mirror the existing skeletons: a short header noting which artifacts to read first, the core question and proof obligation for that paper type, and bracketed `[...]` placeholders for each section.
 2. Make sure commands that infer paper type (such as `/research.idea`) will recognize the new type, and confirm `/research.paper` reads the new skeleton.
