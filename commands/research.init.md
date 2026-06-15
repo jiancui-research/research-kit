@@ -9,12 +9,12 @@ speckit-research commands load skeletons and craft guides from `./.research/temp
 
 ## Steps
 
-1. **Find the staged templates.** `install.sh` stages them at `${SPECKIT_RESEARCH_HOME:-$HOME/.claude/speckit-research}/templates`. If that directory does not exist, stop and tell the user to run `install.sh` from the speckit-research repo first - that step installs the commands *and* stages the templates.
+1. **Find the staged templates.** `install.sh` stages them at `${SPECKIT_RESEARCH_HOME:-$HOME/.speckit-research}/templates`. If that directory does not exist, stop and tell the user to run `install.sh` from the speckit-research repo first - that step installs the commands *and* stages the templates.
 
 2. **Copy them into this repo**, without clobbering anything the user has already customized:
 
    ```sh
-   SRC="${SPECKIT_RESEARCH_HOME:-$HOME/.claude/speckit-research}/templates"
+   SRC="${SPECKIT_RESEARCH_HOME:-$HOME/.speckit-research}/templates"
    mkdir -p ./.research/templates
    cp -Rn "$SRC/." ./.research/templates/
    ```
