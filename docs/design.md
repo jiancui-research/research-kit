@@ -87,6 +87,8 @@ Pure agent slash commands — no runtime of its own. Each command is a Markdown 
 
 The default (no flag) installs for Claude Code, preserving the original behavior; `--all` covers every agent. Templates ship as plain Markdown; `install.sh` stages them to `~/.speckit-research/` (override with `SPECKIT_RESEARCH_HOME`) and `/research.init` copies them into a paper repo's `.research/templates/`. The default constitution is embedded in `/research.constitution`.
 
+For Claude Code there is also a zero-script path: the repo doubles as a **plugin marketplace**. `.claude-plugin/marketplace.json` lists a single plugin whose source is the repo root, and `.claude-plugin/plugin.json` is its manifest; the existing `commands/` directory is the plugin's command set with no file movement. Users run `/plugin marketplace add jiancui-research/speckit-research` then `/plugin install speckit-research@speckit-research`, which namespaces the stages as `/speckit-research:research.<name>`. In this mode the plugin bundle (including `templates/`) is copied to Claude's cache, so `/research.init` reads templates from `${CLAUDE_PLUGIN_ROOT}/templates`, falling back to the `install.sh` staging dir otherwise. This is packaging only — no hooks, MCP servers, or runtime are added.
+
 There is no Python CLI, no daemon, no build step. The model does the work; the files are the interface.
 
 ## Scope (v1)
@@ -96,7 +98,7 @@ Full paper lifecycle: from a rough idea through related work, planning, experime
 ## Non-goals
 
 - No Python CLI or any other CLI - commands run inside the AI coding agent (Claude Code, Codex CLI, or Copilot CLI).
-- No extensions, hooks, or plugin machinery.
+- No hooks, MCP servers, or runtime machinery. The optional Claude Code plugin packaging (`.claude-plugin/`) is just a manifest around the same command files - no event handlers or background processes.
 - No daemon, server, or hosted state.
 - No speculative abstractions. If a feature is not needed for the lifecycle above, it is out.
 
