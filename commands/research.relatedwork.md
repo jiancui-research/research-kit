@@ -19,7 +19,7 @@ The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cit
 4. Treat the closest 2-3 baselines generously (no strawmen) and contrast them directly. Name the single closest prior work and add a note to forward-reference it in the Introduction.
 5. Close with a gap-stating final paragraph the reader can restate in one sentence:
    `To our knowledge, no prior work addresses <the specific cell>: existing systems either <do A but not B> or <do B but not A>. We close this gap by <one-line contribution>.`
-6. **Paper-type aware:** for benchmark, measurement, or systems papers, also draft a comparison table (rows = prior work, columns = the dimensions that matter for your contribution) so the gap is visually obvious. Pull dimensions from `templates/paper/<type>.md` if present.
+6. **Paper-type aware:** for benchmark, measurement, or systems papers, also draft a comparison table (rows = prior work, columns = the dimensions that matter for your contribution) so the gap is visually obvious. Pull dimensions from `.research/templates/paper/<type>.md` if present.
 7. Keep Background (concepts needed to follow the technical sections) separate from Related Work (closest prior systems and the delta). Note that the merge-vs-split choice should match the target venue's recent papers; flag this for the user to check.
 8. (Optional) For breadth, the user may hand off to a deep-research workflow or skill to gather and cluster citations before you synthesize. This is optional, not required; if used, fold its output back into the structure above rather than pasting raw lists.
 
@@ -33,4 +33,4 @@ The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cit
 - Limitations are not apologized for here (those belong in the Limitations section).
 
 ## Completion
-Write/update `./.research/related-work.md`, starting from `templates/related-work-template.md`, creating `./.research/` as needed and never overwriting user content silently. Report the path and end with: `Next: /research.plan`.
+Write/update `./.research/related-work.md`, starting from `.research/templates/related-work-template.md`, creating `./.research/` as needed and never overwriting user content silently. Report the path and end with: `Next: /research.plan`.

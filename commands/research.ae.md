@@ -8,7 +8,7 @@ The user request arrives via the $ARGUMENTS placeholder. Treat it as venue hints
 
 ## Steps
 1. Read `./.research/memory/constitution.md` if present. Read upstream artifacts when available: `./.research/claims.md` (which results need to be reproducible), `./.research/plan.md` (datasets, baselines, hardware, hyperparameters), and `./.research/experiments/` (concrete commands and configs).
-2. Start from `templates/ae-checklist.md`. Work through it venue-agnostically; apply the venue-specific notes below only where $ARGUMENTS names a venue.
+2. Start from `.research/templates/ae-checklist.md`. Work through it venue-agnostically; apply the venue-specific notes below only where $ARGUMENTS names a venue.
 3. Map the paper's headline claims to artifact components: for each claim in `claims.md`, identify the script/dataset/config that regenerates its result, and flag any claim with no runnable backing as a reproducibility gap.
 4. Pick a badge plan and be explicit about what each tier requires:
    - **Available** — artifact is publicly archived at a permanent location (see step 5). Lowest bar; no functionality review.

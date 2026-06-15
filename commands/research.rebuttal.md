@@ -24,7 +24,7 @@ This is the response phase. You turn raw reviews into a tight, prioritized rebut
 
 4. **Prioritize.** Order responses by: meta-reviewer/AC call-outs first, then concerns raised by multiple reviewers, then swayable borderline reviewers, then minor points. Lead with the most damaging concern, not the easiest. Spend disproportionate effort arming the champion with arguments for the committee meeting; in a split, actively re-energize the positive reviewer rather than only fighting the detractors.
 
-5. **Draft the rebuttal** from `templates/rebuttal-template.md`. Group responses by theme with inline reviewer tags in each header (e.g. `**Evaluation scope (R1, R3, AC)**`). For each point:
+5. **Draft the rebuttal** from `.research/templates/rebuttal-template.md`. Group responses by theme with inline reviewer tags in each header (e.g. `**Evaluation scope (R1, R3, AC)**`). For each point:
    - **Answer first**, then justify. Open with the direct factual answer or correction, then a short `First / Second / Further` argument. No buried answers; keep any courtesy opener to one brief line so the budget goes to substance.
    - **Carry evidence for every claim.** For points already in the paper, add a precise pointer (section, figure, table, appendix). For new points, cite a reference or report a result.
    - **Demonstrate over promise.** Where the window allows, run the experiment and report the actual number rather than promising to add it.

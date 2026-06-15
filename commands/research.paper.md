@@ -11,14 +11,14 @@ The user request arrives via the `$ARGUMENTS` placeholder. It may name one secti
 1. **Read context.**
    - Read `./.research/memory/constitution.md` if it exists (for writing voice, venue, paper-type); skip silently if absent.
    - Read upstream artifacts: `./.research/idea.md` (problem, gap, contributions, RQs, venue, paper-type), `./.research/plan.md`, `./.research/related-work.md`, and `./.research/claims.md`. If `claims.md` is missing or empty, warn the user that claims will be unverifiable, then proceed.
-   - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from `idea.md`; default to the closest match and say which you chose. Load the matching skeleton from `templates/paper/<type>.md`.
+   - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from `idea.md`; default to the closest match and say which you chose. Load the matching skeleton from `.research/templates/paper/<type>.md`.
 
 2. **Pick the section.**
    - If `$ARGUMENTS` names a section, draft only that one.
    - If empty, draft the next missing section in the type's skeleton order (abstract is usually drafted last).
    - `mkdir -p ./.research/paper`. Never overwrite an existing section file without saying so and showing what changed.
 
-3. **Draft the section** following the skeleton beat for that section and the constitution's voice. When drafting the abstract or introduction, also load `templates/sections/abstract-intro.md`; when designing figures, tables, or a results section, load `templates/sections/figures-tables.md`. Apply across all sections:
+3. **Draft the section** following the skeleton beat for that section and the constitution's voice. When drafting the abstract or introduction, also load `.research/templates/sections/abstract-intro.md`; when designing figures, tables, or a results section, load `.research/templates/sections/figures-tables.md`. Apply across all sections:
    - **Lead with motivation, not method.** Open the intro by establishing why the target matters (a named example, dated incident, or concrete number), surface the tension, then state the gap so a reader can recite it in one sentence.
    - **Scope every novelty claim** with a qualifier (first *systematic* / *large-scale* study of X *on* Y). Bare "first" invites counterexamples.
    - **Use active "we" voice** for what you did; reserve passive voice for stated facts and system behavior.

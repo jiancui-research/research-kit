@@ -14,7 +14,7 @@ The user request arrives via the $ARGUMENTS placeholder. Treat it as steering no
    - Read `./.research/idea.md` (required upstream). If it is missing, stop and tell the user to run `/research.idea` first.
    - From `idea.md`, extract: paper type (measurement / attack / defense / benchmark / systematization (SoK)), target venue, the gap, the contributions, and the research questions.
 
-2. **Load the skeleton.** Start from `templates/plan-template.md`, then layer in the matching `templates/paper/<type>.md` so the plan inherits that type's proof obligation:
+2. **Load the skeleton.** Start from `.research/templates/plan-template.md`, then layer in the matching `.research/templates/paper/<type>.md` so the plan inherits that type's proof obligation:
    - measurement -> defensible dataset + methodology + a surprising finding
    - attack -> a working exploit + evidence it is not a corner case
    - defense -> a mechanism that stops the threat + a quantified cost

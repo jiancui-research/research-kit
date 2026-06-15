@@ -22,7 +22,7 @@ Pick the genre from `$ARGUMENTS` (ask only if ambiguous), and set the spine acco
    - Read `./.research/plan.md` if it exists (validation, baselines, metrics, risks). If missing, proceed but note the validation section will be thinner.
    - Pull from these: the one-sentence thesis, problem and motivation, the gap, contributions, research questions, and any "have done" results.
 
-2. **Load the skeleton.** Start from `templates/proposal-template.md`. Shape it to the genre chosen above.
+2. **Load the skeleton.** Start from `.research/templates/proposal-template.md`. Shape it to the genre chosen above.
 
 3. **Draft the proposal, motivation-first.** Open on significance and one vivid concrete example, never "X is important [1,2,3]." Cover:
    - **One-sentence thesis.** Falsifiable, with a named mechanism, metric, and direction (`mechanism X improves metric M vs baseline B, under condition Z`). A topic is not a claim.

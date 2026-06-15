@@ -21,16 +21,19 @@ You don't have to run every stage, and you can re-run any command as your work e
 ## Quickstart
 
 ```sh
-# 1. Install the commands into ~/.claude/commands/
+# 1. Install the commands + stage the bundled templates
 ./install.sh
 
-# 2. In your paper repo, set the tone (optional but recommended)
+# 2. In your paper repo, copy the templates in (once per repo)
+/research.init
+
+# 3. Set the tone (optional but recommended)
 /research.constitution measurement paper for a security venue, plain and precise voice
 
-# 3. Sharpen your idea
+# 4. Sharpen your idea
 /research.idea LLM agents leak secrets through tool-call arguments; measure how often
 
-# 4. Walk the pipeline
+# 5. Walk the pipeline
 /research.relatedwork
 /research.plan
 /research.experiment
@@ -46,6 +49,7 @@ All commands are invoked as `/research.<name>` in Claude Code.
 
 | Command | What it does |
 | --- | --- |
+| `/research.init` | Copy the bundled templates into this paper repo's `.research/templates/` (run once per repo, after `install.sh`). |
 | `/research.constitution` | Establish or update the research constitution: quality principles, writing voice, and venue norms. |
 | `/research.idea` | Turn a rough idea into a sharp, falsifiable `idea.md` - NABC, the gap, measurable contributions, testable RQs, venue and paper type. |
 | `/research.relatedwork` | Survey prior work and position your contribution against it. |
@@ -65,6 +69,7 @@ Commands read and write under `./.research/` in your own paper repo. They create
 ```
 .research/
   memory/constitution.md   research principles + writing voice
+  templates/               skeletons + craft guides (copied here by /research.init)
   idea.md                  problem, motivation (NABC), gap, contributions, RQs, venue, paper type
   related-work.md          prior work and positioning
   plan.md                  methodology, baselines, datasets, metrics, threat model
@@ -85,7 +90,7 @@ If no constitution exists, commands fall back to sensible defaults and keep goin
 
 ## Paper types
 
-Several commands are paper-type aware - measurement, attack, defense, benchmark, and systematization (SoK) - and adapt their structure and checklists accordingly. The per-type templates live in `templates/paper/`. Cross-cutting craft guides live in `templates/sections/` (abstract + intro, figures + tables) and `templates/venue-norms.md` (choosing a venue and adapting to its conventions).
+Several commands are paper-type aware - measurement, attack, defense, benchmark, and systematization (SoK) - and adapt their structure and checklists accordingly. The skeletons live in `templates/paper/`, and cross-cutting craft guides in `templates/sections/` (abstract + intro, figures + tables) and `templates/venue-norms.md` (choosing a venue and its conventions). `/research.init` copies all of these into your paper repo's `.research/templates/`, where the commands load them.
 
 ## Contributing
 

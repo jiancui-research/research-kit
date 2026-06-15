@@ -13,7 +13,7 @@ Thanks for helping improve speckit-research. It is a small, MIT-licensed toolkit
 - **Namespace.** Every command is invoked as `/research.<name>` and lives at `commands/research.<name>.md`. `install.sh` copies (or symlinks) those files into `~/.claude/commands/`.
 - **Working directory.** Commands read and write only under `./.research/` in the user's own paper repo. They `mkdir -p` as needed and never overwrite user content without saying so.
 - **Pipeline order.** `constitution -> idea -> relatedwork -> plan -> experiment -> paper -> analyze`, plus `rebuttal`, `review`, `proposal`, and `ae` as needed. Don't reorder it casually.
-- **Command contract.** Each command should: (1) read `./.research/memory/constitution.md` if it exists, skip silently otherwise; (2) read its upstream artifacts; (3) take user input via the `$ARGUMENTS` placeholder; (4) produce or update only its own artifact(s) and end by reporting the path(s) plus a one-line `Next: /research.<x>`; (5) be paper-type aware where relevant via `templates/paper/<type>.md`; (6) stay focused and short - aim under ~120 lines, and reference templates instead of inlining long checklists.
+- **Command contract.** Each command should: (1) read `./.research/memory/constitution.md` if it exists, skip silently otherwise; (2) read its upstream artifacts; (3) take user input via the `$ARGUMENTS` placeholder; (4) produce or update only its own artifact(s) and end by reporting the path(s) plus a one-line `Next: /research.<x>`; (5) be paper-type aware where relevant via `.research/templates/paper/<type>.md` (populated by `/research.init` from the bundled `templates/`); (6) stay focused and short - aim under ~120 lines, and reference templates instead of inlining long checklists.
 
 ## Adding a new command
 
@@ -27,13 +27,13 @@ Thanks for helping improve speckit-research. It is a small, MIT-licensed toolkit
    ```
 
    Then write the steps. Follow the command contract above. Read the user's free text from `$ARGUMENTS`.
-2. If the command needs a template, add it under `templates/` (e.g. `templates/<x>-template.md`) and have the command read it rather than inlining the structure.
+2. If the command needs a template, add it under `templates/` (e.g. `templates/<x>-template.md`) and have the command read it from `.research/templates/<x>-template.md` (where `/research.init` copies it) rather than inlining the structure.
 3. Add a row for the command to the **Commands** table in `README.md`, and slot it into the pipeline description if it belongs in the main flow.
 4. Run `./install.sh` and try the command in a scratch paper repo to confirm it writes the right artifact to `./.research/` and prints the path and next step.
 
 ## Adding a paper-type skeleton
 
-Paper-type-aware commands look for `templates/paper/<type>.md` (measurement, attack, defense, benchmark, systematization today).
+Paper-type-aware commands look for `.research/templates/paper/<type>.md` at runtime - authored under `templates/paper/` in this repo and copied into the paper repo by `/research.init` (measurement, attack, defense, benchmark, systematization today).
 
 1. Add `templates/paper/<newtype>.md`. Mirror the existing skeletons: a short header noting which artifacts to read first, the core question and proof obligation for that paper type, and bracketed `[...]` placeholders for each section.
 2. Make sure commands that infer paper type (such as `/research.idea`) will recognize the new type, and confirm `/research.paper` reads the new skeleton.
