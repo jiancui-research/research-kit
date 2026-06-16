@@ -15,7 +15,7 @@
 #   ./install.sh --uninstall          remove installed commands from all agents
 #   ./install.sh --help               show this help
 #
-# POSIX sh only. Idempotent: re-running is safe and prints each action.
+# POSIX sh only. Idempotent: re-running is safe, prints each action, and prunes commands removed from the bundle.
 set -e
 
 # Resolve this script's own directory so it works when invoked from anywhere.
@@ -114,12 +114,29 @@ read_body() {
     ' "$1"
 }
 
+# Remove already-installed research.* files that are no longer in the bundle,
+# so deleting a command from the repo self-cleans on the next install.
+prune_stale() {
+    pdest="$1"
+    ppat="$2"
+    psuf="$3"
+    for old in "$pdest"/$ppat; do
+        [ -e "$old" ] || [ -L "$old" ] || continue
+        pbase=$(basename "$old" "$psuf")
+        if [ ! -e "$SRC_DIR/$pbase.md" ]; then
+            rm -f "$old"
+            echo "  pruned   $old (removed from bundle)"
+        fi
+    done
+}
+
 # Copy or symlink the raw command markdown into a destination directory.
 # Used for agents that consume the Claude/Codex command format verbatim.
 install_raw() {
     agent="$1"
     dest="$2"
     mkdir -p "$dest"
+    prune_stale "$dest" "research.*.md" ".md"
     echo "Installing speckit-research commands for $agent into $dest ($MODE)"
     for src in "$SRC_DIR"/research.*.md; do
         [ -e "$src" ] || continue
@@ -143,6 +160,7 @@ install_raw() {
 install_copilot() {
     dest="$COPILOT_DIR"
     mkdir -p "$dest"
+    prune_stale "$dest" "research.*.agent.md" ".agent.md"
     echo "Installing speckit-research commands for copilot into $dest (generated agents)"
     for src in "$SRC_DIR"/research.*.md; do
         [ -e "$src" ] || continue
