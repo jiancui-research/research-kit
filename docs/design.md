@@ -1,8 +1,8 @@
-# speckit-research — design (v0.2.0)
+# research-kit — design (v0.2.0)
 
 ## Vision
 
-Writing a research paper is a long-lived, multi-stage process with the same failure modes as building software: vague problem statements, untracked assumptions, claims that drift from evidence, and rework caused by skipping steps. **Spec-Driven Development** addresses these in code by making intent explicit before execution. speckit-research applies the same discipline to papers.
+Writing a research paper is a long-lived, multi-stage process with the same failure modes as building software: vague problem statements, untracked assumptions, claims that drift from evidence, and rework caused by skipping steps. **Spec-Driven Development** addresses these in code by making intent explicit before execution. research-kit applies the same discipline to papers.
 
 It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates and a default research "constitution", installable for Claude Code, Codex CLI, or GitHub Copilot CLI. Each command turns one fuzzy stage of paper writing - proposal, related work, feasibility, tasks, experiments, drafting, rebuttal - into a concrete, reviewable artifact on disk. The artifacts form a chain, so later stages inherit the decisions made earlier instead of re-deriving them, and a claim-to-evidence matrix keeps the eventual paper honest.
 
@@ -10,9 +10,9 @@ Simplicity is the top priority: Markdown in, Markdown out, no runtime.
 
 ## Spec-kit → research mapping
 
-speckit-research mirrors the spec-kit pipeline (constitution → specify → plan → tasks → implement), remapped to research stages, then extends it with stages unique to academic work. The idea is folded into `proposal` (the pipeline entry point) and the old standalone plan is folded into `tasks`.
+research-kit mirrors the spec-kit pipeline (constitution → specify → plan → tasks → implement), remapped to research stages, then extends it with stages unique to academic work. The idea is folded into `proposal` (the pipeline entry point) and the old standalone plan is folded into `tasks`.
 
-| speckit-research stage | spec-kit analogue | What it maps to |
+| research-kit stage | spec-kit analogue | What it maps to |
 |---|---|---|
 | `constitution` | constitution | Research quality principles, writing voice, and venue norms that govern every later stage. |
 | `proposal` | specify | The "spec" of the paper and the pipeline entry point: problem, motivation (NABC), gap, measurable contributions, testable research questions, approach, venue, paper type. The raw idea is the input; the idea is folded in here. |
@@ -90,9 +90,9 @@ Pure agent slash commands — no runtime of its own. Each command is a Markdown 
 - **Codex CLI** — copied (or symlinked) into `~/.codex/prompts/` (honoring `$CODEX_HOME`); same `$ARGUMENTS` form.
 - **GitHub Copilot CLI** — transformed into custom agents in `~/.copilot/agents/research.<name>.agent.md`. Copilot CLI has no parameterized slash commands, so each stage becomes an agent (selected via `/agent`) with a generated adapter note mapping `$ARGUMENTS` → the user's message and `Next: /research.<x>` → switching agents. The command body is otherwise verbatim, so the pipeline is authored once.
 
-The default (no flag) installs for Claude Code, preserving the original behavior; `--all` covers every agent. Templates ship as plain Markdown; `install.sh` stages them to `~/.speckit-research/` (override with `SPECKIT_RESEARCH_HOME`) and `/research.init` copies them into a paper repo's `.research/templates/`. The default constitution is embedded in `/research.constitution`.
+The default (no flag) installs for Claude Code, preserving the original behavior; `--all` covers every agent. Templates ship as plain Markdown; `install.sh` stages them to `~/.research-kit/` (override with `RESEARCH_KIT_HOME`) and `/research.init` copies them into a paper repo's `.research/templates/`. The default constitution is embedded in `/research.constitution`.
 
-For Claude Code there is also a zero-script path: the repo doubles as a **plugin marketplace**. `.claude-plugin/marketplace.json` lists a single plugin whose source is the repo root, and `.claude-plugin/plugin.json` is its manifest; the existing `commands/` directory is the plugin's command set with no file movement. Users run `/plugin marketplace add jiancui-research/speckit-research` then `/plugin install speckit-research@speckit-research`, which namespaces the stages as `/speckit-research:research.<name>`. In this mode the plugin bundle (including `templates/`) is copied to Claude's cache, so `/research.init` reads templates from `${CLAUDE_PLUGIN_ROOT}/templates`, falling back to the `install.sh` staging dir otherwise. This is packaging only — no hooks, MCP servers, or runtime are added.
+For Claude Code there is also a zero-script path: the repo doubles as a **plugin marketplace**. `.claude-plugin/marketplace.json` lists a single plugin whose source is the repo root, and `.claude-plugin/plugin.json` is its manifest; the existing `commands/` directory is the plugin's command set with no file movement. Users run `/plugin marketplace add jiancui-research/research-kit` then `/plugin install research-kit@research-kit`, which namespaces the stages as `/research-kit:research.<name>`. In this mode the plugin bundle (including `templates/`) is copied to Claude's cache, so `/research.init` reads templates from `${CLAUDE_PLUGIN_ROOT}/templates`, falling back to the `install.sh` staging dir otherwise. This is packaging only — no hooks, MCP servers, or runtime are added.
 
 There is no Python CLI, no daemon, no build step. The model does the work; the files are the interface.
 

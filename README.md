@@ -1,4 +1,4 @@
-# speckit-research
+# research-kit
 
 Spec-Driven Development for research papers, as slash commands for your AI coding agent — Claude Code, Codex CLI, or GitHub Copilot CLI. Instead of one giant "write my paper" prompt, you get a pipeline of small commands: each reads what came before, takes your input, and writes one artifact under `./.research/`. Just Markdown commands + templates and a default research constitution — no Python CLI, no build step.
 
@@ -15,11 +15,11 @@ Plus auxiliary commands: `rebuttal` (post-submission) and `ae` (artifact evaluat
 **Claude Code — plugin (recommended, no script):**
 
 ```text
-/plugin marketplace add jiancui-research/speckit-research
-/plugin install speckit-research@speckit-research
+/plugin marketplace add jiancui-research/research-kit
+/plugin install research-kit@research-kit
 ```
 
-Plugin stages are namespaced, e.g. `/speckit-research:research.proposal …`; update later with `/plugin marketplace update`.
+Plugin stages are namespaced, e.g. `/research-kit:research.proposal …`; update later with `/plugin marketplace update`.
 
 **Any agent — script:**
 
@@ -42,7 +42,7 @@ Then, in your paper repo:
 /research.review
 ```
 
-Each command writes its result into `./.research/` and suggests the next one. (Plugin installs prefix every command with `speckit-research:`.)
+Each command writes its result into `./.research/` and suggests the next one. (Plugin installs prefix every command with `research-kit:`.)
 
 ## Commands
 
@@ -67,7 +67,7 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 
 | Agent | Install | How you invoke a stage |
 | --- | --- | --- |
-| **Claude Code** (plugin) | `/plugin install speckit-research@speckit-research` | `/speckit-research:research.proposal <text>` |
+| **Claude Code** (plugin) | `/plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **Claude Code** (script) | `./install.sh` | `/research.proposal <text>` |
 | **Codex CLI** | `./install.sh --codex` | `/research.proposal <text>` |
 | **GitHub Copilot CLI** | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |

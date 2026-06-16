@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Install speckit-research slash commands for one or more AI coding agents, and
+# Install research-kit slash commands for one or more AI coding agents, and
 # stage the bundled templates so /research.init can copy them into a paper repo.
 #
 # Supported agents:
@@ -37,7 +37,7 @@ CODEX_DIR="${CODEX_PROMPTS_DIR:-${CODEX_HOME:-$HOME/.codex}/prompts}"
 COPILOT_DIR="${COPILOT_AGENTS_DIR:-$HOME/.copilot/agents}"
 
 # Agent-neutral staging home for the bundled templates that /research.init copies in.
-BUNDLE_HOME="${SPECKIT_RESEARCH_HOME:-$HOME/.speckit-research}"
+BUNDLE_HOME="${RESEARCH_KIT_HOME:-$HOME/.research-kit}"
 
 usage() {
     sed -n '2,18p' "$SCRIPT_PATH" | sed 's/^# \{0,1\}//'
@@ -137,7 +137,7 @@ install_raw() {
     dest="$2"
     mkdir -p "$dest"
     prune_stale "$dest" "research.*.md" ".md"
-    echo "Installing speckit-research commands for $agent into $dest ($MODE)"
+    echo "Installing research-kit commands for $agent into $dest ($MODE)"
     for src in "$SRC_DIR"/research.*.md; do
         [ -e "$src" ] || continue
         name=$(basename "$src")
@@ -161,7 +161,7 @@ install_copilot() {
     dest="$COPILOT_DIR"
     mkdir -p "$dest"
     prune_stale "$dest" "research.*.agent.md" ".agent.md"
-    echo "Installing speckit-research commands for copilot into $dest (generated agents)"
+    echo "Installing research-kit commands for copilot into $dest (generated agents)"
     for src in "$SRC_DIR"/research.*.md; do
         [ -e "$src" ] || continue
         base=$(basename "$src" .md)          # e.g. research.idea
@@ -174,7 +174,7 @@ install_copilot() {
             echo "description: \"$desc\""
             echo "---"
             echo
-            echo "> **speckit-research agent.** You are the \`$base\` stage of the speckit-research"
+            echo "> **research-kit agent.** You are the \`$base\` stage of the research-kit"
             echo "> pipeline, packaged as a GitHub Copilot CLI custom agent. Two adaptations from the"
             echo "> original slash-command form:"
             echo ">"
@@ -214,7 +214,7 @@ uninstall_dir() {
     agent="$1"
     dest="$2"
     pattern="$3"
-    echo "Uninstalling speckit-research commands for $agent from $dest"
+    echo "Uninstalling research-kit commands for $agent from $dest"
     found=0
     for f in "$dest"/$pattern; do
         if [ -e "$f" ] || [ -L "$f" ]; then

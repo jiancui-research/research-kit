@@ -1,5 +1,5 @@
 {
-  "name": "speckit-research",
+  "name": "research-kit",
   "description": "Spec-Driven Development for research papers: a chained /research.* pipeline (idea, related work, plan, experiments, drafting, rebuttal) that turns each stage of paper writing into a reviewable artifact on disk.",
   "version": "0.2.0",
   "author": {

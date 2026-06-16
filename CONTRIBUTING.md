@@ -1,6 +1,6 @@
-# Contributing to speckit-research
+# Contributing to research-kit
 
-Thanks for helping improve speckit-research. It is a small, MIT-licensed toolkit: slash commands for AI coding agents (Claude Code, Codex CLI, GitHub Copilot CLI) plus Markdown templates and a default research constitution. There is no Python CLI, no hooks, and no build step. Keep it that way.
+Thanks for helping improve research-kit. It is a small, MIT-licensed toolkit: slash commands for AI coding agents (Claude Code, Codex CLI, GitHub Copilot CLI) plus Markdown templates and a default research constitution. There is no Python CLI, no hooks, and no build step. Keep it that way.
 
 ## Guiding principles
 
