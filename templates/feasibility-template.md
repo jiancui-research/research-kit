@@ -38,6 +38,7 @@ A probe that exposes a fatal flaw is a SUCCESS of this phase. Do not sanitize.]
 ## Verdict: [GO | NO-GO | PIVOT]
 [Exactly one. State the single piece of evidence driving it.]
 - Evidence behind the verdict: [...]
+- What this establishes (feasibility-level — NOT a paper claim; the full experiment re-establishes it in `claims.md`): [one line, e.g. "the core mechanism fires on real targets"].
 - GO -> the riskiest assumption held; proceed to `/research.tasks`.
 - NO-GO -> the assumption is false and no nearby reframing saves it; route to `/research.proposal`.
 - PIVOT -> false as stated, but the probe revealed a sharper adjacent idea:
@@ -50,6 +51,7 @@ A probe that exposes a fatal flaw is a SUCCESS of this phase. Do not sanitize.]
 - [ ] The Probe plan is a short throwaway checklist kept in `feasibility.md`, not in `tasks/`.
 - [ ] The finding records the inconvenient result, not a sanitized one.
 - [ ] The verdict is exactly one of GO / NO-GO / PIVOT, with a named piece of evidence.
+- [ ] "What this establishes" is a feasibility-level claim, kept out of `claims.md`.
 - [ ] A NO-GO / PIVOT names what to change and points back to `/research.proposal`.
 
 ---

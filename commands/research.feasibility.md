@@ -31,13 +31,13 @@ It is a self-contained **plan → do → decide**: a short *Probe plan* (a few t
 
 4. **Lay out the Probe plan (the feasibility tasks).** Break the probe into a short checklist of 3-5 concrete, throwaway steps you will actually do or run. Keep them cheap — the smallest sample, the toiest substrate, the shortest time that still gives a real signal; honor any budget in `$ARGUMENTS`; if the plan starts to look like the full study, shrink it. These tasks live in `feasibility.md` and stay separate from `tasks/experiment.md` — they inform GO/NO-GO, not the paper's claims (rigor is `/research.tasks` and `/research.experiment`).
 
-5. **Work the plan and record what it revealed — honestly.** Run (or specify) each step and note the result including the inconvenient parts: what worked, what surprised you, what assumption cracked. A probe that exposes a fatal flaw is a *success* of this phase, not a failure. Do not launder a bad result into a hopeful one.
+5. **Work the plan — run it inline, then fill the blanks.** Actually execute each step you can: write and run the throwaway script, pull the real cases, apply the draft taxonomy. Only fall back to *specifying* a step for the user when you genuinely cannot reach it (system access, a long run, a human judgment call). **If `feasibility.md` already has a Probe plan the user wrote or edited, treat it as the spec** — execute it as written; do not re-plan or rewrite it. Record what each step revealed including the inconvenient parts: what worked, what surprised you, what assumption cracked. A probe that exposes a fatal flaw is a *success* of this phase, not a failure. Do not launder a bad result into a hopeful one.
 
 6. **Decide: GO / NO-GO / PIVOT.** Map the finding to exactly one verdict:
    - **GO** — the riskiest assumption held; the core idea survives. Proceed to `/research.tasks`.
    - **NO-GO** — the assumption is false and no nearby reframing saves it. Stop and route back to `/research.proposal` to find a different problem.
    - **PIVOT** — the assumption is false *as stated*, but the probe revealed a sharper or adjacent idea that does hold. State the new direction in one sentence and route back to `/research.proposal` to re-spec it.
-   State the single piece of evidence driving the verdict; a verdict with no evidence behind it is not yet a decision.
+   State the single piece of evidence driving the verdict; a verdict with no evidence behind it is not yet a decision. Also state in one line **what the probe establishes** — a *feasibility-level* claim (e.g. "the core mechanism fires on real targets"). It justifies proceeding; it is NOT a paper claim and never enters `claims.md` — the full `experiment` stage re-establishes it rigorously.
 
 ## Validate (short checklist)
 
@@ -47,8 +47,10 @@ It is a self-contained **plan → do → decide**: a short *Probe plan* (a few t
 - The Probe plan is a short checklist of throwaway steps, kept in `feasibility.md` (not in `tasks/`).
 - The finding records the inconvenient result, not a sanitized one.
 - The verdict is exactly one of GO / NO-GO / PIVOT, with a named piece of evidence behind it.
+- "What this establishes" is stated as a feasibility-level claim, kept out of `claims.md`.
+- On a re-run, the user's edited assumption/design/Probe plan were preserved; only the blanks were filled.
 - A NO-GO/PIVOT names what to change and points back to `/research.proposal`.
 
 ## Completion
 
-Write/update `./.research/feasibility.md`, starting from `.research/templates/feasibility-template.md`, creating `./.research/` as needed and never overwriting user content silently. Report the path and the verdict. Then end with: `Next: /research.tasks` on a GO, or `Next: /research.proposal` to reshape the idea on a NO-GO / PIVOT.
+Write/update `./.research/feasibility.md`, starting from `.research/templates/feasibility-template.md`, creating `./.research/` as needed. **On a re-run, preserve every section the user has written (assumption, probe design, Probe plan) and fill only the blanks — Finding, what-this-establishes, Verdict — from the executed plan; never overwrite their text.** Report the path and the verdict. Then end with: `Next: /research.tasks` on a GO, or `Next: /research.proposal` to reshape the idea on a NO-GO / PIVOT.
