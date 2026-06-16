@@ -9,22 +9,23 @@ The user request arrives via the `$ARGUMENTS` placeholder. It may narrow the aud
 
 ## What this phase is
 
-This is the self-review phase: read the project the way a skeptical reviewer will and surface gaps **before** submission. It is **read-only** on every other artifact — it inspects `idea.md`, `plan.md`, `claims.md`, `experiments/`, `related-work.md`, and `paper/`, but the **only** file it writes is `./.research/analyze-report.md`. Never edit a claim, experiment, or section to make the audit pass; report the gap and let the upstream command fix it.
+This is the self-review phase: read the project the way a skeptical reviewer will and surface gaps **before** submission. It is **read-only** on every other artifact — it inspects `proposal.md`, `feasibility.md`, `tasks/experiment.md`, `tasks/paper.md`, `claims.md`, `experiments/`, `related-work.md`, and `paper/`, but the **only** file it writes is `./.research/analyze-report.md`. Never edit a claim, experiment, or section to make the audit pass; report the gap and let the upstream command fix it.
 
 ## Steps
 
 1. **Read everything (read-only).**
    - Read `./.research/memory/constitution.md` if present (for venue, paper-type, voice); skip silently if absent.
-   - Read all artifacts that exist: `./.research/idea.md`, `./.research/plan.md`, `./.research/claims.md`, `./.research/experiments/` (files + `index.md`), `./.research/related-work.md`, and `./.research/paper/`. For any missing artifact, note it as a gap rather than failing.
-   - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from `idea.md` so type-specific checks apply.
+   - Read all artifacts that exist: `./.research/proposal.md`, `./.research/feasibility.md`, `./.research/tasks/experiment.md`, `./.research/tasks/paper.md`, `./.research/claims.md`, `./.research/experiments/` (files + `index.md`), `./.research/related-work.md`, and `./.research/paper/`. For any missing artifact, note it as a gap rather than failing.
+   - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from `proposal.md` so type-specific checks apply.
+   - If `feasibility.md` exists, confirm it reached a **GO** verdict; flag a `NO-GO`/`PIVOT` that was never resolved.
 
-2. **Contribution → evidence trace.** For each contribution and research question in `idea.md`, find the supporting claim(s) in `claims.md` and the experiment(s) backing those claims. Flag any contribution with **no supporting claim**, or any claim whose verdict in `claims.md` is `pending` / `partial` / `refuted` while the paper states it as settled.
+2. **Contribution → evidence trace.** For each contribution and research question in `proposal.md`, find the supporting claim(s) in `claims.md` and the experiment(s) backing those claims. Flag any contribution with **no supporting claim**, or any claim whose verdict in `claims.md` is `pending` / `partial` / `refuted` while the paper states it as settled.
 
 3. **Claim ↔ result consistency.** For each claim, check that its verdict matches the actual experiment results in `experiments/` and that the paper text (`paper/`) states it no stronger than the evidence allows. Flag mismatches in both directions: paper overclaims a `partial`/`refuted` result, or paper under-sells a fully `supported` one.
 
 4. **Overclaim audit.** Scan the abstract and intro verbs (`enables`, `solves`, `guarantees`, `proves`, `demonstrates`, `first`). For each, ask whether the evidence is as strong as the verb and whether the scope qualifier is present. Flag any verb that outruns its data, and any bare `first`/novelty claim missing a qualifier.
 
-5. **Cross-artifact agreement.** Check that `idea.md`, `plan.md`, and `paper/` tell the same story: same problem framing, same contributions, same baselines/datasets/metrics, same threat model. Flag drift (e.g. a metric in the paper that never appears in the plan, a baseline planned but never tested, a contribution in the intro absent from `idea.md`).
+5. **Cross-artifact agreement.** Check that `proposal.md`, `tasks/experiment.md`, `tasks/paper.md`, and `paper/` tell the same story: same problem framing, same contributions, same baselines/datasets/metrics, same threat model. Flag drift (e.g. a metric in the paper that never appears in `tasks/experiment.md`, a baseline planned but never tested, a contribution in the intro absent from `proposal.md`).
 
 6. **Reviewer-objection pre-emption.** Walk the five recurring review axes — **motivation, contribution, evaluation, related work, presentation** — and for each, write the single most specific, justified objection a reviewer could raise, then note whether the current artifacts already answer it. Also surface the common unfair-but-likely reactions (`obvious`, `too simple`, `too narrow`, `no SOTA win`) and whether the framing defuses each. Check evaluation rigor explicitly: fairly tuned baselines, variance reported, anomalies explained, no train/test leakage, and any automated/LLM judge validated against ground truth on this task.
 
@@ -52,4 +53,4 @@ Write **only** `./.research/analyze-report.md`, overwriting the prior report. St
 
 ## Completion
 
-Report the path `./.research/analyze-report.md` and the count of critical/major gaps. Then: resolve the gaps via the named commands (most often `Next: /research.paper` or `/research.experiment`), and rerun `/research.analyze` until the report is clean.
+Report the path `./.research/analyze-report.md` and the count of critical/major gaps. Then: route each gap to the command that owns the fix (most often `/research.paper` or `/research.experiment`), and once routed, `Next: /research.review`. Rerun `/research.analyze` if artifacts change materially.

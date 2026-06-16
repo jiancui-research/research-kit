@@ -1,29 +1,29 @@
-# speckit-research — design
+# speckit-research — design (v0.2.0)
 
 ## Vision
 
 Writing a research paper is a long-lived, multi-stage process with the same failure modes as building software: vague problem statements, untracked assumptions, claims that drift from evidence, and rework caused by skipping steps. **Spec-Driven Development** addresses these in code by making intent explicit before execution. speckit-research applies the same discipline to papers.
 
-It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates and a default research "constitution", installable for Claude Code, Codex CLI, or GitHub Copilot CLI. Each command turns one fuzzy stage of paper writing - idea, related work, plan, experiments, drafting, rebuttal - into a concrete, reviewable artifact on disk. The artifacts form a chain, so later stages inherit the decisions made earlier instead of re-deriving them, and a claim-to-evidence matrix keeps the eventual paper honest.
+It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates and a default research "constitution", installable for Claude Code, Codex CLI, or GitHub Copilot CLI. Each command turns one fuzzy stage of paper writing - proposal, related work, feasibility, tasks, experiments, drafting, rebuttal - into a concrete, reviewable artifact on disk. The artifacts form a chain, so later stages inherit the decisions made earlier instead of re-deriving them, and a claim-to-evidence matrix keeps the eventual paper honest.
 
 Simplicity is the top priority: Markdown in, Markdown out, no runtime.
 
 ## Spec-kit → research mapping
 
-speckit-research mirrors the spec-kit pipeline (constitution → spec → plan → tasks → implement), remapped to research stages, then extends it with stages unique to academic work.
+speckit-research mirrors the spec-kit pipeline (constitution → specify → plan → tasks → implement), remapped to research stages, then extends it with stages unique to academic work. The idea is folded into `proposal` (the pipeline entry point) and the old standalone plan is folded into `tasks`.
 
 | speckit-research stage | spec-kit analogue | What it maps to |
 |---|---|---|
 | `constitution` | constitution | Research quality principles, writing voice, and venue norms that govern every later stage. |
-| `idea` | specify | The "spec" of the paper: problem, motivation (NABC), gap, measurable contributions, testable research questions, venue, paper type. |
+| `proposal` | specify | The "spec" of the paper and the pipeline entry point: problem, motivation (NABC), gap, measurable contributions, testable research questions, approach, venue, paper type. The raw idea is the input; the idea is folded in here. |
 | `relatedwork` | (specify, positioning) | Survey of prior work that positions the contribution and names the closest baselines. |
-| `plan` | plan | Methodology, baselines, datasets, metrics, threat model, and evaluation design. |
-| `experiment` | tasks | The plan broken into trackable experiments, kept in sync with a claim-evidence matrix. |
-| `paper` | implement | Section-by-section drafting where every claim traces back to evidence. |
+| `feasibility` | (de-risk gate) | A GO/NO-GO/PIVOT gate that de-risks the result before committing to the full build; a no-go or pivot points back to `proposal`. |
+| `tasks` | plan + tasks | Experiment-design header plus the build/obtain and experiment task list (`tasks/experiment.md`), and the paper-section task list (`tasks/paper.md`). The old planning step is folded in here. |
+| `experiment` | implement | Trackable experiments kept in sync with the claim-evidence matrix; writes verdicts to `claims.md`. |
+| `paper` | implement | Section-by-section drafting (human-led) where every claim traces back to evidence. |
 | `analyze` | analyze | Read-only cross-artifact consistency and review-readiness audit. |
+| `review` | — (research extension) | A self-review panel that routes findings and loops until no high-severity findings remain. |
 | `rebuttal` | — (research extension) | Evidence-backed response to reviewer comments, fitted to the venue limit. |
-| `review` | — (research extension) | A fair, specific peer review of someone else's paper. |
-| `proposal` | — (research extension) | The idea + plan retargeted as a proposal or fellowship pitch. |
 | `ae` | — (research extension) | Artifact-evaluation package: reproducibility checklist, README, badge plan, archival link. |
 
 ## Commands
@@ -32,15 +32,15 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 
 - `/research.init` — One-time per paper repo: copy the bundled templates into `.research/templates/` so commands can load them.
 - `/research.constitution` — Establish or update the research constitution (quality principles, writing voice, venue norms).
-- `/research.idea` — Turn a rough idea into a sharp, falsifiable `idea.md` (NABC, gap, measurable contributions, testable RQs, venue + paper-type).
+- `/research.proposal` — Pipeline entry point: turn a raw idea into a sharp, falsifiable `proposal.md` (NABC, gap, measurable contributions, testable RQs, approach, venue + paper-type).
 - `/research.relatedwork` — Survey prior work and position the contribution against the closest baselines.
-- `/research.plan` — Produce a paper-type-aware plan (methodology, baselines, datasets, metrics, threat model, evaluation design).
-- `/research.experiment` — Break the plan into trackable experiments and keep the claim-evidence matrix current.
-- `/research.paper` — Draft paper sections, paper-type aware, with every claim traceable to `claims.md`.
-- `/research.analyze` — Read-only cross-artifact consistency and review-readiness audit; outputs a prioritized gap report.
+- `/research.feasibility` — De-risk the result with a quick check and emit a GO/NO-GO/PIVOT verdict; a no-go or pivot routes back to `/research.proposal`.
+- `/research.tasks` — Produce the experiment-design header + build/experiment task list (`tasks/experiment.md`) and the paper-section task list (`tasks/paper.md`), paper-type aware.
+- `/research.experiment` — Run trackable experiments and keep the claim-evidence matrix (`claims.md`) current, writing verdicts back.
+- `/research.paper` — Outline or critique paper sections (human-led), paper-type aware, with every claim traceable to `claims.md`.
+- `/research.analyze` — Read-only cross-artifact consistency and review-readiness audit; routes findings to the owning fix-commands.
+- `/research.review` — Simulate a reviewer panel, write mock reviews + scores, route findings, and loop until no new high-severity findings.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
-- `/research.review` — Write a fair, specific, actionable peer review of another author's paper.
-- `/research.proposal` — Turn the idea and plan into a proposal or fellowship pitch (NABC + Heilmeier lenses, audience-aware).
 - `/research.ae` — Prepare an artifact-evaluation submission (reproducibility checklist, artifact README, badge plan, archival link).
 
 ## Working-directory model
@@ -51,19 +51,22 @@ Every command reads and writes under `./.research/` in the user's own paper repo
 .research/
   memory/constitution.md   research principles + writing voice
   templates/               skeletons + craft guides (copied by /research.init)
-  idea.md                  problem, motivation (NABC), gap, contributions, RQs, venue, paper-type
+  proposal.md              problem, motivation (NABC), gap, contributions, RQs, approach, venue, paper-type
   related-work.md
-  plan.md                  methodology, baselines, datasets, metrics, threat model
-  claims.md                claim ↔ evidence matrix (kept by experiment + analyze)
+  feasibility.md           de-risk result + GO/NO-GO/PIVOT
+  tasks/experiment.md      experiment-design header + build/experiment task list
+  tasks/paper.md           paper-section task list (READY vs BLOCKED-on-claim)
+  claims.md                claim ↔ evidence matrix (written by experiment; read by paper/analyze/review)
   experiments/             one file per experiment + index.md
   paper/                   section-by-section drafts
-  review/  rebuttal/  proposal/  ae/   outputs of those commands
+  analyze-report.md        consistency + desk-reject report
+  review/round-N.md  rebuttal/  ae/   outputs of those commands
 ```
 
 Command contract:
 
 1. Read `./.research/memory/constitution.md` if it exists (skip silently otherwise).
-2. Read its upstream artifacts (e.g. `plan` reads `idea.md`; `paper` reads `plan.md` + `claims.md`).
+2. Read its upstream artifacts (e.g. `tasks` reads `proposal.md` + `feasibility.md`; `paper` reads `tasks/paper.md` + `claims.md`).
 3. Take user input via `$ARGUMENTS`.
 4. Produce or update only its own artifact(s); end by reporting the path(s) and a one-line `Next: /research.<x>`.
 5. Be paper-type aware where relevant (measurement / attack / defense / benchmark / systematization (SoK)) via `.research/templates/paper/<type>.md` (copied from the bundle by `/research.init`).
@@ -73,9 +76,11 @@ Commands `mkdir -p` as needed and never overwrite user content without saying so
 ## Pipeline order
 
 ```
-constitution → idea → relatedwork → plan → experiment → paper → analyze
-            (+ rebuttal, review, proposal, ae as needed)
+constitution → proposal → relatedwork → feasibility → tasks → (experiment ∥ paper) → analyze → review (loop)
+            (+ rebuttal post-submission, ae once results exist, init for setup)
 ```
+
+`experiment` and `paper` run in parallel, synced by `claims.md`: experiment writes verdicts; paper reads them and tags any unbacked claim `[UNVERIFIED]`. `feasibility` is a GO/NO-GO gate (a no-go or pivot routes back to `proposal`), and `review` loops back into the fix-commands until no new high-severity findings remain.
 
 ## Form factor
 
@@ -93,7 +98,7 @@ There is no Python CLI, no daemon, no build step. The model does the work; the f
 
 ## Scope (v1)
 
-Full paper lifecycle: from a rough idea through related work, planning, experiments, drafting, and the self-audit, plus the surrounding academic tasks of rebuttal, peer review, proposal/fellowship writing, and artifact evaluation. Paper-type awareness covers measurement, attack, defense, benchmark, and systematization (SoK) papers, with cross-cutting craft guides for abstract/intro, figures/tables, and venue norms.
+Full paper lifecycle: from a raw idea (via the proposal entry point) through related work, the feasibility gate, task planning, experiments, drafting, the self-audit, and the self-review loop, plus the surrounding academic tasks of rebuttal and artifact evaluation. Paper-type awareness covers measurement, attack, defense, benchmark, and systematization (SoK) papers, with cross-cutting craft guides for abstract/intro, figures/tables, and venue norms.
 
 ## Non-goals
 

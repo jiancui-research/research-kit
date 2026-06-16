@@ -1,6 +1,6 @@
 # Proposal: [short working title]
 
-> Produced by `/research.proposal`. Lives at `./.research/proposal/proposal.md`.
+> Produced by `/research.proposal`. Lives at `./.research/proposal.md`.
 > Two lenses, one spine. Fill every bracket; an empty slot means the pitch is still a topic.
 > Pick the genre, then delete the section that does not apply.
 
@@ -110,4 +110,4 @@ Name what prior work is missing; do not enumerate it. The gap must be the same s
 - [ ] A smart non-specialist can restate problem, idea, and test after a two-minute read.
 
 ---
-Next: `/research.review` (to pressure-test it) or `/research.paper` (to start drafting).
+Next: `/research.relatedwork` (survey + position), or `/research.feasibility` if related work is done.

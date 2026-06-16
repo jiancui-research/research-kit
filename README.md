@@ -11,10 +11,10 @@ It is just slash commands plus Markdown templates and a default research constit
 The commands form an ordered pipeline. Each stage builds on the last:
 
 ```
-constitution → idea → relatedwork → plan → experiment → paper → analyze
+constitution → proposal → relatedwork → feasibility → tasks → (experiment + paper, in parallel) → analyze → review
 ```
 
-Plus four commands you reach for when the moment calls for it: `rebuttal`, `review`, `proposal`, and `ae` (artifact evaluation).
+Plus auxiliary commands you reach for when the moment calls for it: `rebuttal` (post-submission) and `ae` (artifact evaluation).
 
 You don't have to run every stage, and you can re-run any command as your work evolves. Commands only touch their own artifacts and tell you before overwriting anything.
 
@@ -28,7 +28,7 @@ You don't have to run every stage, and you can re-run any command as your work e
 /plugin install speckit-research@speckit-research
 ```
 
-Plugin stages are namespaced with the plugin name, e.g. `/speckit-research:research.idea …`.
+Plugin stages are namespaced with the plugin name, e.g. `/speckit-research:research.proposal …`.
 Update later with `/plugin marketplace update` then re-install.
 
 **Any agent — install with the script:**
@@ -43,9 +43,9 @@ Update later with `/plugin marketplace update` then re-install.
 ```
 
 > How you invoke a stage depends on the install method. Via the **plugin** (Claude Code) the
-> stages are namespaced: `/speckit-research:research.idea …`. Via **install.sh** they are plain
-> slash commands in **Claude Code** and **Codex CLI** (`/research.idea …`), and custom agents in
-> **Copilot CLI** (pick with `/agent`, e.g. `research.idea`, then type your input). See
+> stages are namespaced: `/speckit-research:research.proposal …`. Via **install.sh** they are plain
+> slash commands in **Claude Code** and **Codex CLI** (`/research.proposal …`), and custom agents in
+> **Copilot CLI** (pick with `/agent`, e.g. `research.proposal`, then type your input). See
 > [Supported agents](#supported-agents) below.
 
 ```sh
@@ -55,21 +55,23 @@ Update later with `/plugin marketplace update` then re-install.
 # 3. Set the tone (optional but recommended)
 /research.constitution measurement paper for a security venue, plain and precise voice
 
-# 4. Sharpen your idea
-/research.idea LLM agents leak secrets through tool-call arguments; measure how often
+# 4. Turn your raw idea into a proposal
+/research.proposal LLM agents leak secrets through tool-call arguments; measure how often
 
 # 5. Walk the pipeline
 /research.relatedwork
-/research.plan
-/research.experiment
+/research.feasibility
+/research.tasks
+/research.experiment   # runs in parallel with paper, synced via claims.md
 /research.paper
 /research.analyze
+/research.review
 ```
 
 Each command reads your free text after the command name, reads its upstream artifacts, and writes its result into `./.research/`. When it finishes it prints the file path and suggests the next command.
 
 > If you installed via the Claude Code **plugin**, prefix every command with the plugin name,
-> e.g. `/speckit-research:research.init` and `/speckit-research:research.idea …`.
+> e.g. `/speckit-research:research.init` and `/speckit-research:research.proposal …`.
 
 ## Commands
 
@@ -79,15 +81,15 @@ All commands are invoked as `/research.<name>` in Claude Code and Codex CLI (or,
 | --- | --- |
 | `/research.init` | Copy the bundled templates into this paper repo's `.research/templates/` (run once per repo, after `install.sh`). |
 | `/research.constitution` | Establish or update the research constitution: quality principles, writing voice, and venue norms. |
-| `/research.idea` | Turn a rough idea into a sharp, falsifiable `idea.md` - NABC, the gap, measurable contributions, testable RQs, venue and paper type. |
+| `/research.proposal` | Pipeline entry: turn a raw idea into a sharp, falsifiable proposal - NABC, the gap, measurable contributions, testable RQs, venue and paper type. |
 | `/research.relatedwork` | Survey prior work and position your contribution against it. |
-| `/research.plan` | Produce a paper-type-aware research and experiment plan: methodology, baselines, datasets, metrics, threat model, evaluation design. |
-| `/research.experiment` | Break the plan into trackable experiments and keep the claim-evidence matrix current. |
+| `/research.feasibility` | De-risk the central result with a quick probe and return a GO / NO-GO / PIVOT verdict before you invest in the full build. |
+| `/research.tasks` | Produce a paper-type-aware experiment design plus the experiment and paper task lists (READY vs blocked-on-claim). |
+| `/research.experiment` | Break the tasks into trackable experiments and keep the claim-evidence matrix current. |
 | `/research.paper` | Draft paper sections, paper-type aware, with every claim traceable back to the evidence matrix. |
 | `/research.analyze` | Read-only cross-artifact consistency and review-readiness audit; outputs a prioritized gap report. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
-| `/research.review` | Write a fair, specific, actionable peer review of another author's paper. |
-| `/research.proposal` | Turn idea and plan into a proposal or fellowship pitch using NABC and Heilmeier lenses, audience-aware. |
+| `/research.review` | Simulate a reviewer panel: write mock reviews + scores, route each finding to the command that owns the fix, and loop until clean. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 
 ## Supported agents
@@ -96,18 +98,18 @@ speckit-research installs the same pipeline for three AI coding agents. Pick one
 
 | Agent | Install | Where it lands | How you invoke a stage |
 | --- | --- | --- | --- |
-| **Claude Code** (plugin) | `/plugin install speckit-research@speckit-research` | Claude Code plugin cache | `/speckit-research:research.idea <text>` |
-| **Claude Code** (script) | `./install.sh` (default) | `~/.claude/commands/research.*.md` | `/research.idea <text>` slash command |
-| **Codex CLI** | `./install.sh --codex` | `~/.codex/prompts/research.*.md` | `/research.idea <text>` slash command |
-| **GitHub Copilot CLI** | `./install.sh --copilot` | `~/.copilot/agents/research.*.agent.md` | `/agent` → pick `research.idea`, then type your input |
+| **Claude Code** (plugin) | `/plugin install speckit-research@speckit-research` | Claude Code plugin cache | `/speckit-research:research.proposal <text>` |
+| **Claude Code** (script) | `./install.sh` (default) | `~/.claude/commands/research.*.md` | `/research.proposal <text>` slash command |
+| **Codex CLI** | `./install.sh --codex` | `~/.codex/prompts/research.*.md` | `/research.proposal <text>` slash command |
+| **GitHub Copilot CLI** | `./install.sh --copilot` | `~/.copilot/agents/research.*.agent.md` | `/agent` → pick `research.proposal`, then type your input |
 
 A few details:
 
-- **Claude Code, two ways.** The *plugin* path (`/plugin marketplace add jiancui-research/speckit-research` → `/plugin install speckit-research@speckit-research`) needs no script and auto-updates via `/plugin marketplace update`, but stages are namespaced (`/speckit-research:research.idea`). The *script* path (`./install.sh`) drops plain `/research.*` commands into `~/.claude/commands/`. Both ship the same command files and templates; the plugin loads templates from its own bundle (`${CLAUDE_PLUGIN_ROOT}/templates`), the script stages them under `~/.speckit-research`.
+- **Claude Code, two ways.** The *plugin* path (`/plugin marketplace add jiancui-research/speckit-research` → `/plugin install speckit-research@speckit-research`) needs no script and auto-updates via `/plugin marketplace update`, but stages are namespaced (`/speckit-research:research.proposal`). The *script* path (`./install.sh`) drops plain `/research.*` commands into `~/.claude/commands/`. Both ship the same command files and templates; the plugin loads templates from its own bundle (`${CLAUDE_PLUGIN_ROOT}/templates`), the script stages them under `~/.speckit-research`.
 - **Claude Code and Codex CLI** consume the command files verbatim. Both expand the `$ARGUMENTS` placeholder with whatever you type after the command, so the pipeline behaves identically.
 - **Copilot CLI** has no parameterized slash commands, so each stage is installed as a *custom agent* instead. `install.sh` generates one `research.<name>.agent.md` per stage, with a short adapter note at the top that maps the two slash-command idioms onto the agent model: `$ARGUMENTS` becomes "your latest message", and `Next: /research.<x>` becomes "switch to the `research.<x>` agent via `/agent`". The pipeline body is otherwise unchanged.
 - **Honoring `$CODEX_HOME`.** If you set `CODEX_HOME`, Codex prompts install under `$CODEX_HOME/prompts`. You can also override any destination directly with `CLAUDE_COMMANDS_DIR`, `CODEX_PROMPTS_DIR`, or `COPILOT_AGENTS_DIR`.
-- **No install needed for a quick try.** Any agent that can pull a file into context can run a stage directly — e.g. in Copilot CLI, `@commands/research.idea.md <your idea>` reads the command and your input without registering anything. The installers exist so the stages are available everywhere without juggling paths.
+- **No install needed for a quick try.** Any agent that can pull a file into context can run a stage directly — e.g. in Copilot CLI, `@commands/research.proposal.md <your idea>` reads the command and your input without registering anything. The installers exist so the stages are available everywhere without juggling paths.
 
 `--symlink` (for the script install of Claude Code and Codex CLI) links the command files instead of copying them, so edits to this repo take effect immediately. `--uninstall` removes the script-installed stages from all three agents and deletes the staged templates. Plugin installs are managed with `/plugin` instead — remove with `/plugin uninstall speckit-research@speckit-research`.
 
@@ -119,14 +121,16 @@ Commands read and write under `./.research/` in your own paper repo. They create
 .research/
   memory/constitution.md   research principles + writing voice
   templates/               skeletons + craft guides (copied here by /research.init)
-  idea.md                  problem, motivation (NABC), gap, contributions, RQs, venue, paper type
+  proposal.md              problem, motivation (NABC), gap, contributions, RQs, venue, paper type
   related-work.md          prior work and positioning
-  plan.md                  methodology, baselines, datasets, metrics, threat model
+  feasibility.md           de-risk probe + GO / NO-GO / PIVOT verdict
+  tasks/experiment.md      experiment design + build/obtain & experiment task list
+  tasks/paper.md           paper section task list (READY vs blocked-on-claim)
   claims.md                claim ↔ evidence matrix
   experiments/             one file per experiment + index.md
   paper/                   section-by-section drafts
   analyze-report.md        prioritized gap report
-  review/  rebuttal/  proposal/  ae/   outputs of those commands
+  review/  rebuttal/  ae/   outputs of those commands
 ```
 
 Commit `./.research/` alongside your paper. It is the spec - a readable record of every decision, claim, and piece of evidence behind the draft.

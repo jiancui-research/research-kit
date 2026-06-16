@@ -1,5 +1,5 @@
 ---
-description: Survey prior work and position the contribution; write .research/related-work.md.
+description: Survey prior work into .research/related-work.md AND sharpen the proposal's gap and positioning.
 argument-hint: optional pointers to key prior work, themes, or the closest baselines
 ---
 
@@ -7,7 +7,7 @@ argument-hint: optional pointers to key prior work, themes, or the closest basel
 The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cite works, themes to group by, or the single closest baseline).
 
 ## Steps
-1. Read `./.research/memory/constitution.md` if present (skip silently otherwise). Read `./.research/idea.md` for the problem, gap, contributions, RQs, venue, and paper type. If `idea.md` is missing, say so and stop, pointing to `/research.idea`.
+1. Read `./.research/memory/constitution.md` if present (skip silently otherwise). Read `./.research/proposal.md` for the problem, gap, contributions, RQs, venue, and paper type. If `proposal.md` is missing, say so and stop, pointing to `/research.proposal`.
 2. Decide an organizing structure from the idea's framing (do NOT default to a flat survey):
    - **Thematic grouping** when prior work spans different formulations of the problem (3-5 works per theme).
    - **Methodological grouping** when the contribution is a method (e.g., classical vs learning-based vs hybrid).
@@ -22,6 +22,7 @@ The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cit
 6. **Paper-type aware:** for benchmark, measurement, or systems papers, also draft a comparison table (rows = prior work, columns = the dimensions that matter for your contribution) so the gap is visually obvious. Pull dimensions from `.research/templates/paper/<type>.md` if present.
 7. Keep Background (concepts needed to follow the technical sections) separate from Related Work (closest prior systems and the delta). Note that the merge-vs-split choice should match the target venue's recent papers; flag this for the user to check.
 8. (Optional) For breadth, the user may hand off to a deep-research workflow or skill to gather and cluster citations before you synthesize. This is optional, not required; if used, fold its output back into the structure above rather than pasting raw lists.
+9. **Sharpen the proposal.** The survey almost always sharpens the framing, so update `./.research/proposal.md`: tighten its **Gap** to the precise cell the survey exposed, name the closest prior work, and adjust positioning or contributions if the landscape shifted. Report what you changed in one or two lines; never silently overwrite the user's text.
 
 ## Validate against a short checklist
 - A reader can state the gap in one sentence after the section.
@@ -31,6 +32,7 @@ The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cit
 - A comparison table is present for benchmark/measurement/systems papers.
 - Background and Related Work are not conflated; venue convention is flagged for the user.
 - Limitations are not apologized for here (those belong in the Limitations section).
+- The proposal's Gap/positioning was sharpened from the survey (or a one-line note explains why no change was needed).
 
 ## Completion
-Write/update `./.research/related-work.md`, starting from `.research/templates/related-work-template.md`, creating `./.research/` as needed and never overwriting user content silently. Report the path and end with: `Next: /research.plan`.
+Write/update `./.research/related-work.md` (starting from `.research/templates/related-work-template.md`) **and** the sharpened `./.research/proposal.md`, creating `./.research/` as needed and never overwriting user content silently. Report both paths (and what changed in the proposal), then end with: `Next: /research.feasibility`.

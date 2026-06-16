@@ -5,7 +5,7 @@ argument-hint: which experiment(s) to add, run, or update — or paste a result 
 
 ## User input
 
-The user request arrives via the $ARGUMENTS placeholder. It may name a new experiment to scaffold, an existing one to update, or paste results to record. If empty, derive the experiment list from `.research/plan.md`.
+The user request arrives via the $ARGUMENTS placeholder. It may name a new experiment to scaffold, an existing one to update, or paste results to record. If empty, derive the experiment list from `.research/tasks/experiment.md`.
 
 ## What this phase is
 
@@ -13,10 +13,10 @@ This is the run-and-track phase. Each experiment is one falsifiable test of one 
 
 ## Steps
 
-1. Read `./.research/memory/constitution.md` if present (skip silently otherwise). Read `./.research/plan.md` (methodology, baselines, datasets, metrics, threat model) and `./.research/idea.md` (contributions, RQs). Read `./.research/claims.md` if it exists.
+1. Read `./.research/memory/constitution.md` if present (skip silently otherwise). Read `./.research/tasks/experiment.md` (experiment-design header + build/experiment task list: methodology, baselines, datasets, metrics, threat model) and `./.research/proposal.md` (contributions, RQs). Read `./.research/claims.md` if it exists.
 2. `mkdir -p ./.research/experiments`.
 3. Decide the action from $ARGUMENTS:
-   - **Scaffold** — for each experiment implied by the plan (or named by the user), create `./.research/experiments/NN-slug.md` from `.research/templates/experiment-template.md`. Number sequentially (`01`, `02`, …); `slug` is a short kebab-case name. Never overwrite an existing file without saying so.
+   - **Scaffold** — for each experiment implied by `tasks/experiment.md` (or named by the user), create `./.research/experiments/NN-slug.md` from `.research/templates/experiment-template.md`. Number sequentially (`01`, `02`, …); `slug` is a short kebab-case name. Never overwrite an existing file without saying so.
    - **Update** — open the matching `NN-slug.md` and fill the actual result, status, and any deviation from setup.
 4. In every experiment file make sure these are concrete and present:
    - **Hypothesis** — a single falsifiable statement, not a topic.
@@ -38,4 +38,4 @@ This is the run-and-track phase. Each experiment is one falsifiable test of one 
 
 ## Completion
 
-Report the experiment file path(s), `./.research/experiments/index.md`, and `./.research/claims.md`. Then: `Next: /research.paper` (or rerun `/research.experiment` to record results as they land).
+Report the experiment file path(s), `./.research/experiments/index.md`, and `./.research/claims.md`. Then: `Next: /research.paper` (runs in parallel, synced by `claims.md`), then `/research.analyze` once claims are filled (or rerun `/research.experiment` to record results as they land).

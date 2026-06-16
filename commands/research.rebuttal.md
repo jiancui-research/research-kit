@@ -15,7 +15,7 @@ This is the response phase. You turn raw reviews into a tight, prioritized rebut
 
 1. **Read context.**
    - Read `./.research/memory/constitution.md` if it exists (skip silently otherwise) and honor its voice.
-   - Read `./.research/idea.md`, `./.research/plan.md`, and `./.research/claims.md` if present, so pointers to sections, tables, and existing evidence are accurate.
+   - Read `./.research/proposal.md`, `./.research/tasks/experiment.md`, and `./.research/claims.md` if present, so pointers to sections, tables, and existing evidence are accurate.
    - Parse the reviews from `$ARGUMENTS` (inline or file). Capture each reviewer's id, score/recommendation, and concerns. Note the meta-review/AC items and which reviewer is the champion (most supportive) if identifiable.
 
 2. **Itemize before drafting.** Build a concern grid: one row per distinct concern, columns for which reviewer(s) raised it, severity, and whether evidence already exists in the paper or must be gathered. Merge duplicates across reviewers into one row.
