@@ -8,7 +8,7 @@ The raw idea arrives via the $ARGUMENTS placeholder. It is the INPUT to the whol
 
 ## Steps
 1. Read `./.research/memory/constitution.md` if it exists (research principles + writing voice); skip silently otherwise.
-2. **Refine path.** If `./.research/related-work.md` exists, read it and fold its positioning in: use its argued gap, its named closest baseline, and its delta sentence to sharpen the Gap and Competition below rather than re-deriving them. If `./.research/proposal.md` already exists, treat this run as a refine - preserve the user's text and clearly mark what you changed; never silently overwrite.
+2. **Refine path.** If `./.research/proposal.md` already exists, treat this run as a refine - preserve the user's text and clearly mark what you changed; never silently overwrite. (Survey-driven sharpening of the Gap and positioning is owned by `/research.relatedwork`, not here.)
 3. Parse `$ARGUMENTS` into the spine: problem, hinted mechanism, who cares, any prior work named, any venue hinted.
 4. Make informed guesses for everything missing. Infer the **paper-type** (measurement / attack / defense / benchmark / systematization (SoK)) and a plausible **target venue** from the problem; consult `.research/templates/venue-norms.md` to choose the venue and inherit its conventions, and if a matching `.research/templates/paper/<type>.md` exists, read it for type-specific framing.
 5. Ask **at most 3** clarifying questions, and ONLY for framing-critical unknowns that change the whole pitch (e.g., the core mechanism, the metric, or the threat model). If the proposal is workable without an answer, guess and label it `[ASSUMPTION]` instead of asking.
@@ -19,7 +19,7 @@ The raw idea arrives via the $ARGUMENTS placeholder. It is the INPUT to the whol
 - **Problem** as a sharp question plus **one concrete motivating example** (a vivid molehill, not "X is important [1,2,3]").
 - **NABC**: Need (specific, sized opportunity) -> Approach (concrete mechanism + the insight that makes it work) -> Benefit (quantified, better not just different) -> Competition (nearest alternative AND the do-nothing default, and why yours wins). Iterate the 60-second NABC one-liner until it is crisp.
 - **Why now**: importance = consequence x plausibility. Argue BOTH the stakes (who is hurt if unsolved) and why it is newly tractable (new data, tool, access, or method) in the same breath.
-- **Gap** as an argument, not a citation list: "Prior work does X but leaves Y open / assumes Z, which fails when <situation>; we fill exactly Y" - no wider, no narrower. On the refine path, inherit this from `related-work.md`.
+- **Gap** as an argument, not a citation list: "Prior work does X but leaves Y open / assumes Z, which fails when <situation>; we fill exactly Y" - no wider, no narrower. (`/research.relatedwork` tightens this once the survey is done.)
 - **Contributions**: things that will *exist* (dataset, system, theorem, measured effect), each measurable and each pointing at the evidence that will support it.
 - **Research questions**: testable. For each RQ name the predicted direction and a falsifier (the observable result that would prove it wrong).
 - **Target venue + paper-type**, with a one-line reason.
