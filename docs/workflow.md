@@ -66,6 +66,18 @@ Only three commands ever touch another command's document — the feedback that 
 
 Everything else writes only its own artifact. `paper` and `experiment` stay decoupled because they communicate **only** through `claims.md`: `experiment` writes verdicts, `paper` reads them and tags any unbacked claim `[UNVERIFIED]`.
 
+## Three task surfaces
+
+The actual *doing* lives in three separate places, each scoped to its job — don't confuse them:
+
+| task surface | where | scope | feeds |
+| --- | --- | --- | --- |
+| **feasibility probe** | `feasibility.md` (Probe plan) | throwaway de-risk | the GO/NO-GO verdict |
+| **experiment tasks** | `tasks/experiment.md` | rigorous, repeatable | `claims.md` → the paper |
+| **paper tasks** | `tasks/paper.md` | writing | the draft |
+
+The feasibility probe keeps its own short checklist inside `feasibility.md` and deliberately does **not** enter `claims.md` — its results decide whether to proceed, not what the paper claims. After a GO, `tasks` formalizes anything worth keeping into a real experiment task.
+
 ## Examples
 
 ```text

@@ -22,6 +22,13 @@ check; systematization (SoK) -> draft taxonomy on ~5-10 sample papers.]
 - Budget / scope: [sample size, substrate, time - honor any steering in $ARGUMENTS].
 - Why this is a probe, not the study: [one line a reader would agree with].
 
+## Probe plan (the feasibility tasks)
+[3-5 concrete, throwaway steps you will actually do or run. Cheap and disposable; they
+inform the verdict below, NOT the paper's claims - kept here, never in `tasks/`.]
+- [ ] [step, e.g. "wire a 3-line PoC of the core mechanism"]
+- [ ] [step, e.g. "run it on one real target / a toy input"]
+- [ ] [step, e.g. "eyeball whether the riskiest assumption held"]
+
 ## Finding (honest, including the inconvenient parts)
 [Record what actually happened. What worked, what surprised you, what assumption cracked.
 A probe that exposes a fatal flaw is a SUCCESS of this phase. Do not sanitize.]
@@ -40,6 +47,7 @@ A probe that exposes a fatal flaw is a SUCCESS of this phase. Do not sanitize.]
 - [ ] The probe tests the one riskiest assumption, not the whole contribution.
 - [ ] The probe type matches the paper type.
 - [ ] It is genuinely small and cheap - a reader agrees it is a probe, not the study.
+- [ ] The Probe plan is a short throwaway checklist kept in `feasibility.md`, not in `tasks/`.
 - [ ] The finding records the inconvenient result, not a sanitized one.
 - [ ] The verdict is exactly one of GO / NO-GO / PIVOT, with a named piece of evidence.
 - [ ] A NO-GO / PIVOT names what to change and points back to `/research.proposal`.

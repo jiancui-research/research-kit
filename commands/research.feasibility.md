@@ -11,6 +11,8 @@ The user request arrives via the $ARGUMENTS placeholder. Treat it as steering on
 
 A **single cheap probe that asks "does the core idea survive first contact with reality?"** — run *before* the full experiment plan exists, so a dead idea dies here instead of after weeks of work. It is deliberately under-powered: a handful of cases, a toy substrate, a throwaway script. It does not prove the contribution; it only buys the right to keep going. The output is one honest finding plus a **GO / NO-GO / PIVOT** decision. A NO-GO or PIVOT routes back to `/research.proposal` to reshape the idea; only a GO proceeds to `/research.tasks`.
 
+It is a self-contained **plan → do → decide**: a short *Probe plan* (a few throwaway tasks), the finding, and the verdict — all in `feasibility.md`. Those probe tasks are deliberately separate from the rigorous `tasks/experiment.md`: they inform GO/NO-GO, not the paper's claims.
+
 ## Steps
 
 1. **Read context.**
@@ -27,9 +29,9 @@ A **single cheap probe that asks "does the core idea survive first contact with 
    - **benchmark** — **a few hand-built task instances + a baseline sanity check**: author 3-5 instances by hand, run one off-the-shelf baseline, and confirm the task is solvable-but-not-trivial (baseline neither 0% nor 100%) and that scoring works.
    - **systematization (SoK)** — **a draft taxonomy on a sample of papers**: apply a candidate taxonomy to ~5-10 papers and check that the axes actually separate them (every paper lands somewhere, the cells are not all empty or all one bucket).
 
-4. **Keep it cheap.** Bound the probe by the smallest sample, the toiest substrate, and the shortest time that still gives a real signal. Honor any budget in `$ARGUMENTS`. If the probe starts to look like the full study, it is too big — shrink it. The goal is signal, not rigor; rigor is `/research.tasks` and `/research.experiment`.
+4. **Lay out the Probe plan (the feasibility tasks).** Break the probe into a short checklist of 3-5 concrete, throwaway steps you will actually do or run. Keep them cheap — the smallest sample, the toiest substrate, the shortest time that still gives a real signal; honor any budget in `$ARGUMENTS`; if the plan starts to look like the full study, shrink it. These tasks live in `feasibility.md` and stay separate from `tasks/experiment.md` — they inform GO/NO-GO, not the paper's claims (rigor is `/research.tasks` and `/research.experiment`).
 
-5. **Run it (or specify it) and record what it revealed — honestly.** Note the result including the inconvenient parts: what worked, what surprised you, what assumption cracked. A probe that exposes a fatal flaw is a *success* of this phase, not a failure. Do not launder a bad result into a hopeful one.
+5. **Work the plan and record what it revealed — honestly.** Run (or specify) each step and note the result including the inconvenient parts: what worked, what surprised you, what assumption cracked. A probe that exposes a fatal flaw is a *success* of this phase, not a failure. Do not launder a bad result into a hopeful one.
 
 6. **Decide: GO / NO-GO / PIVOT.** Map the finding to exactly one verdict:
    - **GO** — the riskiest assumption held; the core idea survives. Proceed to `/research.tasks`.
@@ -42,6 +44,7 @@ A **single cheap probe that asks "does the core idea survive first contact with 
 - The probe tests the one riskiest assumption, not the whole contribution.
 - The probe type matches the paper type (validation / prototype / wild cases / hand-built instances / draft taxonomy).
 - It is genuinely small and cheap — a reader agrees it is a probe, not the study.
+- The Probe plan is a short checklist of throwaway steps, kept in `feasibility.md` (not in `tasks/`).
 - The finding records the inconvenient result, not a sanitized one.
 - The verdict is exactly one of GO / NO-GO / PIVOT, with a named piece of evidence behind it.
 - A NO-GO/PIVOT names what to change and points back to `/research.proposal`.
