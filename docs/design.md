@@ -8,6 +8,8 @@ It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates
 
 Simplicity is the top priority: Markdown in, Markdown out, no runtime.
 
+For the full pipeline diagram and the input/output of every command, see [workflow.md](workflow.md).
+
 ## Spec-kit → research mapping
 
 research-kit mirrors the spec-kit pipeline (constitution → specify → plan → tasks → implement), remapped to research stages, then extends it with stages unique to academic work. The idea is folded into `proposal` (the pipeline entry point) and the old standalone plan is folded into `tasks`.

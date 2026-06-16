@@ -10,6 +10,8 @@ constitution → proposal → relatedwork → feasibility → tasks → (experim
 
 Plus auxiliary commands: `rebuttal` (post-submission) and `ae` (artifact evaluation). Run any subset, re-run any stage as your work evolves; commands only touch their own artifacts and never overwrite silently.
 
+📐 **[Workflow diagram + per-command inputs/outputs →](docs/workflow.md)**
+
 ## Quickstart
 
 **Claude Code — plugin (recommended, no script):**
