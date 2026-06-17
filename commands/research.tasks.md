@@ -62,4 +62,4 @@ The three are the parallel work plan: `design` builds the system, `eval` evaluat
 
 ## Completion
 
-Report the paths written (`./.research/tasks/design.md` if applicable, `./.research/tasks/eval.md`, `./.research/tasks/paper.md`). End with: `Next: /research.design, /research.eval, and /research.paper (run in parallel, synced by claims.md + /research.analyze)`.
+Report the paths written (`./.research/tasks/design.md` if applicable, `./.research/tasks/eval.md`, `./.research/tasks/paper.md`). End with: `Next: /research.design, /research.eval, and /research.paper (run in parallel; eval and paper share claims.md, and /research.analyze keeps all three lanes in sync)`.
