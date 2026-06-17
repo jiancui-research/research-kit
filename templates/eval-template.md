@@ -1,8 +1,8 @@
-# Experiment [NN-slug]: [short name of what this run tests]
+# Eval [NN-slug]: [short name of what this run tests]
 
-> Produced by `/research.experiment`. Lives at `./.research/experiments/NN-slug.md`.
-> One file per experiment. The index is `./.research/experiments/index.md`.
-> Fill every bracket. An experiment that does not test a stated claim is not yet an experiment.
+> Produced by `/research.eval`. Lives at `./eval/NN-slug.md`.
+> One file per eval. The index is `./eval/index.md`.
+> Fill every bracket. An eval that does not test a stated claim is not yet an eval.
 
 ## ID
 [Stable identifier, e.g. `01`. Never reused. Referenced from `claims.md` and the index.]
@@ -17,9 +17,9 @@ If you cannot state what result would prove you WRONG, it is not a hypothesis ye
 ## Linked claim / contribution
 [Which row of `claims.md` and which contribution (C1, C2, ...) this run supports.
 A result here flows back to exactly that claim. If it maps to no claim, either add
-the claim or drop the experiment - do not run orphan experiments.]
+the claim or drop the eval - do not run orphan evals.]
 - Claim: [verbatim claim from `claims.md`]
-- Contribution: [C# from `idea.md`]
+- Contribution: [C# from `proposal.md`]
 - RQ: [RQ# this answers, if any]
 
 ## Setup
@@ -83,7 +83,7 @@ Then state how the claim's wording in `claims.md` should change, if at all.]
 
 ## Quality checklist
 - [ ] The hypothesis was written before the run and names a result that would refute it.
-- [ ] This experiment maps to a specific claim and contribution, not a vague theme.
+- [ ] This eval maps to a specific claim and contribution, not a vague theme.
 - [ ] Setup, data, and procedure are complete enough to reproduce from this file alone.
 - [ ] The primary metric is defined precisely and decides the hypothesis on its own.
 - [ ] Any automatic / LLM judge is validated against ground truth for this task.
@@ -94,4 +94,4 @@ Then state how the claim's wording in `claims.md` should change, if at all.]
 - [ ] The takeaway updates `claims.md` honestly - refuted claims get rescoped, not hidden.
 
 ---
-Next: `/research.experiment` (next experiment) or `/research.analyze` when the batch is done.
+Next: `/research.eval` (next eval) or `/research.analyze` when the batch is done.

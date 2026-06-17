@@ -21,7 +21,7 @@ offer three (names vary by venue, but the substance is consistent):
 | --- | --- | --- |
 | **Available** | The artifact is publicly retrievable and permanently archived. | A stable, citable link (DOI / archival URL). No functionality claim. |
 | **Functional** | The artifact is complete, documented, exercisable, and does what the paper says (it runs and produces sane output). | Build/run instructions + a way to exercise the core code paths. |
-| **Reproduced** | An independent party reproduced the paper's central results from the artifact. | The above, plus a mapping from paper claims to runnable experiments and expected numbers. |
+| **Reproduced** | An independent party reproduced the paper's central results from the artifact. | The above, plus a mapping from paper claims to runnable evals and expected numbers. |
 
 Write one line per badge: `Available: <yes/no + link>`, `Functional: <yes/no +
 which run proves it>`, `Reproduced: <yes/no + which claims are reproducible and
@@ -60,7 +60,7 @@ first. It should stand alone. Include, in order:
 - [ ] **Overview** - one paragraph: what the artifact is and which paper it
       backs.
 - [ ] **Claims supported** - bullet list of the paper claims this artifact
-      backs, each pointing at the experiment that demonstrates it (links to
+      backs, each pointing at the eval that demonstrates it (links to
       Section 4).
 - [ ] **Directory layout** - what lives where (code, data, scripts, results).
 - [ ] **Requirements** - OS, hardware (CPU/GPU/RAM/disk), required accounts or
@@ -72,10 +72,10 @@ first. It should stand alone. Include, in order:
       minutes, so the evaluator confirms basic functionality before the long
       runs.
 - [ ] **Usage** - how to run the main entry points, with example invocations.
-- [ ] **Experiment-to-claim map** - see Section 4.
+- [ ] **Eval-to-claim map** - see Section 4.
 - [ ] **Expected output** - what success looks like (sample output, expected
       files, expected numbers / tolerances).
-- [ ] **Runtime & cost** - wall-clock and resource cost for each experiment, so
+- [ ] **Runtime & cost** - wall-clock and resource cost for each eval, so
       reviewers can plan and abort-budget long jobs.
 - [ ] **Troubleshooting** - known failure modes and fixes.
 - [ ] **License & citation** - how to cite, under what license.
@@ -87,7 +87,7 @@ first. It should stand alone. Include, in order:
 Reproduced is about a stranger getting your numbers. Provide a path from each
 central claim to a command and an expected result.
 
-- [ ] **Claim-to-experiment table.** For each headline result, give: the claim,
+- [ ] **Claim-to-eval table.** For each headline result, give: the claim,
       the figure/table in the paper, the exact script/command, the expected
       output, and the acceptable tolerance. (Reuse `.research/claims.md`.)
 
@@ -128,4 +128,4 @@ central claim to a command and an expected result.
 ---
 
 Output to `.research/ae/`. Next: `/research.review` to self-review the paper, or
-revisit `/research.experiment` to keep the claim-evidence matrix in sync.
+revisit `/research.eval` to keep the claim-evidence matrix in sync.

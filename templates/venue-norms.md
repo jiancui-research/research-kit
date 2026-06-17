@@ -7,7 +7,7 @@
 ## Choosing a venue - decision checklist
 - **Fit first.** Match topic, *method*, and *audience*. A measurement of model misuse reads as security at CCS and as an evaluation paper at EMNLP - the contribution framing changes, not the data.
 - **Tier honestly.** Top-tier rejection costs a cycle. Weigh acceptance odds against the deadline you can actually hit with the evidence you have *now*.
-- **Timeline.** Map the deadline to your experiment plan. Rolling/multi-deadline venues (ARR, USENIX cycles) trade flexibility for longer end-to-end time; one-shot conferences (NeurIPS, ICML) are higher-variance.
+- **Timeline.** Map the deadline to your eval plan. Rolling/multi-deadline venues (ARR, USENIX cycles) trade flexibility for longer end-to-end time; one-shot conferences (NeurIPS, ICML) are higher-variance.
 - **Page limit.** Security venues run long (roughly a dozen+ pages, body excludes references/appendix); ML venues run shorter with hard main-paper caps and unlimited appendix. This decides how much fits in the body vs the appendix.
 - **Review model.** Single vs multi-round, rebuttal format, score axes, shepherding, revision option. Know what you're signing up to defend.
 

@@ -74,7 +74,7 @@ Make the scoring exactly reproducible.
 - Specify the **scoring harness, prompt template, decoding settings (temperature, max tokens), and seeds**.
 - State how partial credit and ties are handled, and how runs are aggregated (mean over K runs, with variance).
 
-## 7. Experiments / leaderboard
+## 7. Evals / leaderboard
 
 Evaluate at least **3-5 representative baselines** spanning a sensible axis (open vs closed, small vs large, general vs domain-specific). Justify the panel.
 

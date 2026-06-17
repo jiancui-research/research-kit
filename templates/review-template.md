@@ -28,7 +28,7 @@ cause and a fix or a pre-emption in the paper.]
 
 - Motivation & problem: [what a reviewer could attack] -> [cause] -> [fix / where to address]
 - Technical contribution: [is the novelty real and clearly delimited from prior work?] -> [...] -> [...]
-- Evaluation: [do the experiments directly test each claim? fair baselines? variance reported? leakage?] -> [...] -> [...]
+- Evaluation: [do the evals directly test each claim? fair baselines? variance reported? leakage?] -> [...] -> [...]
 - Related work: [closest neighbor that is under-cited or mischaracterized] -> [...] -> [...]
 - Presentation: [where a first-pass reader gets lost or a term is undefined] -> [...] -> [...]
 
@@ -107,7 +107,7 @@ each, leading with the strongest result and citing it exactly.]
 - Acknowledged limitations are not weaknesses unless they invalidate a core claim.
   Candor removes a reviewer's ammunition; a hidden flaw invites a harsher finding.
 - Turn every finding into an action: fix the draft, rescope a claim, add an
-  experiment, or write the pre-emption into the text. A review you do not act on is
+  eval, or write the pre-emption into the text. A review you do not act on is
   wasted.
 
 ---

@@ -59,7 +59,7 @@ role], not to [the broader thing the reviewer measured against]; under that scop
 framed thoughtfully as out-of-scope or future work.]
 
 ## New results run during the response window
-[Demonstrate beats promise. Where the window allows, run the experiment and report the
+[Demonstrate beats promise. Where the window allows, run the eval and report the
 number instead of committing to add it later.]
 - [setup] yields [result]; we will add this to [Table/Figure X]. (Concern: [#block])
 - [...]
@@ -91,7 +91,7 @@ industry/web sources, not only papers. Keep it tight.]
       fresh result for new ones (no claim left unsupported).
 - [ ] "Will it handle X?" questions answered with depth, not a shallow yes/no.
 - [ ] Specific numbers quoted; exact revised paragraph text given where asked.
-- [ ] New experiments run in-window and results reported where feasible.
+- [ ] New evals run in-window and results reported where feasible.
 - [ ] Every commitment is one you can actually deliver in camera-ready.
 - [ ] Tone is polite, not defensive, not snarky (a snarky rebuttal can sink a borderline paper).
 - [ ] Neutral-third-party test passes: each concern is resolvable from the rebuttal alone.

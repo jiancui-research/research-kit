@@ -4,14 +4,14 @@
 > One task per section, in the paper-type skeleton's order (from
 > `.research/templates/paper/<type>.md`). Each task is tagged **READY** (write now) or
 > **BLOCKED on claim Cx** (waits on a result). This file is the parallel partner of
-> `tasks/experiment.md`: experiments fill `claims.md`, and a BLOCKED section unblocks the
+> `tasks/eval.md`: evals fill `claims.md`, and a BLOCKED section unblocks the
 > moment its claim is marked supported.
 
 ## How to read the tags
 
 - **READY** - framing sections that need no result: intro, related work, method /
   attack-design / construction, threat model, background. Write these immediately, in
-  parallel with experiments. They establish the argument the results will land in.
+  parallel with evals. They establish the argument the results will land in.
 - **BLOCKED on claim Cx** - results-dependent sections: evaluation / findings, abstract,
   conclusion, and any discussion that quotes a number. Name the exact claim id(s) the
   section waits on, so it unblocks as soon as `claims.md` marks them supported.
@@ -67,7 +67,7 @@ Fill each task's claim ids from the contributions in `proposal.md` / `claims.md`
 - [ ] Design / construction - dataset build, filters, dedup, contamination check. **READY**
 - [ ] Validation (is the benchmark sound?) - IAA, ground-truth quality, leakage. **BLOCKED on claim C#**
 - [ ] Evaluation protocol - metrics, judge validation, variance reporting. **READY**
-- [ ] Experiments / leaderboard - 3-5 baselines, headline gaps. **BLOCKED on claim C#**
+- [ ] Evals / leaderboard - 3-5 baselines, headline gaps. **BLOCKED on claim C#**
 - [ ] Discussion - what the scores mean, limits, generalization. **BLOCKED on claim C#**
 - [ ] Ethics, responsible disclosure, and artifact - release plan, licenses. **READY**
 - [ ] Conclusion - restate the benchmark + headline gap, future work. **BLOCKED on claim C#**
@@ -89,9 +89,9 @@ Fill each task's claim ids from the contributions in `proposal.md` / `claims.md`
 - One task per skeleton section, in order; no invented sections; any dropped section has
   a one-line reason.
 - Every BLOCKED task names the exact claim id(s) it waits on; every claim id that gates a
-  section here also appears on an experiment task in `tasks/experiment.md`.
+  section here also appears on an eval task in `tasks/eval.md`.
 - Framing sections (intro, method, threat model, background, related work) are tagged
   READY, not blocked.
 
 ---
-Next: `/research.experiment` and `/research.paper` (run in parallel, synced by `claims.md`).
+Next: `/research.eval` and `/research.paper` (run in parallel, synced by `claims.md`).

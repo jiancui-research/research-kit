@@ -10,7 +10,7 @@
 > **Paper-type aware.** Heavy for systems/defense (a full architecture), medium for
 > attack (a PoC / exploit) and benchmark (a construction harness). For **measurement /
 > SoK** there is usually no system to build - skip this lane and keep any light
-> data-obtain tasks in `tasks/experiment.md` instead.
+> data-obtain tasks in `tasks/eval.md` instead.
 
 ## System overview (the design picture)
 
@@ -46,11 +46,11 @@ code is built into `./design/`.]
     feasibility/    [throwaway probe code]
     design/         [THE SYSTEM CODE — what /research.design builds]
       src/  ...     [internal structure: modules / entrypoints]
-    experiment/     [evaluation scripts, data, results]
+    eval/     [evaluation scripts, data, results]
     paper/          [the actual paper source — LaTeX, figures]
   ```
 - `design/` internal structure: [src / modules / entrypoints].
-- Naming conventions: [the shared rule for files, modules, and experiment scripts].
+- Naming conventions: [the shared rule for files, modules, and eval scripts].
 
 ## Build task list
 
@@ -65,10 +65,10 @@ repo) or `[dev]` (normal development); light glue code needs no flag.
 
 - [ ] The diagram shows every component and the end-to-end path; nothing load-bearing is implicit.
 - [ ] Each design decision names its rejected alternative (so the paper can defend it).
-- [ ] Project layout + naming are concrete enough that experiment scripts land in the right place.
+- [ ] Project layout + naming are concrete enough that eval scripts land in the right place.
 - [ ] Every build task has a done-when criterion; heavy builds are flagged and point at a repo.
 - [ ] For measurement / SoK: this lane is correctly skipped or kept minimal.
 
 ---
 Next: `/research.design` (implement the build tasks into code), in parallel with
-`/research.experiment` (evaluates the built system) and `/research.paper`.
+`/research.eval` (evaluates the built system) and `/research.paper`.

@@ -15,7 +15,7 @@ This is the response phase. You turn raw reviews into a tight, prioritized rebut
 
 1. **Read context.**
    - Read `./.research/memory/constitution.md` if it exists (skip silently otherwise) and honor its voice.
-   - Read `./.research/proposal.md`, `./.research/tasks/experiment.md`, and `./.research/claims.md` if present, so pointers to sections, tables, and existing evidence are accurate.
+   - Read `./.research/proposal.md`, `./.research/tasks/eval.md`, and `./.research/claims.md` if present, so pointers to sections, tables, and existing evidence are accurate.
    - Parse the reviews from `$ARGUMENTS` (inline or file). Capture each reviewer's id, score/recommendation, and concerns. Note the meta-review/AC items and which reviewer is the champion (most supportive) if identifiable.
 
 2. **Itemize before drafting.** Build a concern grid: one row per distinct concern, columns for which reviewer(s) raised it, severity, and whether evidence already exists in the paper or must be gathered. Merge duplicates across reviewers into one row.
@@ -27,7 +27,7 @@ This is the response phase. You turn raw reviews into a tight, prioritized rebut
 5. **Draft the rebuttal** from `.research/templates/rebuttal-template.md`. Group responses by theme with inline reviewer tags in each header (e.g. `**Evaluation scope (R1, R3, AC)**`). For each point:
    - **Answer first**, then justify. Open with the direct factual answer or correction, then a short `First / Second / Further` argument. No buried answers; keep any courtesy opener to one brief line so the budget goes to substance.
    - **Carry evidence for every claim.** For points already in the paper, add a precise pointer (section, figure, table, appendix). For new points, cite a reference or report a result.
-   - **Demonstrate over promise.** Where the window allows, run the experiment and report the actual number rather than promising to add it.
+   - **Demonstrate over promise.** Where the window allows, run the eval and report the actual number rather than promising to add it.
    - **Be specific.** Quote the exact statistic, the exact revised paragraph text, the exact section that will change.
    - **Reframe scope instead of conceding** where fair: bound what the contribution claims rather than flatly admitting a weakness. When a limitation is genuine, concede it gracefully as out-of-scope or future work, briefly.
    - For unbounded "what if the attacker does X?" questions, frame X as a general challenge for this class of systems and give its bounded impact on the metric/guarantee, not a shallow yes/no.
@@ -45,7 +45,7 @@ This is the response phase. You turn raw reviews into a tight, prioritized rebut
 - Priority order followed: meta-reviewer > multi-reviewer > swayable borderline > minor; most damaging point led with.
 - Every response answers first, then justifies; no obsequious opener.
 - Every claim has evidence: a paper pointer for existing points, a reference or fresh result for new ones.
-- Specific numbers and exact revised text given where asked; new experiments run in-window where feasible.
+- Specific numbers and exact revised text given where asked; new evals run in-window where feasible.
 - Every commitment is one you can actually deliver in camera-ready.
 - Tone polite; neutral-third-party test passes; trimmed to the word limit.
 

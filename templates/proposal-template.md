@@ -48,11 +48,11 @@ Name what prior work is missing; do not enumerate it. The gap must be the same s
 [Name the test before the results exist. "We will evaluate it" is not a plan - a plan can prove or disprove the thesis.]
 - Hypothesis: [predicted direction, e.g. metric(A) < metric(B)].
 - Falsifier: [the observable result that would prove the thesis wrong].
-- Experiment / substrate: [what you run it on].
+- Eval / substrate: [what you run it on].
 - Metric(s): [measured end-to-end, not via a convenient proxy; if a proxy, argue the link].
 - Baselines: [the unmodified default system AND a fairly tuned state of the art - never evaluate only against yourself].
 - Trials: [repeated runs with reported variance for any nondeterministic result; never single runs].
-- Confounds: [named, each with its control - experimental, statistical, or acknowledged - decided at design time, not post-hoc].
+- Confounds: [named, each with its control - evaluation, statistical, or acknowledged - decided at design time, not post-hoc].
 
 ## Risks and feasibility (plan a tree, not a sequence)
 [Replace "will do" with "have done": cite at least one pilot number, working prototype, or dataset already in hand - the single strongest, cheapest feasibility signal.]
@@ -62,7 +62,7 @@ Name what prior work is missing; do not enumerate it. The gap must be the same s
 
 ## Contributions (things that will exist, each with evidence)
 [Each item is an artifact or measured effect, pointing at where it is shown. Not "we describe a cool system."]
-- C1: [release <artifact> / show <measured effect>] -> [evidence: experiment / section]
+- C1: [release <artifact> / show <measured effect>] -> [evidence: eval / section]
 - C2: [...]
 - C3: [...]
 
@@ -100,7 +100,7 @@ Name what prior work is missing; do not enumerate it. The gap must be the same s
 - [ ] Importance is argued as consequence x plausible attack, not stakes alone.
 - [ ] The gap is argued, not listed, and is exactly the hole the idea fills.
 - [ ] The key idea names a mechanism and is distinguished from the nearest prior idea.
-- [ ] Validation names experiment, metric, baselines (default + fair SOTA), substrate, and the disconfirming result.
+- [ ] Validation names eval, metric, baselines (default + fair SOTA), substrate, and the disconfirming result.
 - [ ] Nondeterministic results report repeated trials with variance; confounds are named with controls at design time.
 - [ ] Feasibility shows at least one "have done" artifact; risks form a tree with fallbacks.
 - [ ] Contributions are things that will exist, each pointing at its evidence.

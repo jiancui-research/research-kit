@@ -38,7 +38,7 @@ A probe that exposes a fatal flaw is a SUCCESS of this phase. Do not sanitize.]
 ## Verdict: [GO | NO-GO | PIVOT]
 [Exactly one. State the single piece of evidence driving it.]
 - Evidence behind the verdict: [...]
-- What this establishes (feasibility-level — NOT a paper claim; the full experiment re-establishes it in `claims.md`): [one line, e.g. "the core mechanism fires on real targets"].
+- What this establishes (feasibility-level — NOT a paper claim; the full eval re-establishes it in `claims.md`): [one line, e.g. "the core mechanism fires on real targets"].
 - GO -> the riskiest assumption held; proceed to `/research.tasks`.
 - NO-GO -> the assumption is false and no nearby reframing saves it; route to `/research.proposal`.
 - PIVOT -> false as stated, but the probe revealed a sharper adjacent idea:

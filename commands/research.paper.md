@@ -12,7 +12,7 @@ The user request arrives via the `$ARGUMENTS` placeholder. It names one section 
 - **CRITIQUE:** if the user pasted a draft or pointed to one, review their prose against the constitution voice, claim traceability, overclaims, and tightening. Edit nothing; return specific, located findings.
 - **DRAFT (only on explicit request):** generate full prose *only* when `$ARGUMENTS` says so (e.g. `draft intro`). Even then, match the user's voice and keep it tight; never produce walls of generic text.
 
-Runs in **parallel** with `/research.experiment`: experiment writes verdicts into `claims.md`; you read them. Framing sections (intro, related work, method) can be outlined or drafted now; results sections (eval, abstract, conclusion) stay **blocked** until their claims are supported — outline them, but tag every result beat `[UNVERIFIED]` until `claims.md` backs it.
+Runs in **parallel** with `/research.eval`: eval writes verdicts into `claims.md`; you read them. Framing sections (intro, related work, method) can be outlined or drafted now; results sections (eval, abstract, conclusion) stay **blocked** until their claims are supported — outline them, but tag every result beat `[UNVERIFIED]` until `claims.md` backs it.
 
 ## Steps
 
@@ -26,11 +26,11 @@ Runs in **parallel** with `/research.experiment`: experiment writes verdicts int
 2. **Pick the section and the mode.**
    - Section: from `$ARGUMENTS`, else the next non-`done` section in skeleton order (abstract usually last).
    - Mode: **CRITIQUE** if a draft is pasted or pointed to; **DRAFT** if `$ARGUMENTS` explicitly asks; otherwise **OUTLINE**.
-   - `mkdir -p ./.research/paper`. Write to `./.research/paper/<section>.md`. Never overwrite the user's existing prose — append your outline/critique under a clearly labeled heading, or write to `<section>.outline.md` / `<section>.critique.md`, and say what you did. (These outlines/critiques are docs and live in `.research/paper/`; the user's actual manuscript source — LaTeX, figures — lives in `./paper/` at the project root.)
+   - `mkdir -p ./paper`. Write to `./paper/<section>.md` (or `<section>.outline.md` / `<section>.critique.md`). Never overwrite the user's existing prose — append your outline/critique under a clearly labeled heading and say what you did. (Your outlines, drafts, and the manuscript source — LaTeX, figures — all live in `./paper/` at the project root; `.research/` keeps only the planning doc `tasks/paper.md`.)
 
 3. **OUTLINE mode (default).** For the named section, lay out the argument the *user* will write:
    - The **beats in order** following the type skeleton (one line each: what this beat must establish).
-   - For each result beat, the **claim id(s)** it must hit (e.g. `→ C3`) and the **evidence** (experiment id / figure / table) backing it; if no backing entry exists, mark `[UNVERIFIED — add to claims.md]`.
+   - For each result beat, the **claim id(s)** it must hit (e.g. `→ C3`) and the **evidence** (eval id / figure / table) backing it; if no backing entry exists, mark `[UNVERIFIED — add to claims.md]`.
    - The **citations** to slot in, pulled from `related-work.md` only; mark missing ones `[cite?]`, never invented.
    - The **load-bearing reminders** for this section (see step 5) as short notes against the relevant beat — not prose.
    Hand back a skeleton, not paragraphs. The user fills the words.
@@ -70,4 +70,4 @@ Runs in **parallel** with `/research.experiment`: experiment writes verdicts int
 - No user prose was overwritten; critique findings are located, not vague.
 
 ## Completion
-Report the path(s) touched (e.g. `./.research/paper/intro.outline.md`) and the updated `./.research/tasks/paper.md` status. List any `[UNVERIFIED]` or `[cite?]` markers the user must resolve. Then end with: `Next: /research.analyze` (or `Next: /research.paper <next-section>` if sections remain, and rerun `/research.experiment` to land the evidence that unblocks result sections).
+Report the path(s) touched (e.g. `./paper/intro.outline.md`) and the updated `./.research/tasks/paper.md` status. List any `[UNVERIFIED]` or `[cite?]` markers the user must resolve. Then end with: `Next: /research.analyze` (or `Next: /research.paper <next-section>` if sections remain, and rerun `/research.eval` to land the evidence that unblocks result sections).
