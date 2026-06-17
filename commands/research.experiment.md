@@ -1,5 +1,5 @@
 ---
-description: Break the plan into trackable experiments and keep the claim-evidence matrix current.
+description: Evaluate the system with trackable experiments and keep the claim-evidence matrix current. Evaluation only — the system itself is built by /research.design.
 argument-hint: which experiment(s) to add, run, or update — or paste a result to record
 ---
 
@@ -9,7 +9,7 @@ The user request arrives via the $ARGUMENTS placeholder. It may name a new exper
 
 ## What this phase is
 
-This is the run-and-track phase. Each experiment is one falsifiable test of one claim. You scaffold it before running, fill in actual results after, and keep `.research/claims.md` honest as evidence arrives. Do not write paper prose here.
+This is the run-and-track **evaluation** phase. Each experiment is one falsifiable test of one claim. You scaffold it before running, fill in actual results after, and keep `.research/claims.md` honest as evidence arrives. Do not write paper prose here, and **do not build the system here** — for build-papers the system is constructed by `/research.design` (from `tasks/design.md`); this phase evaluates what it produced. If the design changed under you, re-run against the new build and let `/research.analyze` flag the drift.
 
 ## Steps
 

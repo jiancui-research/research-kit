@@ -19,6 +19,7 @@ Runs in **parallel** with `/research.experiment`: experiment writes verdicts int
 1. **Read context.**
    - Read `./.research/memory/constitution.md` if present (writing voice, venue, paper-type); skip silently if absent.
    - Read the upstream artifacts: `./.research/tasks/paper.md` (the section task list + READY/BLOCKED status), `./.research/proposal.md` (problem, gap, contributions, RQs, venue, paper-type), `./.research/related-work.md`, and `./.research/claims.md`. If `claims.md` is missing or empty, warn that result claims are unverifiable, then proceed with framing sections only.
+   - For a build-paper, read `./.research/tasks/design.md` (architecture, components, design decisions, repo layout) — it is the source for the **System Design / Implementation** section. Describe what was actually built; if it disagrees with `claims.md`, flag the drift rather than papering over it.
    - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from the proposal; default to the closest match and say which you chose. Load the matching skeleton from `.research/templates/paper/<type>.md`.
    - Load the relevant craft guide: `.research/templates/sections/abstract-intro.md` for abstract/intro, `.research/templates/sections/figures-tables.md` for results/figures/tables.
 

@@ -1,4 +1,4 @@
-# research-kit — design (v0.2.0)
+# research-kit — design (v0.3.0)
 
 ## Vision
 
@@ -20,10 +20,11 @@ research-kit mirrors the spec-kit pipeline (constitution → specify → plan �
 | `proposal` | specify | The "spec" of the paper and the pipeline entry point: problem, motivation (NABC), gap, measurable contributions, testable research questions, approach, venue, paper type. The raw idea is the input; the idea is folded in here. |
 | `relatedwork` | (specify, positioning) | Survey of prior work that positions the contribution and names the closest baselines. |
 | `feasibility` | (de-risk gate) | A GO/NO-GO/PIVOT gate that de-risks the result before committing to the full build; a no-go or pivot points back to `proposal`. |
-| `tasks` | plan + tasks | Experiment-design header plus the build/obtain and experiment task list (`tasks/experiment.md`), and the paper-section task list (`tasks/paper.md`). The old planning step is folded in here. |
-| `experiment` | implement | Trackable experiments kept in sync with the claim-evidence matrix; writes verdicts to `claims.md`. |
-| `paper` | implement | Section-by-section drafting (human-led) where every claim traces back to evidence. |
-| `analyze` | analyze | Read-only cross-artifact consistency and review-readiness audit. |
+| `tasks` | plan + tasks | Three parallel plans: the design/build plan (`tasks/design.md`), the experiment-evaluation plan (`tasks/experiment.md`), and the paper-section plan (`tasks/paper.md`). The old planning step is folded in here. |
+| `design` | implement | Builds the system as actual code (in `~/Projects/<repo>`, outside the vault) from `tasks/design.md`. Paper-type aware; skipped for measurement / SoK. |
+| `experiment` | implement (evaluation) | Trackable experiments that **evaluate** the built system, kept in sync with the claim-evidence matrix; writes verdicts to `claims.md`. |
+| `paper` | implement (writing) | Section-by-section drafting (human-led) where every claim traces back to evidence; the System Design section is sourced from `tasks/design.md`. |
+| `analyze` | analyze | Read-only cross-artifact consistency + review-readiness audit, AND the **sync checker** across the design/experiment/paper lanes (detects drift, routes the re-run). |
 | `review` | — (research extension) | A self-review panel that routes findings and loops until no high-severity findings remain. |
 | `rebuttal` | — (research extension) | Evidence-backed response to reviewer comments, fitted to the venue limit. |
 | `ae` | — (research extension) | Artifact-evaluation package: reproducibility checklist, README, badge plan, archival link. |
@@ -37,17 +38,18 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.proposal` — Pipeline entry point: turn a raw idea into a sharp, falsifiable `proposal.md` (NABC, gap, measurable contributions, testable RQs, approach, venue + paper-type).
 - `/research.relatedwork` — Survey prior work and position the contribution against the closest baselines.
 - `/research.feasibility` — De-risk the result with a quick check and emit a GO/NO-GO/PIVOT verdict; a no-go or pivot routes back to `/research.proposal`.
-- `/research.tasks` — Produce the experiment-design header + build/experiment task list (`tasks/experiment.md`) and the paper-section task list (`tasks/paper.md`), paper-type aware.
-- `/research.experiment` — Run trackable experiments and keep the claim-evidence matrix (`claims.md`) current, writing verdicts back.
-- `/research.paper` — Outline or critique paper sections (human-led), paper-type aware, with every claim traceable to `claims.md`.
-- `/research.analyze` — Read-only cross-artifact consistency and review-readiness audit; routes findings to the owning fix-commands.
+- `/research.tasks` — Produce the three plans (paper-type aware): the design/build plan (`tasks/design.md`), the experiment-evaluation plan (`tasks/experiment.md`), and the paper-section plan (`tasks/paper.md`).
+- `/research.design` — Build lane (the spec-kit `implement` analogue): implement the system from `tasks/design.md` into actual code under `~/Projects/<repo>`, outside the vault. Skipped for measurement / SoK.
+- `/research.experiment` — Run trackable experiments that evaluate the built system and keep the claim-evidence matrix (`claims.md`) current, writing verdicts back.
+- `/research.paper` — Outline or critique paper sections (human-led), paper-type aware, with every claim traceable to `claims.md`; the System Design section is sourced from `tasks/design.md`.
+- `/research.analyze` — Read-only cross-artifact consistency + review-readiness audit, and the sync checker across the design/experiment/paper lanes; routes findings and stale-lane re-runs to the owning commands.
 - `/research.review` — Simulate a reviewer panel, write mock reviews + scores, route findings, and loop until no new high-severity findings.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
 - `/research.ae` — Prepare an artifact-evaluation submission (reproducibility checklist, artifact README, badge plan, archival link).
 
 ## Working-directory model
 
-Every command reads and writes under `./.research/` in the user's own paper repo. Nothing lives outside the project; the directory is portable and version-controllable alongside the paper.
+Every command reads and writes under `./.research/` in the user's own paper repo, with one deliberate exception: the design lane's **code** lives in its own repo under `~/Projects/<repo>` (outside the vault), since source code does not belong in the paper's decision record. The `.research/` directory is portable and version-controllable alongside the paper.
 
 ```
 .research/
@@ -56,21 +58,24 @@ Every command reads and writes under `./.research/` in the user's own paper repo
   proposal.md              problem, motivation (NABC), gap, contributions, RQs, approach, venue, paper-type
   related-work.md
   feasibility.md           de-risk result + GO/NO-GO/PIVOT
-  tasks/experiment.md      experiment-design header + build/experiment task list
+  tasks/design.md          system architecture + repo layout + build task list (build-papers; → code)
+  tasks/experiment.md      experiment-design header + experiment task list (evaluation)
   tasks/paper.md           paper-section task list (READY vs BLOCKED-on-claim)
   claims.md                claim ↔ evidence matrix (written by experiment; read by paper/analyze/review)
   experiments/             one file per experiment + index.md
   paper/                   section-by-section drafts
-  analyze-report.md        consistency + desk-reject report
+  analyze-report.md        consistency + sync + desk-reject report
   review/round-N.md  rebuttal/  ae/   outputs of those commands
+
+~/Projects/<repo>/         the built system (design lane's code) — outside the vault
 ```
 
 Command contract:
 
 1. Read `./.research/memory/constitution.md` if it exists (skip silently otherwise).
-2. Read its upstream artifacts (e.g. `tasks` reads `proposal.md` + `feasibility.md`; `paper` reads `tasks/paper.md` + `claims.md`).
+2. Read its upstream artifacts (e.g. `tasks` reads `proposal.md` + `feasibility.md`; `design` reads `tasks/design.md`; `paper` reads `tasks/paper.md` + `tasks/design.md` + `claims.md`).
 3. Take user input via `$ARGUMENTS`.
-4. Produce or update only its own artifact(s); end by reporting the path(s) and a one-line `Next: /research.<x>`.
+4. Produce or update only its own artifact(s) — the design lane's code is the one output written outside `.research/` (in `~/Projects/<repo>`); end by reporting the path(s) and a one-line `Next: /research.<x>`.
 5. Be paper-type aware where relevant (measurement / attack / defense / benchmark / systematization (SoK)) via `.research/templates/paper/<type>.md` (copied from the bundle by `/research.init`).
 
 Commands `mkdir -p` as needed and never overwrite user content without saying so.
@@ -78,11 +83,11 @@ Commands `mkdir -p` as needed and never overwrite user content without saying so
 ## Pipeline order
 
 ```
-constitution → proposal → relatedwork → feasibility → tasks → (experiment ∥ paper) → analyze → review (loop)
+constitution → proposal → relatedwork → feasibility → tasks → (design ∥ experiment ∥ paper) → analyze → review (loop)
             (+ rebuttal post-submission, ae once results exist, init for setup)
 ```
 
-`experiment` and `paper` run in parallel, synced by `claims.md`: experiment writes verdicts; paper reads them and tags any unbacked claim `[UNVERIFIED]`. `feasibility` is a GO/NO-GO gate (a no-go or pivot routes back to `proposal`), and `review` loops back into the fix-commands until no new high-severity findings remain.
+After a GO, `tasks` fans out into three parallel lanes that co-evolve: `design` builds the system as code, `experiment` evaluates it (writing verdicts to `claims.md`), and `paper` writes sections (reading `claims.md` and tagging any unbacked claim `[UNVERIFIED]`). They communicate only through documents they read - `tasks/design.md` and `claims.md` - never by writing into each other. `feasibility` is a GO/NO-GO gate (a no-go or pivot routes back to `proposal`). `analyze` is the sync checker that detects lane drift and routes the re-run (change `design` → it tells you to re-run `experiment` + `paper`), and `review` loops back into the fix-commands until no new high-severity findings remain. The design lane is paper-type aware: present for build-papers, skipped for measurement / SoK.
 
 ## Form factor
 
