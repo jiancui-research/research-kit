@@ -30,7 +30,7 @@ copilot plugin marketplace add jiancui-research/research-kit
 copilot plugin install research-kit@research-kit
 ```
 
-Copilot reads the same `.claude-plugin` bundle directly, exposing the `/research.*` stages; update later with `copilot plugin update research-kit`.
+Copilot reads the same `.claude-plugin` bundle directly, exposing the namespaced `/research-kit:research.*` stages; update later with `copilot plugin update research-kit`.
 
 **Any agent — script:**
 
@@ -83,7 +83,7 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 | **Claude Code** (plugin) | `/plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **Claude Code** (script) | `./install.sh` | `/research.proposal <text>` |
 | **Codex CLI** | `./install.sh --codex` | `/research.proposal <text>` |
-| **GitHub Copilot CLI** (plugin) | `copilot plugin marketplace add jiancui-research/research-kit` → `copilot plugin install research-kit@research-kit` | `/research.proposal <text>` |
+| **GitHub Copilot CLI** (plugin) | `copilot plugin marketplace add jiancui-research/research-kit` → `copilot plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **GitHub Copilot CLI** (script) | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |
 
 - **Copilot** installs the same `.claude-plugin` bundle straight from its marketplace (`copilot plugin marketplace add …` → `copilot plugin install research-kit@research-kit`), reading `commands/` directly — no script needed. The `./install.sh --copilot` path stays as an alternative that instead generates `*.agent.md` custom agents (invoked via `/agent`).
