@@ -23,6 +23,15 @@ After feasibility, `tasks` fans out into three parallel lanes that co-evolve: **
 
 Plugin stages are namespaced, e.g. `/research-kit:research.proposal …`; update later with `/plugin marketplace update`.
 
+**GitHub Copilot CLI — plugin (no script):**
+
+```text
+copilot plugin marketplace add jiancui-research/research-kit
+copilot plugin install research-kit@research-kit
+```
+
+Copilot reads the same `.claude-plugin` bundle directly, exposing the `/research.*` stages; update later with `copilot plugin update research-kit`.
+
 **Any agent — script:**
 
 ```sh
@@ -74,9 +83,10 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 | **Claude Code** (plugin) | `/plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **Claude Code** (script) | `./install.sh` | `/research.proposal <text>` |
 | **Codex CLI** | `./install.sh --codex` | `/research.proposal <text>` |
-| **GitHub Copilot CLI** | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |
+| **GitHub Copilot CLI** (plugin) | `copilot plugin marketplace add jiancui-research/research-kit` → `copilot plugin install research-kit@research-kit` | `/research.proposal <text>` |
+| **GitHub Copilot CLI** (script) | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |
 
-- **Copilot** has no parameterized slash commands, so each stage installs as a custom agent (`research.<name>.agent.md`) with a short adapter note; the body is otherwise identical.
+- **Copilot** installs the same `.claude-plugin` bundle straight from its marketplace (`copilot plugin marketplace add …` → `copilot plugin install research-kit@research-kit`), reading `commands/` directly — no script needed. The `./install.sh --copilot` path stays as an alternative that instead generates `*.agent.md` custom agents (invoked via `/agent`).
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
 
 ## Working directory
