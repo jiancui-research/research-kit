@@ -22,7 +22,16 @@ flowchart TD
     RV -.->|"append eval tasks"| T
 ```
 
-**Reading it:** the solid spine is the pipeline; the dashed edges are the two feedback loops. `feasibility` is a GO / NO-GO / PIVOT gate (a NO-GO or PIVOT loops back to `proposal`). After a GO, `tasks` opens **three parallel lanes that co-evolve** — `design` builds the system into `./design/`, `eval` evaluates it and fills `claims.md`, and `paper` (human-led) reads `claims.md` to write. The lanes talk only through shared docs they *read* (`tasks/design.md`, `claims.md`), never by writing into each other. `analyze` is the **sync checker** — it detects lane drift and routes the exact re-run (the dashed edge back to the lanes), and doubles as the review-readiness audit. `review` loops until clean, appending new eval tasks to `tasks`. The design lane is paper-type aware: heavy for systems/defense, skipped for measurement / SoK. (Auxiliary: `rebuttal` post-submission, `ae` for artifact evaluation.)
+**Reading it**
+
+- **Solid arrows** = the pipeline; **dashed** = the two feedback loops.
+- `feasibility` is a GO / NO-GO / PIVOT gate; a NO-GO or PIVOT loops back to `proposal`.
+- After a GO, `tasks` opens three parallel lanes that co-evolve: `design` builds the system into `./design/`, `eval` fills `claims.md`, `paper` reads `claims.md` to write.
+- Lanes never write into each other - they share only the docs they read (`tasks/design.md`, `claims.md`).
+- `analyze` = the sync checker: detects lane drift, routes the exact re-run, and doubles as the review-readiness audit.
+- `review` loops until clean, appending eval tasks to `tasks/eval.md`.
+- `design` is paper-type aware: heavy for systems / defense, skipped for measurement / SoK.
+- Auxiliary: `rebuttal` (post-submission), `ae` (artifact evaluation).
 
 ## Input → output, per command
 
