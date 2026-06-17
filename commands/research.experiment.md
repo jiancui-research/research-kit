@@ -11,6 +11,8 @@ The user request arrives via the $ARGUMENTS placeholder. It may name a new exper
 
 This is the run-and-track **evaluation** phase. Each experiment is one falsifiable test of one claim. You scaffold it before running, fill in actual results after, and keep `.research/claims.md` honest as evidence arrives. Do not write paper prose here, and **do not build the system here** — for build-papers the system is constructed by `/research.design` (from `tasks/design.md`); this phase evaluates what it produced. If the design changed under you, re-run against the new build and let `/research.analyze` flag the drift.
 
+The actual evaluation scripts, data, and result files live in `./experiment/` at the project root; the tracking docs (the `experiments/*.md` files and `claims.md`) stay in `.research/`.
+
 ## Steps
 
 1. Read `./.research/memory/constitution.md` if present (skip silently otherwise). Read `./.research/tasks/experiment.md` (experiment-design header + build/experiment task list: methodology, baselines, datasets, metrics, threat model) and `./.research/proposal.md` (contributions, RQs). Read `./.research/claims.md` if it exists.

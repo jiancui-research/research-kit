@@ -11,7 +11,7 @@ The user request arrives via the $ARGUMENTS placeholder. Treat it as steering on
 
 This is the planning phase. It absorbs the old plan stage and fans out into **three** parallel work plans, one per lane:
 
-- **`tasks/design.md`** — the system's architecture, repo layout & naming, and the **build** task list. `/research.design` turns this into actual code. **Paper-type aware:** heavy for systems/defense, medium for attack/benchmark, **skipped or minimal for measurement / SoK** (nothing is built).
+- **`tasks/design.md`** — the system's architecture, project layout & naming, and the **build** task list. `/research.design` turns this into actual code. **Paper-type aware:** heavy for systems/defense, medium for attack/benchmark, **skipped or minimal for measurement / SoK** (nothing is built).
 - **`tasks/experiment.md`** — the **evaluation** plan: an experiment-design header (methodology, baselines, datasets, metrics, threat model, evaluation design, ethics) plus an experiment task list. Build no longer lives here; it moved to the design lane.
 - **`tasks/paper.md`** — one task per section, tagged READY vs BLOCKED-on-claim.
 
@@ -37,7 +37,7 @@ The three are the parallel work plan: `design` builds the system, `experiment` e
      - benchmark -> concrete task tuple + dataset + metrics + 3-5 baselines
      - systematization (SoK) -> a novel, MECE-ish taxonomy + lessons found in no single prior paper
 
-3. **Write `tasks/design.md` — the design / build lane (paper-type aware).** For papers that build something (systems, defense, attack tool / PoC, benchmark harness), fill the design template: the **system overview + a workflow diagram**, the **key design decisions + rejected alternatives**, the **repo layout & naming** (the repo under `~/Projects/<repo>`, never inside the vault), and the **build task list** (one task per component, a done-when criterion, `[spec-kit]` / `[dev]` flag on heavy builds). This doc is both the spec `/research.design` implements and the source for the paper's System Design section. **For measurement / SoK** there is no system to build: skip this file and keep any light data-obtain tasks in `tasks/experiment.md` instead (note that choice in one line).
+3. **Write `tasks/design.md` — the design / build lane (paper-type aware).** For papers that build something (systems, defense, attack tool / PoC, benchmark harness), fill the design template: the **system overview + a workflow diagram**, the **key design decisions + rejected alternatives**, the **project layout & naming** (code goes in the project's `./design/` folder, a sibling of `.research/`; `.research/` stays for docs), and the **build task list** (one task per component, a done-when criterion, `[spec-kit]` / `[dev]` flag on heavy builds). This doc is both the spec `/research.design` implements and the source for the paper's System Design section. **For measurement / SoK** there is no system to build: skip this file and keep any light data-obtain tasks in `tasks/experiment.md` instead (note that choice in one line).
 
 4. **Write the experiment-design header of `tasks/experiment.md`** — the PLAN-KEEP block of `.research/templates/tasks-experiment-template.md`. This is the **evaluation** plan. Fill every dimension it lists (methodology, baselines, datasets, metrics, threat model, evaluation design, ethics/disclosure/artifact); keep it tight and specific — numbers and named artifacts over adjectives — and let the layered `paper/<type>.md` say which dimensions are load-bearing for this type. For a build-paper, reference the system in `tasks/design.md` rather than re-describing its architecture here. Do not restate the dimension definitions; they live in the template.
 
@@ -49,7 +49,7 @@ The three are the parallel work plan: `design` builds the system, `experiment` e
    - Keep one task per section, in order; do not invent sections the skeleton does not have, and drop a skeleton section only with a one-line reason.
 
 7. **Validate** against this short checklist before writing:
-   - For a build-paper, `tasks/design.md` has a system diagram, design decisions with rejected alternatives, a concrete repo layout, and build tasks with done-when criteria; for measurement / SoK, the design lane is correctly skipped.
+   - For a build-paper, `tasks/design.md` has a system diagram, design decisions with rejected alternatives, a concrete project layout, and build tasks with done-when criteria; for measurement / SoK, the design lane is correctly skipped.
    - The experiment header discharges the paper type's proof obligation; nothing load-bearing is hand-waved.
    - Every contribution / research question maps to at least one experiment task via a claim id; every experiment task serves a claim.
    - Baselines, datasets, and metrics are concrete (named, sized, operationally defined), not placeholders.

@@ -1,10 +1,11 @@
 # System design & build plan: [project / paper short name]
 
 > Produced by `/research.tasks`. Lives at `./.research/tasks/design.md`.
-> The **design lane**: the system's architecture, how the repo is laid out, and the build
-> task list. `/research.design` reads this and produces the actual **code** (in
-> `~/Projects/<repo>`, outside the vault). This doc also doubles as the source for the
-> paper's **System Design / Implementation** section, so keep the architecture honest.
+> The **design lane**: the system's architecture, the project layout, and the build task
+> list. `/research.design` reads this and produces the actual **code** in the project's
+> `./design/` folder (a sibling of `.research/`; the project is one repo under
+> `~/Projects`, outside the vault). This doc also doubles as the source for the paper's
+> **System Design / Implementation** section, so keep the architecture honest.
 >
 > **Paper-type aware.** Heavy for systems/defense (a full architecture), medium for
 > attack (a PoC / exploit) and benchmark (a construction harness). For **measurement /
@@ -31,21 +32,25 @@ alternative you rejected. This is exactly what the paper's design section has to
 
 - Decision: [...] - chosen because [...]; rejected [alternative] because [...].
 
-## Repo layout & naming
+## Project layout & naming
 
-[How the code repo is organized, so the design, experiment, and paper lanes all agree on
-it. The experiment lane drops its scripts here; the paper's artifact section references it.]
+[How the project is organized so every lane agrees on it. research-kit's tracking docs
+live in `.research/`; the actual work products live in sibling root folders. The system
+code is built into `./design/`.]
 
-- Repo: `~/Projects/[repo-name]` (outside the vault, never inside `.research/`).
-- Folder structure:
+- Project root: `~/Projects/[project]/` (one repo, outside the vault).
+- Layout:
   ```
-  [repo-name]/
-    src/            [the system itself]
-    experiments/    [scripts the experiment lane adds]
-    data/           [inputs / fixtures]
-    README.md
+  [project]/
+    .research/      [all research-kit tracking docs — proposal, tasks, claims, ...]
+    feasibility/    [throwaway probe code]
+    design/         [THE SYSTEM CODE — what /research.design builds]
+      src/  ...     [internal structure: modules / entrypoints]
+    experiment/     [evaluation scripts, data, results]
+    paper/          [the actual paper source — LaTeX, figures]
   ```
-- Naming conventions: [files / modules / experiment scripts - the shared rule everyone follows].
+- `design/` internal structure: [src / modules / entrypoints].
+- Naming conventions: [the shared rule for files, modules, and experiment scripts].
 
 ## Build task list
 
@@ -60,7 +65,7 @@ repo) or `[dev]` (normal development); light glue code needs no flag.
 
 - [ ] The diagram shows every component and the end-to-end path; nothing load-bearing is implicit.
 - [ ] Each design decision names its rejected alternative (so the paper can defend it).
-- [ ] Repo layout + naming are concrete enough that experiment scripts land in the right place.
+- [ ] Project layout + naming are concrete enough that experiment scripts land in the right place.
 - [ ] Every build task has a done-when criterion; heavy builds are flagged and point at a repo.
 - [ ] For measurement / SoK: this lane is correctly skipped or kept minimal.
 

@@ -7,7 +7,7 @@
 > `.research/templates/paper/<type>.md` so this discharges the paper type's proof
 > obligation.
 >
-> **Building the system is NOT here.** For build-papers the architecture, repo layout, and
+> **Building the system is NOT here.** For build-papers the architecture, project layout, and
 > build tasks live in `tasks/design.md` (implemented by `/research.design`); this file only
 > evaluates what was built. Only measurement / SoK papers (no design lane) keep a light
 > data-obtain task here.

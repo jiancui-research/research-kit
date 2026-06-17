@@ -38,7 +38,7 @@ Then, in your paper repo:
 /research.relatedwork
 /research.feasibility
 /research.tasks                      # writes three plans: design, experiment, paper
-/research.design                     # build-papers only: implement the system into ~/Projects/<repo>
+/research.design                     # build-papers only: implement the system into ./design/
 /research.experiment                 # evaluate the build; runs parallel with paper, synced via claims.md
 /research.paper
 /research.analyze                    # also a "sync" check: what drifted, what to re-run
@@ -57,7 +57,7 @@ Each command writes its result into `./.research/` and suggests the next one. (P
 | `/research.relatedwork` | Survey prior work into `related-work.md` and sharpen the proposal's gap and positioning. |
 | `/research.feasibility` | De-risk the central result with a quick probe and return a GO / NO-GO / PIVOT verdict before you invest in the full build. |
 | `/research.tasks` | Produce three paper-type-aware plans: the design/build plan, the experiment-evaluation plan, and the paper task list (READY vs blocked-on-claim). |
-| `/research.design` | Build lane (build-papers only): implement the system from `tasks/design.md` into actual code under `~/Projects/<repo>`, outside the vault. Skipped for measurement / SoK. |
+| `/research.design` | Build lane (build-papers only): implement the system from `tasks/design.md` into actual code in the project's `./design/` folder. Skipped for measurement / SoK. |
 | `/research.experiment` | Run the experiment tasks that evaluate the built system and keep the claim-evidence matrix current. |
 | `/research.paper` | Human-led writing: outline a section or critique your draft, every claim traceable to the evidence matrix; System Design sourced from `tasks/design.md`. |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across the design/experiment/paper lanes: flags drift and names the exact re-run. Outputs a prioritized gap report. |
@@ -81,25 +81,28 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 
 ## Working directory
 
-Everything a paper needs lives under `./.research/` — commit it alongside the paper as the decision record. The one exception is the design lane's **code**, which lives in its own repo under `~/Projects/<repo>` (outside the vault).
+The project is one repo (under `~/Projects`, outside the vault). research-kit's **tracking docs** all live under `./.research/` — commit it alongside the paper as the decision record. The actual **work products** (code, data, paper source) live in sibling root folders.
 
 ```
-.research/
-  memory/constitution.md   research principles + writing voice
-  templates/               skeletons + craft guides (from /research.init)
-  proposal.md              problem, NABC, gap, contributions, RQs, venue, paper type
-  related-work.md          prior work + positioning
-  feasibility.md           de-risk probe + GO / NO-GO / PIVOT
-  tasks/design.md          system architecture + repo layout + build tasks (build-papers; → code)
-  tasks/experiment.md      experiment design + task list (evaluation)
-  tasks/paper.md           paper section tasks (READY vs blocked-on-claim)
-  claims.md                claim ↔ evidence matrix
-  experiments/             one file per experiment + index.md
-  paper/                   section drafts
-  analyze-report.md        prioritized gap + sync report
-  review/ rebuttal/ ae/    outputs of those commands
-
-~/Projects/<repo>/         the built system (design lane's code) — outside the vault
+<project>/                 one repo under ~/Projects, outside the vault
+  .research/               all research-kit tracking docs:
+    memory/constitution.md   research principles + writing voice
+    templates/               skeletons + craft guides (from /research.init)
+    proposal.md              problem, NABC, gap, contributions, RQs, venue, paper type
+    related-work.md          prior work + positioning
+    feasibility.md           de-risk probe + GO / NO-GO / PIVOT
+    tasks/design.md          system architecture + project layout + build tasks (build-papers)
+    tasks/experiment.md      experiment design + task list (evaluation)
+    tasks/paper.md           paper section tasks (READY vs blocked-on-claim)
+    claims.md                claim ↔ evidence matrix
+    experiments/             one file per experiment + index.md (tracking)
+    paper/                   section outlines/drafts (tracking)
+    analyze-report.md        prioritized gap + sync report
+    review/ rebuttal/ ae/    outputs of those commands
+  feasibility/             throwaway probe code
+  design/                  the system code (built by /research.design)
+  experiment/              evaluation scripts, data, results
+  paper/                   the actual paper source (LaTeX, figures)
 ```
 
 ## Customization
