@@ -70,7 +70,7 @@ Each command writes its result into `./.research/` and suggests the next one. (P
 | `/research.eval` | Run the eval tasks that evaluate the built system and keep the claim-evidence matrix current. |
 | `/research.paper` | Human-led writing: outline a section or critique your draft, every claim traceable to the evidence matrix; System Design sourced from `tasks/design.md`. |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across the design/eval/paper lanes: flags drift and names the exact re-run. Outputs a prioritized gap report. |
-| `/research.review` | Simulate a reviewer panel: mock reviews + scores, route each finding to the command that owns the fix, and loop until clean. |
+| `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 

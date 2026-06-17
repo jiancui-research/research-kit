@@ -33,8 +33,8 @@ cause and a fix or a pre-emption in the paper.]
 - Presentation: [where a first-pass reader gets lost or a term is undefined] -> [...] -> [...]
 
 [Also flag any scope mismatch: a claim whose verb ("solves", "proves reasoning",
-"guarantees") outruns what was measured. Cross-check against `claims.md` - any row
-not `supported` is a weakness here until rescoped or cut.]
+"guarantees") outruns what the paper actually shows. Any claim stated as settled but
+not backed by the paper's own results is a weakness here until rescoped or cut.]
 
 ## Detailed comments
 [Ordered, specific, actionable - the granular pass. Reference exact locations
@@ -98,8 +98,10 @@ each, leading with the strongest result and citing it exactly.]
 - Concern: [...] | Response: [...] | Priority: [...]
 
 ## How to use
-- Read `./.research/memory/constitution.md` and `./.research/claims.md` first - the
-  review is only honest if it is checked against the actual claim-evidence ledger.
+- Read `./.research/memory/constitution.md` first for venue and paper-type, then
+  review ONLY the submitted paper (`./paper/`) - a real reviewer does not see your
+  `claims.md`, `eval/`, or task lists, so judge every claim against the paper's own
+  evidence. (Internal consistency vs. those docs is `/research.analyze`'s job.)
 - Be paper-type aware: a benchmark paper adds checks (data construction transparency,
   inter-annotator agreement, bias / coverage, baseline results, maintenance plan); an
   attack / defense paper adds threat-model and dual-use checks. Pull the relevant

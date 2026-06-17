@@ -25,7 +25,7 @@ research-kit mirrors the spec-kit pipeline (constitution → specify → plan �
 | `eval` | implement (evaluation) | Trackable evals that **evaluate** the built system, kept in sync with the claim-evidence matrix; writes verdicts to `claims.md`. |
 | `paper` | implement (writing) | Section-by-section drafting (human-led) where every claim traces back to evidence; the System Design section is sourced from `tasks/design.md`. |
 | `analyze` | analyze | Read-only cross-artifact consistency + review-readiness audit, AND the **sync checker** across the design/eval/paper lanes (detects drift, routes the re-run). |
-| `review` | — (research extension) | A self-review panel that routes findings and loops until no high-severity findings remain. |
+| `review` | — (research extension) | A self-review panel that reads **only the paper** (like a real reviewer), reports findings + scores with a suggested fix command each, and loops until no high-severity findings remain. Writes only its round file. |
 | `rebuttal` | — (research extension) | Evidence-backed response to reviewer comments, fitted to the venue limit. |
 | `ae` | — (research extension) | Artifact-evaluation package: reproducibility checklist, README, badge plan, archival link. |
 
@@ -43,7 +43,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.eval` — Run trackable evals that evaluate the built system and keep the claim-evidence matrix (`claims.md`) current, writing verdicts back.
 - `/research.paper` — Outline or critique paper sections (human-led), paper-type aware, with every claim traceable to `claims.md`; the System Design section is sourced from `tasks/design.md`.
 - `/research.analyze` — Read-only cross-artifact consistency + review-readiness audit, and the sync checker across the design/eval/paper lanes; routes findings and stale-lane re-runs to the owning commands.
-- `/research.review` — Simulate a reviewer panel, write mock reviews + scores, route findings, and loop until no new high-severity findings.
+- `/research.review` — Simulate a reviewer panel reading **only the paper**; report mock reviews + scores with a suggested fix command per finding (writes only `review/round-N.md`, never another artifact), and loop until clean.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
 - `/research.ae` — Prepare an artifact-evaluation submission (reproducibility checklist, artifact README, badge plan, archival link).
 

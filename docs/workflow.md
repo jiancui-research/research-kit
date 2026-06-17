@@ -18,8 +18,8 @@ flowchart TD
 
     L --> AN["analyze<br/>(+ sync check)"]
     AN -.->|"re-run stale lane"| L
-    AN --> RV["review<br/>(loop until clean)"]
-    RV -.->|"append eval tasks"| T
+    AN --> RV["review<br/>(paper-only, loop)"]
+    RV -.->|"route findings"| L
 ```
 
 **Reading it**
@@ -29,7 +29,7 @@ flowchart TD
 - After a GO, `tasks` opens three parallel lanes that co-evolve: `design` builds the system into `./design/`, `eval` fills `claims.md`, `paper` reads `claims.md` to write.
 - Lanes never write into each other - they share only the docs they read (`tasks/design.md`, `claims.md`).
 - `analyze` = the sync checker: detects lane drift, routes the exact re-run, and doubles as the review-readiness audit.
-- `review` loops until clean, appending eval tasks to `tasks/eval.md`.
+- `review` reads only the paper (like a real reviewer); it reports findings + scores and suggests a fix command per finding — you route them and re-run, looping until clean.
 - `design` is paper-type aware: heavy for systems / defense, skipped for measurement / SoK.
 - Auxiliary: `rebuttal` (post-submission), `ae` (artifact evaluation).
 
@@ -48,17 +48,18 @@ All research-kit **tracking docs** live under `./.research/`; the actual **work 
 | `eval` | `tasks/eval.md` | `eval/NN-*.md`, `eval/index.md` | **`claims.md`** |
 | `paper` (human-led) | `tasks/paper.md`, `tasks/design.md`, `proposal`, `related-work`, `claims.md` | `paper/<section>.md` | `tasks/paper.md` (status) |
 | `analyze` (+ sync) | everything (read-only) | `analyze-report.md` | — (routes re-runs) |
-| `review` (loop) | `proposal`, `related-work`, `claims`, `paper` | `review/round-N.md` | **`tasks/eval.md`** (auto-appends) |
+| `review` (loop) | `paper` only (+ constitution) | `review/round-N.md` | — (suggests a fix command per finding; you route) |
 | `rebuttal` (aux) | reviewer comments | `rebuttal/rebuttal.md` | — |
 | `ae` (aux) | `claims`, `tasks`, `eval/` | `ae/*` | — |
 
 ### Write-edges, and how the three lanes talk
 
-Only three commands ever **write into another command's document** — the feedback that makes this a workflow rather than a one-way chain:
+Only **two** commands ever **write into another command's document** — the feedback that makes this a workflow rather than a one-way chain:
 
 1. **`relatedwork` → `proposal.md`** — the survey sharpens the gap and positioning.
 2. **`eval` → `claims.md`** — results fill the claim ↔ evidence matrix.
-3. **`review` → `tasks/eval.md`** — evidence-gap findings become new eval tasks.
+
+(`review` is report-only: it reads just the paper and writes only `review/round-N.md`, suggesting a fix command per finding that *you* run — it never writes into another lane. `analyze` is likewise read-only, routing re-runs without editing.)
 
 The three lanes (`design ∥ eval ∥ paper`) stay decoupled because they communicate **only through shared documents they read, never write into each other**:
 
