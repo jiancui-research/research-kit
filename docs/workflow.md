@@ -11,7 +11,7 @@ flowchart TD
     F -->|GO| T[tasks]
     T --> L
 
-    subgraph L["parallel lanes — co-evolve, synced by claims.md"]
+    subgraph L["parallel lanes (co-evolve)"]
         direction LR
         D["design<br/>→ ./design/ code"] ~~~ E["eval<br/>→ claims.md"] ~~~ PA["paper<br/>reads claims.md"]
     end
