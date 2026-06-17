@@ -6,45 +6,23 @@ The pipeline and the input/output of every command. (See the [README](../README.
 
 ```mermaid
 flowchart TD
-    C["constitution (one-time)<br/>writes memory/constitution.md"]
-    I(["your raw idea"])
-    P["proposal<br/>writes proposal.md"]
-    RW["relatedwork<br/>writes related-work.md"]
-    F{"feasibility<br/>writes feasibility.md<br/>GO / NO-GO / PIVOT"}
-    T["tasks<br/>writes tasks/design.md + tasks/eval.md + tasks/paper.md"]
-    D["design<br/>builds code in ./design/"]
-    E["eval<br/>writes eval/"]
-    PA["paper (human-led)<br/>writes paper/"]
-    AN["analyze (+ sync checker)<br/>writes analyze-report.md"]
-    RV["review (loop)<br/>writes review/round-N.md"]
-    CL[("claims.md")]
-
-    C -.->|"read first by every command"| P
-    I --> P
-    P --> RW
-    RW --> F
-    RW -.->|"sharpens"| P
-    F -->|"GO"| T
+    C[constitution] --> P[proposal] --> RW[relatedwork] --> F{feasibility}
     F -->|"NO-GO / PIVOT"| P
-    T --> D
-    T --> E
-    T --> PA
-    D -.->|"built system"| E
-    D -.->|"System Design section"| PA
-    E -.->|"fills"| CL
-    CL -.->|"reads"| PA
-    D --> AN
-    E --> AN
-    PA --> AN
-    AN -.->|"re-run stale lane"| D
-    AN -.->|"re-run stale lane"| E
-    AN -.->|"re-run stale lane"| PA
-    AN --> RV
-    RV -.->|"auto-appends tasks"| T
-    RV -.->|"re-run after fixes"| RV
+    F -->|GO| T[tasks]
+    T --> L
+
+    subgraph L["parallel lanes — co-evolve, synced by claims.md"]
+        direction LR
+        D["design<br/>→ ./design/ code"] ~~~ E["eval<br/>→ claims.md"] ~~~ PA["paper<br/>reads claims.md"]
+    end
+
+    L --> AN["analyze<br/>(+ sync check)"]
+    AN -.->|"re-run stale lane"| L
+    AN --> RV["review<br/>(loop until clean)"]
+    RV -.->|"append eval tasks"| T
 ```
 
-**Reading it:** solid arrows are the pipeline flow; dashed arrows are cross-document reads, updates, and loops. `feasibility` is a GO/NO-GO/PIVOT gate (a NO-GO or PIVOT loops back to `proposal`). After a GO, `tasks` fans out into **three parallel lanes** — `design` (builds the system as code in `./design/`), `eval` (evaluates it, filling `claims.md`), and `paper` (human-led writing) — which co-evolve rather than run in sequence. `analyze` is the **sync checker**: it detects when one lane drifts from the others and routes the exact re-run, and it doubles as the review-readiness audit. `review` is a **loop** — re-run after fixes until no high-severity findings remain. Auxiliary commands `rebuttal` (post-submission) and `ae` (artifact evaluation) run as needed. The design lane is paper-type aware: heavy for systems/defense, skipped for measurement / SoK.
+**Reading it:** the solid spine is the pipeline; the dashed edges are the two feedback loops. `feasibility` is a GO / NO-GO / PIVOT gate (a NO-GO or PIVOT loops back to `proposal`). After a GO, `tasks` opens **three parallel lanes that co-evolve** — `design` builds the system into `./design/`, `eval` evaluates it and fills `claims.md`, and `paper` (human-led) reads `claims.md` to write. The lanes talk only through shared docs they *read* (`tasks/design.md`, `claims.md`), never by writing into each other. `analyze` is the **sync checker** — it detects lane drift and routes the exact re-run (the dashed edge back to the lanes), and doubles as the review-readiness audit. `review` loops until clean, appending new eval tasks to `tasks`. The design lane is paper-type aware: heavy for systems/defense, skipped for measurement / SoK. (Auxiliary: `rebuttal` post-submission, `ae` for artifact evaluation.)
 
 ## Input → output, per command
 
