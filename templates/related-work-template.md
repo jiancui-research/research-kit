@@ -1,11 +1,11 @@
 # Related work: [short working title]
 
 > Produced by `/research.relatedwork`. Lives at `./.research/related-work.md`.
-> Reads `./.research/idea.md` for the problem, gap, contributions, RQs, venue, and
+> Reads `./.research/proposal.md` for the problem, gap, contributions, RQs, venue, and
 > paper type. The section turns those into a positioned survey, not a citation dump.
 > Fill every bracket. Each themed paragraph must end with an explicit delta sentence.
-> Paper type from `idea.md` ([measurement | attack | defense | benchmark]) decides
-> whether the comparison table below is required - consult `templates/paper/<type>.md`
+> Paper type from `proposal.md` ([measurement | attack | defense | benchmark | SoK]) decides
+> whether the comparison table below is required - consult `.research/templates/paper/<type>.md`
 > for the dimensions that matter.
 
 ## Organizing structure (pick one, justify in one line)
@@ -40,7 +40,7 @@ In contrast, our work <delta>.`]
 
 ## Comparison table (required for benchmark / measurement / systems papers)
 [Rows = prior work; columns = the dimensions that make your gap visible. Pull dimensions
-from `templates/paper/<type>.md`. The empty cell that only your row fills is the gap.]
+from `.research/templates/paper/<type>.md`. The empty cell that only your row fills is the gap.]
 
 | Prior work | [dimension 1] | [dimension 2] | [dimension 3] | [dimension 4] |
 |------------|---------------|---------------|---------------|---------------|
@@ -69,4 +69,4 @@ target venue's recent papers - flag the chosen convention for the user to confir
 - [ ] Limitations are not apologized for here (those belong in the Limitations section).
 
 ---
-Next: `/research.plan`
+Next: `/research.feasibility`
