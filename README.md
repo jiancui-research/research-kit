@@ -62,7 +62,7 @@ Each command writes its result into `./.research/` and suggests the next one. (P
 | --- | --- |
 | `/research.init` | Copy the bundled templates into this paper repo's `.research/templates/` (run once per repo, after `install.sh`). |
 | `/research.constitution` | Establish or update the research constitution: quality principles, writing voice, and venue norms. |
-| `/research.proposal` | Pipeline entry: turn a raw idea into a sharp, falsifiable proposal — NABC, the gap, measurable contributions, testable RQs, venue and paper type. |
+| `/research.proposal` | Pipeline entry: turn a raw idea into a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue and paper type). |
 | `/research.relatedwork` | Survey prior work into `related-work.md` and sharpen the proposal's gap and positioning. |
 | `/research.feasibility` | De-risk the central result with a quick probe and return a GO / NO-GO / PIVOT verdict before you invest in the full build. |
 | `/research.tasks` | Produce three paper-type-aware plans: the design/build plan, the eval plan, and the paper task list (READY vs blocked-on-claim). |
