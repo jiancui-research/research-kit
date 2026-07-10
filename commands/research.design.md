@@ -1,5 +1,5 @@
 ---
-description: Implement the system from tasks/design.md into actual code (in the project's ./design/ folder), following the architecture and layout. The build lane; eval evaluates what this produces.
+description: Build lane, for build-papers only (skipped for measurement / SoK). Implement the system from tasks/design.md into actual code in the project's ./design/ folder; eval evaluates what this produces.
 argument-hint: which component(s) to build or update — or paste a build result / blocker to record
 ---
 

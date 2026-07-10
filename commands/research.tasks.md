@@ -1,5 +1,5 @@
 ---
-description: Turn the proposal + feasibility into three ordered plans — a design/build plan, an eval (evaluation) plan, and a paper section plan — into .research/tasks/.
+description: Turn the proposal + feasibility into three paper-type-aware plans (a design/build plan, an eval plan, and a paper section plan) in .research/tasks/.
 argument-hint: optional steering (e.g. "security venue, focus coverage over severity" or "system build is heavy, use spec-kit")
 ---
 

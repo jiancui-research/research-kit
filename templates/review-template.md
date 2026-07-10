@@ -105,7 +105,7 @@ each, leading with the strongest result and citing it exactly.]
 - Be paper-type aware: a benchmark paper adds checks (data construction transparency,
   inter-annotator agreement, bias / coverage, baseline results, maintenance plan); an
   attack / defense paper adds threat-model and dual-use checks. Pull the relevant
-  `templates/paper/<type>.md` rubric into the weaknesses pass.
+  `.research/templates/paper/<type>.md` rubric into the weaknesses pass.
 - Acknowledged limitations are not weaknesses unless they invalidate a core claim.
   Candor removes a reviewer's ammunition; a hidden flaw invites a harsher finding.
 - Turn every finding into an action: fix the draft, rescope a claim, add an

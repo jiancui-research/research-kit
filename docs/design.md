@@ -35,7 +35,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 
 - `/research.init` — One-time per paper repo: copy the bundled templates into `.research/templates/` so commands can load them.
 - `/research.constitution` — Establish or update the research constitution (quality principles, writing voice, venue norms).
-- `/research.proposal` — Pipeline entry point: turn a raw idea into a sharp, falsifiable `proposal.md` (NABC, gap, measurable contributions, testable RQs, approach, venue + paper-type).
+- `/research.proposal` — Pipeline entry point: turn a raw idea into `proposal.md`, a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue + paper-type).
 - `/research.relatedwork` — Survey prior work and position the contribution against the closest baselines.
 - `/research.feasibility` — De-risk the result with a quick check and emit a GO/NO-GO/PIVOT verdict; a no-go or pivot routes back to `/research.proposal`.
 - `/research.tasks` — Produce the three plans (paper-type aware): the design/build plan (`tasks/design.md`), the eval plan (`tasks/eval.md`), and the paper-section plan (`tasks/paper.md`).

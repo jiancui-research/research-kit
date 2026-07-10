@@ -1,6 +1,6 @@
 # Defense paper — section skeleton
 
-> Loaded by `/research.paper` when `idea.md` paper type is `defense`.
+> Loaded by `/research.paper` when `proposal.md` paper type is `defense`.
 > Core question: *can we prevent this threat, and at what cost?* The proof
 > obligation is a mechanism that stops the threat AND a quantified cost.
 > Fill every bracket; delete beats that do not apply to your sub-genre.

@@ -1,6 +1,6 @@
 # Systematization (SoK) paper — section skeleton
 
-> Loaded by /research.paper when idea.md paper type is systematization (SoK).
+> Loaded by /research.paper when proposal.md paper type is systematization (SoK).
 
 Use this skeleton when the paper's core question is "what does the field actually know about X, organized so the community can build on it?". The proof obligation is **two things, not one**: a NOVEL, defensible taxonomy/framework, PLUS lessons/insights that appear in *no single* prior paper. An SoK is not a new system, and it is not a literature dump - it is reorganization that produces new understanding.
 
