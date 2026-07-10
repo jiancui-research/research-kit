@@ -13,7 +13,7 @@ The raw idea arrives via the $ARGUMENTS placeholder. It is the INPUT to the whol
 4. Make informed guesses for everything missing. Infer the **paper-type** (measurement / attack / defense / benchmark / systematization (SoK)) and a plausible **target venue** from the problem; consult `.research/templates/venue-norms.md` to choose the venue and inherit its conventions, and if a matching `.research/templates/paper/<type>.md` exists, read it for type-specific framing.
 5. Ask **at most 3** clarifying questions, and ONLY for framing-critical unknowns that change the whole pitch (e.g., the core mechanism, the metric, or the threat model). If the proposal is workable without an answer, guess and record the guess in the numbered **Open assumptions** block - never as an inline bracket.
 6. **Story first.** Draft the 7-part spine as seven plain sentences (one per part) and show them in chat BEFORE writing any prose. If the seven sentences do not tell a story, no amount of polish will fix it - fix the spine first.
-7. Expand the spine into `./.research/proposal.md`, starting from `.research/templates/proposal-template.md` (`mkdir -p ./.research` first). Write part 1 (problem & motivation) last. Revise by cutting: each pass removes a sentence, it never adds one.
+7. Expand the spine into `./.research/proposal.md`, starting from `.research/templates/proposal-template.md` (`mkdir -p ./.research` first). Write part 1 (problem & motivation) last. Revise for clarity first, then cut what does not serve the argument: splitting a fused sentence is always allowed; fusing sentences to save space never is.
 
 ## What the document contains
 The template's shape and nothing more:
@@ -28,13 +28,17 @@ After drafting, check the draft against these lenses and report pass/fail in cha
 - The gap is argued (what prior work misses, why that matters), not a citation list.
 - The baselines could actually beat you: the unmodified default AND a fairly tuned state of the art, never only yourself.
 - Nondeterministic results plan repeated trials with variance; every confound is named with its control.
+- No sentence carries more than one claim, and the main point lands in the first ten words.
 - The whole document is at most 3 pages, and a smart non-specialist can restate problem, idea, and test after a two-minute read.
 
-## Readability gate (the proposal must be easy to read)
-- Plain words and short sentences; do not jam jargon. Define every term of art at first use, then reuse the same word instead of a synonym.
+## Readability gate (clarity and simplicity come first - before length, before completeness)
+- One claim per sentence: a sentence asserting two things joined by "and" or a semicolon gets split. Splitting for clarity is always allowed.
+- The main point lands in the first ~10 words; elaboration goes after a colon or into a list, never into stacked clauses.
+- Each sentence starts from what the reader just learned (given -> new); prefer the concrete example ("a poisoned pull request") to the category label ("poisoned context").
+- Plain words; do not jam jargon. Define every term of art at first use, then reuse the same word instead of a synonym.
 - Cite by bare name in prose ("unlike SpecEval"); full citations live only in References.
 - No inline `[ASSUMPTION: ...]` brackets anywhere in prose - every inferred value goes in the numbered Open assumptions block.
-- Each idea appears exactly once; the thesis exactly twice (elevator paragraph + part 3).
+- Each idea appears exactly once; the thesis exactly twice (elevator paragraph + part 3) - satisfied by cutting duplicates, never by fusing claims into one sentence.
 
 ## Completion
 Report the path `./.research/proposal.md` and the lens verification results. End with: `Next: /research.relatedwork` (survey + position), or `/research.feasibility` if related work is already done.
