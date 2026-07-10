@@ -1,16 +1,18 @@
 # Proposal: [short working title]
 
 > Produced by `/research.proposal`. Lives at `./.research/proposal.md`.
-> A proposal is a 1-3 page argument, not a form. Hard rules:
-> - **1-3 pages total.** Revise by cutting: each pass removes a sentence, it never adds one.
-> - **Each idea appears exactly once.** The thesis appears exactly twice: the elevator paragraph and part 3.
-> - **Easy to read.** Plain words, short sentences, no jargon pile-ups; define each term of art at first use, then reuse the same word. A smart non-specialist must be able to restate problem, idea, and test after a two-minute read.
+> A proposal is a 1-3 page argument, not a form. Hard rules - clarity and simplicity come first, before length and before completeness:
+> - **Easy to read.** Plain words, no jargon pile-ups; define each term of art at first use, then reuse the same word. A smart non-specialist must be able to restate problem, idea, and test after a two-minute read.
+> - **One claim per sentence.** A sentence that asserts two things joined by "and" or a semicolon gets split; splitting for clarity is always allowed.
+> - **Main point in the first ~10 words.** Elaboration goes after a colon or into a list, never into stacked clauses. Each sentence starts from what the reader just learned; prefer the concrete example ("a poisoned pull request") to the category label ("poisoned context").
+> - **1-3 pages total.** Cut what does not serve the argument - never by fusing sentences or trading away clarity.
+> - **Each idea appears exactly once.** The thesis appears exactly twice: the elevator paragraph and part 3. Satisfy this by cutting the duplicate, not by merging claims into one sentence.
 > - **Cite by bare name in prose** ("unlike SpecEval"); full citations live only in References.
 > - **No inline `[ASSUMPTION: ...]` brackets.** Everything inferred goes in the numbered Open assumptions block at the end.
 
 **Target venue:** [venue + one-line reason] · **Paper type:** [measurement / attack / defense / benchmark / SoK]
 
-*[The NABC elevator paragraph - the only compressed restatement of the pitch in the whole document. 3-5 sentences, no citations: who needs what outcome (Need), the mechanism and the insight that makes it work (Approach), the quantified payoff (Benefit), and the nearest alternative plus the do-nothing default, and why yours wins (Competition).]*
+*[The NABC elevator paragraph - the only compressed restatement of the pitch in the whole document. Short sentences with one claim each, as many as needed (roughly 6-9), under ~130 words, no citations: who needs what outcome (Need), the mechanism and the insight that makes it work (Approach), the quantified payoff (Benefit), and the nearest alternative plus the do-nothing default, and why yours wins (Competition).]*
 
 ## 1. Problem & motivation
 [~1 paragraph - write it LAST. Open on one vivid, concrete example the reader can picture, not background. Argue consequence (who is hurt if this stays unsolved) and tractability (why it is solvable now: new data, tool, access, or method) in the same breath. A huge problem with no credible attack is a daydream, not a proposal.]
