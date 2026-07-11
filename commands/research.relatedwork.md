@@ -15,21 +15,21 @@ The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cit
    - **Funnel** (broad area -> themes -> your niche) as a safe default.
 3. For each group, write a synthesis paragraph, never a shopping list. Use the per-paragraph scaffold:
    `<Theme topic sentence>. A line of work approaches this by <shared idea>, differing mainly in <axis>. These methods, however, all assume <constraint> / stop at <boundary>. In contrast, our work <delta>.`
-   Every paragraph ends with an explicit delta sentence positioning this paper.
+   Every paragraph ends with an explicit delta sentence positioning this paper. Shape each paragraph with the **argued-positioning craft moves** in `.research/templates/related-work-template.md`: lead with the shared blind spot (not a roster), group by failure-axis, concede shared costs before differentiating, and attack the strongest form using the competitor's own reported limitation.
 4. Treat the closest 2-3 baselines generously (no strawmen) and contrast them directly. Name the single closest prior work and add a note to forward-reference it in the Introduction.
 5. Close with a gap-stating final paragraph the reader can restate in one sentence:
    `To our knowledge, no prior work addresses <the specific cell>: existing systems either <do A but not B> or <do B but not A>. We close this gap by <one-line contribution>.`
-6. **Paper-type aware:** for benchmark, measurement, or systems papers, also draft a comparison table (rows = prior work, columns = the dimensions that matter for your contribution) so the gap is visually obvious. Pull dimensions from `.research/templates/paper/<type>.md` if present.
+6. **Paper-type aware:** for benchmark, measurement, defense, or SoK papers, also draft a comparison table (rows = prior work, columns = the dimensions that matter for your contribution) so the gap is visually obvious. Pull dimensions from `.research/templates/paper/<type>.md` if present.
 7. Keep Background (concepts needed to follow the technical sections) separate from Related Work (closest prior systems and the delta). Note that the merge-vs-split choice should match the target venue's recent papers; flag this for the user to check.
 8. (Optional) For breadth, the user may hand off to a deep-research workflow or skill to gather and cluster citations before you synthesize. This is optional, not required; if used, fold its output back into the structure above rather than pasting raw lists.
 9. **Sharpen the proposal.** The survey almost always sharpens the framing, so update `./.research/proposal.md`: tighten its **Gap** to the precise cell the survey exposed, name the closest prior work, and adjust positioning or contributions if the landscape shifted. Report what you changed in one or two lines; never silently overwrite the user's text.
 
-## Validate against a short checklist
+## Validate before finishing (a post-draft pass reported in chat, not text added to the section)
 - A reader can state the gap in one sentence after the section.
 - Every paragraph synthesizes (groups + delta); no `A did X, B did Y, C did Z` paragraphs.
 - The closest 2-3 baselines are named and contrasted generously.
 - The single closest prior work is flagged for an Introduction forward reference.
-- A comparison table is present for benchmark/measurement/systems papers.
+- A comparison table is present for benchmark/measurement/defense/SoK papers.
 - Background and Related Work are not conflated; venue convention is flagged for the user.
 - Limitations are not apologized for here (those belong in the Limitations section).
 - The proposal's Gap/positioning was sharpened from the survey (or a one-line note explains why no change was needed).
