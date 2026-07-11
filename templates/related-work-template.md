@@ -3,7 +3,8 @@
 > Produced by `/research.relatedwork`. Lives at `./.research/related-work.md`.
 > Reads `./.research/proposal.md` for the problem, gap, contributions, RQs, venue, and
 > paper type. The section turns those into a positioned survey, not a citation dump.
-> Fill every bracket. Each themed paragraph must end with an explicit delta sentence.
+> Clarity and the argument come first, not filling the form: write only what positions this paper,
+> cut the rest, and end each themed paragraph with an explicit delta sentence.
 > Paper type from `proposal.md` ([measurement | attack | defense | benchmark | SoK]) decides
 > whether the comparison table below is required - consult `.research/templates/paper/<type>.md`
 > for the dimensions that matter.
@@ -17,10 +18,19 @@
 - Why this structure: [...]
 
 ## Themed synthesis paragraphs
-[One paragraph per group. Synthesize, never list. Use the scaffold and end each on a delta:]
+[One paragraph per group (~4-6 sentences). Synthesize, never list. Use the scaffold and end each on a delta:]
 [`<Theme topic sentence>. A line of work approaches this by <shared idea>, differing
 mainly in <axis>. These methods, however, all assume <constraint> / stop at <boundary>.
 In contrast, our work <delta>.`]
+
+> **Argued positioning: craft moves (shape every paragraph with these; guidance, not text to paste).**
+> The scaffold above is hygiene; these are the moves that make a positioning paragraph win a crowded field.
+> 1. **Lead with the shared blind spot, not a roster.** Make the limitation the whole family shares the subject of the topic sentence, so the reader sees the gap before the list of systems. ("Existing agent defenses operate at the tool-call level" beats "Runtime defenses guard the agent in two ways.")
+> 2. **Group by failure-axis, not one paragraph per system.** Bucket prior work under the 2-3 underlying reasons it falls short; each bucket is a "differs in kind" claim. Two buckets are easier to hold than five papers.
+> 3. **Concede shared costs, then win elsewhere.** If a "why not just do X?" objection rests on something that also burdens you, grant it out loud, then attack the axis where you genuinely differ. Never lean on a differentiator that boomerangs onto your own system.
+> 4. **Attack the strongest form; prefer the competitor's own admission.** Go at the best member ("even the ones with formal proofs...") and cite their paper's own reported limitation as evidence, not your speculation.
+> 5. **Name the load-bearing mechanism with the exact word.** Make the pivotal link concrete and pick the technical term that carries the logic (the code is the *argument* of a tool call, not its *output*); imprecision here reads as not understanding the model.
+> 6. **Keep design rationale out of the gap.** "Why we built it this way" belongs in the proposal's Key idea, not here - each idea appears once.
 
 ### Theme 1: [name]
 [...]
@@ -38,7 +48,7 @@ In contrast, our work <delta>.`]
 - Closest #3: [work] - shares [...]; differs in [...]; we [delta].
 - Single closest prior work: [work] -> forward-reference it in the Introduction.
 
-## Comparison table (required for benchmark / measurement / systems papers)
+## Comparison table (expected for benchmark / measurement / defense / SoK papers)
 [Rows = prior work; columns = the dimensions that make your gap visible. Pull dimensions
 from `.research/templates/paper/<type>.md`. The empty cell that only your row fills is the gap.]
 
@@ -58,15 +68,6 @@ from `.research/templates/paper/<type>.md`. The empty cell that only your row fi
 prior systems and the delta (Related Work). Whether to merge or split should match the
 target venue's recent papers - flag the chosen convention for the user to confirm.]
 - Decision: [merge | split], because [venue convention]: [flag for user to check].
-
-## Quality checklist
-- [ ] A reader can state the gap in one sentence after the section.
-- [ ] Every paragraph synthesizes (groups + delta); no `A did X, B did Y, C did Z` paragraphs.
-- [ ] The closest 2-3 baselines are named and contrasted generously, no strawmen.
-- [ ] The single closest prior work is flagged for an Introduction forward reference.
-- [ ] A comparison table is present for benchmark / measurement / systems papers.
-- [ ] Background and Related Work are not conflated; venue convention is flagged for the user.
-- [ ] Limitations are not apologized for here (those belong in the Limitations section).
 
 ---
 Next: `/research.feasibility`

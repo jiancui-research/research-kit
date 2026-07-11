@@ -18,7 +18,7 @@
 [~1 paragraph - write it LAST. Open on one vivid, concrete example the reader can picture, not background. Argue consequence (who is hurt if this stays unsolved) and tractability (why it is solvable now: new data, tool, access, or method) in the same breath. A huge problem with no credible attack is a daydream, not a proposal.]
 
 ## 2. Gap
-[~1 paragraph, argued not listed: "Prior work does X, but X leaves Y open / assumes Z, which fails when <situation>. This idea fills exactly Y." The gap is exactly the hole the idea fills - no wider, no narrower.]
+[~1 paragraph, argued not listed: "Prior work does X, but X leaves Y open / assumes Z, which fails when <situation>. This idea fills exactly Y." The gap is exactly the hole the idea fills - no wider, no narrower. Argue it with the positioning moves in `related-work-template.md` (lead with the shared blind spot; group by failure-axis; concede shared costs; attack the strongest form).]
 
 ## 3. Key idea
 **Thesis:** [one declarative, falsifiable sentence, at most 35 words, naming the metric and the baseline. If a reader cannot repeat it back after a two-minute read, shorten it.]
