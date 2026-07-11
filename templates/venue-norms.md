@@ -1,6 +1,6 @@
 # Venue norms: choosing a venue and adapting to its conventions
 
-> Consulted by /research.idea (when choosing a target venue + paper type) and /research.paper (for structure conventions).
+> Consulted by /research.proposal (when choosing a target venue + paper type) and /research.paper (for structure conventions).
 
 **TL;DR:** Pick the venue *before* you draft - it sets your structure, your review game, and your obligations. The biggest split is **security** (USENIX Security, IEEE S&P, ACM CCS, NDSS) vs **AI/ML** (NeurIPS, ICML, ICLR, ACL/EMNLP via ARR). Same finding, different paper.
 
@@ -49,4 +49,4 @@ Same result, two papers. For **security**, lead with the threat it enables, add 
 - [ ] You know the review model and what you'll be asked to defend.
 
 ---
-**Next**: feed the chosen venue + paper type back to `/research.idea`, then `/research.paper` for the matching skeleton.
+**Next**: feed the chosen venue + paper type back to `/research.proposal`, then `/research.paper` for the matching skeleton.
