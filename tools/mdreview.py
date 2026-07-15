@@ -180,28 +180,31 @@ PAGE = r"""<!doctype html>
   :root { --line:#e2e2e2; --accent:#2563eb; --hl:#fff3b0; --hl-strong:#ffe066; }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#1f2328; }
-  #app { display:grid; grid-template-columns:250px 1fr 320px; height:100vh; }
+  #app { display:grid; grid-template-columns:230px 1fr 1fr 300px; height:100vh; }
   #side { border-right:1px solid var(--line); overflow-y:auto; padding:10px; font-size:13px; }
+  #scope { display:none; font-size:12px; color:#555; margin-bottom:8px; user-select:none; }
   #side .dir { font-weight:600; margin-top:6px; }
   #side button { display:block; width:100%; text-align:left; border:0; background:none;
                  padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:#333; }
   #side button:hover { background:#f0f3f8; }
   #side button.active { background:#e3ecfd; color:var(--accent); }
-  #main { overflow-y:auto; padding:28px 40px; }
-  #bar { display:flex; gap:8px; align-items:center; margin-bottom:14px; }
-  #bar .path { font-weight:600; margin-right:auto; }
+  #srcpane { display:flex; flex-direction:column; border-right:1px solid var(--line); min-width:0; }
+  #bar { display:flex; gap:8px; align-items:center; padding:9px 12px; border-bottom:1px solid var(--line); }
+  #bar .path { font-weight:600; font-size:13px; margin-right:auto; overflow:hidden;
+               text-overflow:ellipsis; white-space:nowrap; }
   #bar button { border:1px solid var(--line); background:#fff; border-radius:6px;
-                padding:5px 12px; cursor:pointer; font:inherit; }
+                padding:4px 11px; cursor:pointer; font:13px inherit; }
   #bar button:hover { border-color:var(--accent); color:var(--accent); }
-  #doc { max-width:760px; }
+  #editor { flex:1; width:100%; border:0; outline:none; resize:none; padding:14px 16px;
+            font:13px/1.55 ui-monospace,Menlo,monospace; color:#24292f; }
+  #main { overflow-y:auto; padding:22px 30px; min-width:0; }
+  #doc { max-width:720px; }
   #doc h1,#doc h2,#doc h3 { line-height:1.3; }
   #doc pre { background:#f6f8fa; padding:10px; border-radius:6px; overflow-x:auto; }
   #doc code { background:#f6f8fa; padding:1px 4px; border-radius:4px; font-size:90%; }
   #doc table { border-collapse:collapse; } #doc td,#doc th { border:1px solid var(--line); padding:4px 9px; }
   #doc blockquote { border-left:3px solid var(--line); margin-left:0; padding-left:14px; color:#555; }
   #doc mark { background:var(--hl); cursor:pointer; border-bottom:2px solid var(--hl-strong); }
-  #editor { display:none; width:100%; height:calc(100vh - 110px); font:13px/1.5 ui-monospace,Menlo,monospace;
-            border:1px solid var(--line); border-radius:6px; padding:12px; }
   #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px; }
   .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px; }
   .card.resolved { opacity:.55; }
@@ -220,17 +223,23 @@ PAGE = r"""<!doctype html>
   .empty { color:#999; }
 </style></head><body>
 <div id="app">
-  <nav id="side"></nav>
-  <section id="main">
-    <div id="bar" style="display:none">
+  <nav id="sidewrap" style="overflow-y:auto; border-right:1px solid var(--line);">
+    <div style="padding:10px 10px 0 10px;">
+      <label id="scope"><input type="checkbox" id="scopeChk" checked> .research/ only</label>
+    </div>
+    <div id="side" style="border:0;"></div>
+  </nav>
+  <section id="srcpane">
+    <div id="bar" style="visibility:hidden">
       <span class="path" id="path"></span>
-      <button id="editBtn">Edit</button>
-      <button id="saveBtn" style="display:none">Save</button>
-      <button id="cancelBtn" style="display:none">Cancel</button>
+      <button id="saveBtn">Save</button>
       <button id="exportBtn">Export</button>
     </div>
-    <article id="doc"><p class="empty">Pick a file on the left.</p></article>
-    <textarea id="editor" spellcheck="false"></textarea>
+    <textarea id="editor" spellcheck="false" placeholder="Pick a file on the left."></textarea>
+  </section>
+  <section id="main">
+    <article id="doc"><p class="empty">Raw markdown on the left, rendered preview here.
+      Click rendered text to jump the cursor to its source. Select rendered text to comment.</p></article>
   </section>
   <aside id="panel"><p class="empty">Comments appear here.</p></aside>
 </div>
@@ -239,20 +248,30 @@ PAGE = r"""<!doctype html>
 <div id="toast"></div>
 <script>
 const $ = id => document.getElementById(id);
-let state = null;      // {path, content, mtime, comments:[{...,anchored}]}
-let editing = false;
+let state = null;      // {path, mtime, comments:[{...,anchored}]}
+let allFiles = [];
 let pending = null;    // {quote, prefix, suffix} awaiting comment text
+let dirty = false;
+let renderTimer = null;
 
-const api = async (url, body) => {
-  const res = await fetch(url, body ? {method:"POST",
-    headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : undefined);
-  return res;
-};
+const api = async (url, body) => fetch(url, body ? {method:"POST",
+  headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : undefined);
 const toast = msg => { const t=$("toast"); t.textContent=msg; t.style.display="block";
   setTimeout(()=>t.style.display="none", 2200); };
+const setDirty = d => { dirty = d; $("saveBtn").textContent = d ? "Save •" : "Save"; };
 
+/* ---------- sidebar ---------- */
 async function loadFiles() {
-  const files = await (await api("/api/files")).json();
+  allFiles = await (await api("/api/files")).json();
+  const hasResearch = allFiles.some(f => f.startsWith(".research/"));
+  $("scope").style.display = hasResearch ? "block" : "none";
+  $("scopeChk").checked = hasResearch;
+  renderSidebar();
+}
+$("scopeChk").onchange = renderSidebar;
+function renderSidebar() {
+  const only = $("scope").style.display !== "none" && $("scopeChk").checked;
+  const files = only ? allFiles.filter(f => f.startsWith(".research/")) : allFiles;
   const tree = {};
   for (const f of files) {
     const parts = f.split("/"); let node = tree;
@@ -272,26 +291,45 @@ function renderTree(node, el, depth) {
     } else {
       const b = document.createElement("button");
       b.textContent = key; b.dataset.path = node[key]; b.style.paddingLeft = (depth*12+6) + "px";
+      b.classList.toggle("active", state && state.path === node[key]);
       b.onclick = () => openDoc(node[key]);
       el.appendChild(b);
     }
   }
 }
 
+/* ---------- document ---------- */
 async function openDoc(path) {
+  if (dirty && !confirm("Unsaved changes will be lost. Switch file anyway?")) return;
   const res = await api("/api/doc?path=" + encodeURIComponent(path));
   if (!res.ok) { toast((await res.json()).error); return; }
-  state = await res.json();
-  setEditing(false);
-  $("bar").style.display = "flex";
+  const d = await res.json();
+  state = { path: d.path, mtime: d.mtime, comments: d.comments };
+  $("editor").value = d.content;
+  setDirty(false);
+  $("bar").style.visibility = "visible";
   $("path").textContent = state.path;
-  $("doc").innerHTML = state.html;
-  for (const btn of document.querySelectorAll("#side button"))
-    btn.classList.toggle("active", btn.dataset.path === path);
+  paint(d.html);
+  renderSidebar();
+}
+function paint(html) {
+  $("doc").innerHTML = html;
   applyHighlights();
   renderPanel();
 }
+async function rerender() {
+  if (!state) return;
+  const res = await api("/api/render", {content: $("editor").value});
+  if (res.ok) paint((await res.json()).html);
+}
+$("editor").addEventListener("input", () => {
+  if (!state) return;
+  setDirty(true);
+  clearTimeout(renderTimer);
+  renderTimer = setTimeout(rerender, 450);
+});
 
+/* ---------- highlights + comments ---------- */
 function textNodesUnder(el) {
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), out = [];
   let n; while (n = w.nextNode()) out.push(n);
@@ -327,11 +365,10 @@ function applyHighlights() {
     }
   }
 }
-
 function renderPanel() {
   const panel = $("panel"); panel.innerHTML = "";
   if (!state.comments.length) {
-    panel.innerHTML = '<p class="empty">No comments. Select text in the document to add one.</p>';
+    panel.innerHTML = '<p class="empty">No comments. Select rendered text to add one.</p>';
     return;
   }
   for (const c of state.comments) {
@@ -341,21 +378,28 @@ function renderPanel() {
     const q = document.createElement("span"); q.className = "q"; q.textContent = '"' + c.quote + '"';
     const body = document.createElement("div"); body.textContent = c.comment;
     const meta = document.createElement("div"); meta.className = "meta";
-    meta.textContent = c.created.slice(0, 16).replace("T", " ") + (c.anchored ? "" : " ");
+    meta.textContent = c.created.slice(0, 16).replace("T", " ") + " ";
     if (!c.anchored) { const o = document.createElement("span"); o.className = "orphan";
       o.textContent = "orphaned"; meta.appendChild(o); }
     const res = document.createElement("button");
     res.textContent = c.resolved ? "Reopen" : "Resolve";
     res.onclick = async () => { await api("/api/comment/update",
-      {path: state.path, id: c.id, resolved: !c.resolved}); openDoc(state.path); };
+      {path: state.path, id: c.id, resolved: !c.resolved}); refreshComments(); };
     const del = document.createElement("button");
     del.textContent = "Delete";
     del.onclick = async () => { await api("/api/comment/delete",
-      {path: state.path, id: c.id}); openDoc(state.path); };
+      {path: state.path, id: c.id}); refreshComments(); };
     meta.append(res, del);
     card.append(q, body, meta);
     panel.appendChild(card);
   }
+}
+async function refreshComments() {
+  // re-fetch comments only; keep the editor (possibly dirty) untouched
+  const res = await api("/api/doc?path=" + encodeURIComponent(state.path));
+  if (!res.ok) return;
+  state.comments = (await res.json()).comments;
+  rerender();
 }
 function focusCard(id) {
   const card = $("card-" + id);
@@ -364,8 +408,9 @@ function focusCard(id) {
     setTimeout(()=>card.style.borderColor = "", 1200); }
 }
 
+/* ---------- select-to-comment ---------- */
 $("doc").addEventListener("mouseup", ev => {
-  if (editing || !state) return;
+  if (!state) return;
   setTimeout(() => {
     const sel = window.getSelection();
     if (!sel.rangeCount || sel.isCollapsed) { $("pop").style.display = "none"; return; }
@@ -390,24 +435,62 @@ $("popAdd").onclick = async () => {
   if (!text || !pending) return;
   await api("/api/comment/add", {path: state.path, ...pending, comment: text});
   $("pop").style.display = "none"; pending = null;
-  openDoc(state.path);
+  refreshComments();
 };
 document.addEventListener("mousedown", ev => {
   if (!$("pop").contains(ev.target)) $("pop").style.display = "none";
 });
 
-function setEditing(on) {
-  editing = on;
-  $("doc").style.display = on ? "none" : "";
-  $("editor").style.display = on ? "block" : "none";
-  $("editBtn").style.display = on ? "none" : "";
-  $("exportBtn").style.display = on ? "none" : "";
-  $("saveBtn").style.display = on ? "" : "none";
-  $("cancelBtn").style.display = on ? "" : "none";
+/* ---------- click rendered -> cursor in source ---------- */
+$("doc").addEventListener("click", ev => {
+  if (!state) return;
+  const sel = window.getSelection();
+  if (sel && !sel.isCollapsed) return;              // a drag-select, not a click
+  let node = null, offset = 0;
+  if (document.caretRangeFromPoint) {
+    const r = document.caretRangeFromPoint(ev.clientX, ev.clientY);
+    if (r) { node = r.startContainer; offset = r.startOffset; }
+  } else if (document.caretPositionFromPoint) {
+    const p = document.caretPositionFromPoint(ev.clientX, ev.clientY);
+    if (p) { node = p.offsetNode; offset = p.offset; }
+  }
+  if (!node || !$("doc").contains(node)) return;
+  const pre = document.createRange();
+  pre.selectNodeContents($("doc"));
+  try { pre.setEnd(node, offset); } catch (e) { return; }
+  jumpToSource(pre.toString());
+});
+function jumpToSource(renderedCtx) {
+  const src = $("editor").value;
+  const total = $("doc").textContent.length || 1;
+  const ratio = renderedCtx.length / total;         // where the click sits in the doc
+  let tail = renderedCtx.slice(-60);
+  while (tail.length >= 5) {
+    const hits = [];
+    let i = src.indexOf(tail);
+    while (i >= 0 && hits.length < 50) { hits.push(i); i = src.indexOf(tail, i + 1); }
+    if (hits.length) {
+      // among repeated matches, pick the one whose position best matches the click's
+      const best = hits.reduce((a, b) =>
+        Math.abs(b / src.length - ratio) < Math.abs(a / src.length - ratio) ? b : a);
+      placeCursor(best + tail.length);
+      return;
+    }
+    tail = tail.slice(Math.max(1, Math.ceil(tail.length / 4)));  // markdown syntax in the way: shrink from the left
+  }
 }
-$("editBtn").onclick = () => { $("editor").value = state.content; setEditing(true); };
-$("cancelBtn").onclick = () => setEditing(false);
+function placeCursor(pos) {
+  const ed = $("editor");
+  ed.focus();
+  ed.setSelectionRange(pos, pos);
+  const line = ed.value.slice(0, pos).split("\n").length - 1;
+  const lh = parseFloat(getComputedStyle(ed).lineHeight) || 20;
+  ed.scrollTop = Math.max(0, line * lh - ed.clientHeight / 2);
+}
+
+/* ---------- save + export ---------- */
 async function save(overwrite) {
+  if (!state) return;
   const body = { path: state.path, content: $("editor").value };
   if (!overwrite) body.mtime = state.mtime;
   const res = await api("/api/doc", body);
@@ -417,14 +500,15 @@ async function save(overwrite) {
     return openDoc(state.path);
   }
   if (!res.ok) { toast((await res.json()).error); return; }
+  state.mtime = (await res.json()).mtime;
+  setDirty(false);
   toast("Saved");
-  await openDoc(state.path);
+  rerender();
 }
 $("saveBtn").onclick = () => save(false);
 document.addEventListener("keydown", ev => {
-  if ((ev.metaKey || ev.ctrlKey) && ev.key === "s" && editing) { ev.preventDefault(); save(false); }
+  if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") { ev.preventDefault(); save(false); }
 });
-
 $("exportBtn").onclick = async () => {
   const res = await api("/api/export?path=" + encodeURIComponent(state.path));
   await navigator.clipboard.writeText(await res.text());
@@ -452,6 +536,8 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
             }
         if method == "GET" and path == "/api/export":
             return 200, "text/plain; charset=utf-8", export_text(root, query["path"][0])
+        if method == "POST" and path == "/api/render":
+            return 200, "application/json", {"html": render_md(body["content"])}
         if method == "POST" and path == "/api/doc":
             return 200, "application/json", write_doc(
                 root, body["path"], body["content"], body.get("mtime"))

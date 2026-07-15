@@ -18,13 +18,15 @@ A local, single-user web UI for reviewing markdown documents in any repo: read t
 
 Serve every `*.md` under the launch directory, recursively, skipping `.git`, `node_modules`, `.venv`, and `.mdreview`. Hidden directories like `.research` are included. Sidebar shows a collapsible tree.
 
-## UI model: rendered-first with edit toggle
+## UI model: Overleaf-style split view (revised 2026-07-14 after first use)
 
-- Default view: server-rendered markdown (python-markdown, extensions: `tables`, `fenced_code`).
-- `Edit` swaps the document for a full-document plain textarea. `Save` POSTs and returns to the rendered view; `Cancel` discards. Cmd/Ctrl-S also saves.
-- No live preview and no autosave in v1.
-- Commented spans are highlighted in the rendered view; clicking one focuses its card in a right-hand comments panel (text, timestamp, resolve toggle, delete).
-- Selecting text in the rendered view shows an "Add comment" popover.
+v1 shipped rendered-first with an edit toggle; after first use the user requested a permanent split view, so the toggle is gone.
+
+- Four columns: file sidebar, raw markdown editor, rendered preview, comments panel.
+- The editor is always live; typing re-renders the preview after a 450 ms debounce via `POST /api/render` (server-side python-markdown, extensions: `tables`, `fenced_code`). Save is explicit (button or Cmd/Ctrl-S); no autosave.
+- **Click-to-source sync:** clicking in the rendered pane moves the cursor to the corresponding spot in the raw editor (blinking caret, scrolled into view). Implemented by taking the rendered text up to the click point, searching the source for its tail (shrinking from the left when markdown syntax breaks the match), and disambiguating repeated phrases by relative document position.
+- Commented spans are highlighted in the rendered view; clicking one focuses its card in the comments panel (text, timestamp, resolve toggle, delete). Selecting rendered text shows an "Add comment" popover. Comment actions refresh comments without touching unsaved editor content.
+- Sidebar scope toggle: when the repo has `.research/`, the sidebar defaults to showing only `.research/**`, with a checkbox to show every markdown file.
 
 ## Comments
 
