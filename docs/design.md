@@ -46,6 +46,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.review` — Simulate a reviewer panel reading **only the paper**; report mock reviews + scores with a suggested fix command per finding (writes only `review/round-N.md`, never another artifact), and loop until clean.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
 - `/research.ae` — Prepare an artifact-evaluation submission (reproducibility checklist, artifact README, badge plan, archival link).
+- `/research.mdreview` — Optional review UI: launch `tools/mdreview.py` (local web server) to read, edit, comment on, and export the repo's markdown; comments land in `./.mdreview/` as sidecar JSON.
 
 ## Working-directory model
 

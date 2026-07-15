@@ -31,7 +31,7 @@ flowchart TD
 - `analyze` = the sync checker: detects lane drift, routes the exact re-run, and doubles as the review-readiness audit.
 - `review` reads only the paper (like a real reviewer); it reports findings + scores and suggests a fix command per finding — you route them and re-run, looping until clean.
 - `design` is paper-type aware: heavy for systems / defense, skipped for measurement / SoK.
-- Auxiliary: `rebuttal` (post-submission), `ae` (artifact evaluation).
+- Auxiliary: `rebuttal` (post-submission), `ae` (artifact evaluation), `mdreview` (optional local review UI; its `./.mdreview/` comment sidecars are plain JSON any lane's command can read - it writes no pipeline artifact).
 
 ## Input → output, per command
 

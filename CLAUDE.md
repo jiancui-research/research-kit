@@ -14,7 +14,7 @@ Because the shipped Markdown *is* the product (read by AI agents and users, neve
 
 When editing this repo you are authoring the **bundle**. The `.research/...` paths written inside command bodies refer to the **end user's paper repo at runtime**, not to this repo.
 
-- **This repo (the bundle):** `commands/`, `templates/` (root), `memory/constitution.md` (root), `install.sh`, `.claude-plugin/`.
+- **This repo (the bundle):** `commands/`, `templates/` (root), `tools/` (optional utilities), `memory/constitution.md` (root), `install.sh`, `.claude-plugin/`.
 - **The user's paper repo (runtime, never exists here):** `./.research/` holds tracking docs - `.research/templates/` (copied in by `/research.init`), `.research/memory/constitution.md`, `proposal.md`, `claims.md`, `tasks/`, etc. Work products (`design/`, `eval/`, `paper/`, `feasibility/`) are sibling root folders.
 
 So: this repo's root `templates/` and `memory/constitution.md` are the **source** that gets *copied into* a user's `./.research/templates/` and `./.research/memory/constitution.md`. Command bodies read from the `.research/` copies, never from this repo's paths.
@@ -74,5 +74,5 @@ There is no test runner or linter. The validation loop (from `CONTRIBUTING.md`) 
 - **Don't let a command write into another command's artifact.** The only two allowed cross-writes are `relatedwork → proposal.md` and `eval → claims.md`; `analyze` and `review` are report-only (they route a re-run, never edit other lanes).
 - **Don't inline a long checklist or skeleton** into a command body - it belongs in `templates/` and is referenced via `.research/templates/...`. Keep command files short (< ~120 lines).
 - **`cp -Rn` (init) and the install copy are no-clobber by design.** They fill in missing files and never overwrite a user's customized `./.research/` content - that's a feature; don't "fix" it into an overwrite.
-- **Don't add machinery.** No Python CLI, hooks, MCP servers, daemon, or build step. The plugin packaging is a manifest around the same Markdown - nothing more.
+- **Don't add machinery.** No Python CLI, hooks, MCP servers, daemon, or build step for the pipeline itself. One deliberate exception exists: `tools/mdreview.py`, an optional leaf review UI launched by `/research.mdreview` - nothing in the pipeline depends on it, and it must stay that way. The plugin packaging is a manifest around the same Markdown - nothing more.
 - **Editing one place means editing the mirrors.** A flow change must stay consistent across `README.md`, `docs/workflow.md`, and `docs/design.md`; a command's one-line description lives in its frontmatter *and* the README Commands table.
