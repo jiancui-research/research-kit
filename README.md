@@ -1,18 +1,53 @@
-# research-kit
+<div align="center">
 
-Spec-Driven Development for research papers, as slash commands for your AI coding agent — Claude Code, Codex CLI, or GitHub Copilot CLI. Instead of one giant "write my paper" prompt, you get a pipeline of small commands: each reads what came before, takes your input, and writes one artifact under `./.research/`. Just Markdown commands + templates and a default research constitution — no Python CLI, no build step.
+# 🔬 research-kit
 
-## Pipeline
+### *Spec-Driven Development for research papers.*
 
+**A pipeline of slash commands for your AI coding agent — Claude Code, Codex CLI, or GitHub Copilot CLI.
+Every stage of paper writing becomes one reviewable artifact on disk. Pure Markdown: no build step, no lock-in.**
+
+[![License](https://img.shields.io/github/license/jiancui-research/research-kit)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/jiancui-research/research-kit)](https://github.com/jiancui-research/research-kit/commits/main)
+[![Agents](https://img.shields.io/badge/agents-Claude%20Code%20·%20Codex%20·%20Copilot-blueviolet)](#-supported-agents)
+[![Form factor](https://img.shields.io/badge/pure%20markdown-no%20build%20step-brightgreen)](#-quickstart)
+[![GitHub stars](https://img.shields.io/github/stars/jiancui-research/research-kit?style=social)](https://github.com/jiancui-research/research-kit/stargazers)
+
+[Quickstart](#-quickstart) · [Commands](#-commands) · [Review UI](#-the-review-ui-researchmdreview) · [Workflow docs](docs/workflow.md) · [Design](docs/design.md)
+
+</div>
+
+---
+
+## 🤔 Why
+
+Asking one giant "write my paper" prompt produces plausible slop and hidden overclaims. research-kit splits the work the way strong labs do:
+
+- **One command per stage, one artifact per command.** Each stage reads what came before, takes your steering, and writes a single reviewable document under `./.research/` — your decision record, committed with the paper.
+- **A kill-switch before you over-invest.** `feasibility` runs one small probe and returns **GO / NO-GO / PIVOT** before the full build.
+- **Claims that can't drift from evidence.** The build (`design`), evaluation (`eval`), and writing (`paper`) lanes co-evolve in parallel, synced only through a claim ↔ evidence matrix (`claims.md`); `analyze` catches drift and names the exact re-run, and `review` simulates a reviewer panel reading only the paper.
+
+## 🗺️ The pipeline
+
+```mermaid
+flowchart LR
+    C[constitution] --> P[proposal] --> RW[relatedwork] --> F{feasibility<br/>GO / NO-GO / PIVOT}
+    F -.->|NO-GO / PIVOT| P
+    F -->|GO| T[tasks]
+    subgraph lanes["parallel lanes (co-evolve)"]
+        D["design<br/>→ ./design/ code"] ~~~ E["eval<br/>→ claims.md"] ~~~ PA["paper<br/>reads claims.md"]
+    end
+    T --> lanes
+    lanes --> A["analyze<br/>(sync check)"] --> R["review<br/>(paper-only)"]
+    A -.->|re-run stale lane| lanes
+    R -.->|route findings| lanes
 ```
-constitution → proposal → relatedwork → feasibility → tasks → (design + eval + paper, in parallel) → analyze → review
-```
 
-After feasibility, `tasks` fans out into three parallel lanes that co-evolve: **design** builds the system (code), **eval** evaluates it, **paper** writes it up. `analyze` is the sync checker that catches drift between them and tells you what to re-run. The design lane is paper-type aware - heavy for systems/defense, skipped for measurement / SoK. Plus auxiliary commands: `rebuttal` (post-submission) and `ae` (artifact evaluation). Run any subset, re-run any stage as your work evolves; commands only touch their own artifacts and never overwrite silently.
+After feasibility, `tasks` fans out into three parallel lanes that co-evolve: **design** builds the system (code), **eval** evaluates it, **paper** writes it up. The design lane is paper-type aware — heavy for systems/defense, skipped for measurement / SoK. Auxiliary commands: `rebuttal` (post-submission), `ae` (artifact evaluation), and `mdreview` (the review UI below). Run any subset, re-run any stage as your work evolves; commands only touch their own artifacts and never overwrite silently.
 
 📐 **[Workflow diagram + per-command inputs/outputs →](docs/workflow.md)**
 
-## Quickstart
+## ⚡ Quickstart
 
 **Claude Code — plugin (recommended, no script):**
 
@@ -48,7 +83,7 @@ Then, in your paper repo:
 /research.feasibility
 /research.tasks                      # writes three plans: design, eval, paper
 /research.design                     # build-papers only: implement the system into ./design/
-/research.eval                 # evaluate the build; runs parallel with paper, synced via claims.md
+/research.eval                       # evaluate the build; runs parallel with paper, synced via claims.md
 /research.paper
 /research.analyze                    # also a "sync" check: what drifted, what to re-run
 /research.review
@@ -56,7 +91,7 @@ Then, in your paper repo:
 
 Each command writes its result into `./.research/` and suggests the next one. (Plugin installs prefix every command with `research-kit:`.)
 
-## Commands
+## 🧩 Commands
 
 | Command | What it does |
 | --- | --- |
@@ -75,18 +110,18 @@ Each command writes its result into `./.research/` and suggests the next one. (P
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 | `/research.mdreview` | Open a local web UI to read, edit, comment on, and export the repo's markdown (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
 
-## The review UI (`/research.mdreview`)
+## 🖥️ The review UI (`/research.mdreview`)
 
-Read, edit, comment on, and export your paper's markdown in a local web UI - one file, localhost only, nothing beyond `uv` to install.
+Read, edit, comment on, and export your paper's markdown in a local web UI — one file, localhost only, nothing beyond `uv` to install.
 
 ![mdreview demo: click-to-source sync, commenting, export](docs/assets/mdreview-demo.gif)
 
-- **Overleaf-style split view** - raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
-- **Click-to-source sync** - click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor.
-- **Google-Docs-style comments** - select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: "read `.mdreview/` and address the comments on proposal.md".
-- **One-click export** - copies the document plus open comments to the clipboard, ready to paste into any AI for review.
-- **Mermaid diagrams** - ` ```mermaid ` fences render as diagrams (via CDN; they fall back to code blocks offline).
-- **Safe saves** - atomic writes with a conflict guard for when the file changed on disk mid-review (say, an agent edited it), plus a `.research/ only` sidebar filter that keeps the focus on the tracking docs.
+- ✂️ **Overleaf-style split view** — raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
+- 🎯 **Click-to-source sync** — click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor; the **Reveal →** button blinks the preview text matching your cursor.
+- 💬 **Google-Docs-style comments** — select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: *"read `.mdreview/` and address the comments on proposal.md"*.
+- 📋 **One-click export** — copies the document plus open comments to the clipboard, ready to paste into any AI for review.
+- 🧜 **Mermaid diagrams** — ` ```mermaid ` fences render as diagrams with a zoom + pan lightbox (via CDN; they fall back to code blocks offline).
+- 🔒 **Safe saves** — atomic writes with a conflict guard for when the file changed on disk mid-review (say, an agent edited it), plus a `.research/ only` sidebar filter that keeps the focus on the tracking docs.
 
 ![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
 
@@ -96,7 +131,7 @@ Read, edit, comment on, and export your paper's markdown in a local web UI - one
 
 Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
 
-## Supported agents
+## 🤖 Supported agents
 
 The same pipeline installs for three agents; pick one or more (`--all` for every one; default is Claude Code).
 
@@ -112,7 +147,7 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 - **Codex** has its own plugin marketplace, but it expects a skill-based Codex plugin (`.agents/plugins/marketplace.json` + `.codex-plugin/`), not the `.claude-plugin` bundle — so Codex uses the script, which installs the commands into `~/.codex/prompts/` as native `/research.*` slash commands.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
 
-## Working directory
+## 📁 Working directory
 
 The project is one repo (under `~/Projects`, outside the vault). research-kit's **tracking docs** all live under `./.research/` — commit it alongside the paper as the decision record. The actual **work products** (code, data, paper source) live in sibling root folders.
 
@@ -136,14 +171,14 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   paper/                   outlines, drafts, and the manuscript source (LaTeX, figures)
 ```
 
-## Customization
+## 🎨 Customization
 
 `.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`.
 
-## Contributing
+## 🤝 Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Keep it simple, keep the pipeline consistent, and write original, generalizable guidance.
 
-## Credits & license
+## 🙏 Credits & license
 
 Inspired by [GitHub spec-kit](https://github.com/github/spec-kit) (MIT), which brought Spec-Driven Development to software. MIT licensed — see [LICENSE](LICENSE).
