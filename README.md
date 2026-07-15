@@ -15,6 +15,10 @@ Every stage of paper writing becomes one reviewable artifact on disk. Pure Markd
 
 [Quickstart](#-quickstart) · [Commands](#-commands) · [Review UI](#-the-review-ui-researchmdreview) · [Workflow docs](docs/workflow.md) · [Design](docs/design.md)
 
+![mdreview demo: click-to-source sync, commenting, export](docs/assets/mdreview-demo.gif)
+
+*The bundled review UI: Overleaf-style split view, click-to-source sync, Google-Docs-style comments, one-click export to any AI — [details below](#-the-review-ui-researchmdreview).*
+
 </div>
 
 ---
@@ -73,7 +77,10 @@ Copilot reads the same `.claude-plugin` bundle directly, exposing the namespaced
 ./install.sh            # Claude Code (default). Also: --codex, --copilot, --all
 ```
 
-Then, in your paper repo:
+Then, in your paper repo, start with `/research.init` and follow the pipeline — each command writes its result into `./.research/` and suggests the next one. (Plugin installs prefix every command with `research-kit:`.)
+
+<details>
+<summary><b>The full run, stage by stage</b></summary>
 
 ```sh
 /research.init                       # once per repo: copy templates into .research/
@@ -89,7 +96,7 @@ Then, in your paper repo:
 /research.review
 ```
 
-Each command writes its result into `./.research/` and suggests the next one. (Plugin installs prefix every command with `research-kit:`.)
+</details>
 
 ## 🧩 Commands
 
@@ -112,9 +119,7 @@ Each command writes its result into `./.research/` and suggests the next one. (P
 
 ## 🖥️ The review UI (`/research.mdreview`)
 
-Read, edit, comment on, and export your paper's markdown in a local web UI — one file, localhost only, nothing beyond `uv` to install.
-
-![mdreview demo: click-to-source sync, commenting, export](docs/assets/mdreview-demo.gif)
+Read, edit, comment on, and export your paper's markdown in a local web UI — one file, localhost only, nothing beyond `uv` to install. (Demo GIF at the top of this page.)
 
 - ✂️ **Overleaf-style split view** — raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
 - 🎯 **Click-to-source sync** — click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor; the **Reveal →** button blinks the preview text matching your cursor.
@@ -122,8 +127,6 @@ Read, edit, comment on, and export your paper's markdown in a local web UI — o
 - 📋 **One-click export** — copies the document plus open comments to the clipboard, ready to paste into any AI for review.
 - 🧜 **Mermaid diagrams** — ` ```mermaid ` fences render as diagrams with a zoom + pan lightbox (via CDN; they fall back to code blocks offline).
 - 🔒 **Safe saves** — atomic writes with a conflict guard for when the file changed on disk mid-review (say, an agent edited it), plus a `.research/ only` sidebar filter that keeps the focus on the tracking docs.
-
-![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
 
 | Comment on a selection | Click-to-source sync + mermaid |
 | --- | --- |
@@ -143,13 +146,21 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 | **GitHub Copilot CLI** (plugin) | `copilot plugin marketplace add jiancui-research/research-kit` → `copilot plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **GitHub Copilot CLI** (script) | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |
 
+<details>
+<summary><b>Per-agent notes (Copilot bundle, Codex marketplace, self-pruning, overrides)</b></summary>
+
 - **Copilot** installs the same `.claude-plugin` bundle straight from its marketplace (`copilot plugin marketplace add …` → `copilot plugin install research-kit@research-kit`), reading `commands/` directly — no script needed. The `./install.sh --copilot` path stays as an alternative that instead generates `*.agent.md` custom agents (invoked via `/agent`).
 - **Codex** has its own plugin marketplace, but it expects a skill-based Codex plugin (`.agents/plugins/marketplace.json` + `.codex-plugin/`), not the `.claude-plugin` bundle — so Codex uses the script, which installs the commands into `~/.codex/prompts/` as native `/research.*` slash commands.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
 
+</details>
+
 ## 📁 Working directory
 
 The project is one repo (under `~/Projects`, outside the vault). research-kit's **tracking docs** all live under `./.research/` — commit it alongside the paper as the decision record. The actual **work products** (code, data, paper source) live in sibling root folders.
+
+<details>
+<summary><b>Full layout</b></summary>
 
 ```
 <project>/                 one repo under ~/Projects, outside the vault
@@ -170,6 +181,8 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   eval/                    eval writeups + index + scripts, data, results
   paper/                   outlines, drafts, and the manuscript source (LaTeX, figures)
 ```
+
+</details>
 
 ## 🎨 Customization
 
