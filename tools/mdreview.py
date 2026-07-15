@@ -301,9 +301,9 @@ async function loadFiles() {
 $("scopeChk").onchange = renderSidebar;
 function renderSidebar() {
   const only = $("scope").style.display !== "none" && $("scopeChk").checked;
-  // toggled: only the tracking docs sitting directly in .research/ (hides templates/, tasks/, memory/, ...)
+  // toggled: everything the pipeline wrote under .research/ - only the bundled templates are noise
   const files = only
-    ? allFiles.filter(f => f.startsWith(".research/") && !f.slice(10).includes("/"))
+    ? allFiles.filter(f => f.startsWith(".research/") && !f.startsWith(".research/templates/"))
     : allFiles;
   const tree = {};
   for (const f of files) {

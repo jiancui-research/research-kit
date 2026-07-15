@@ -1,7 +1,7 @@
 {
   "name": "research-kit",
   "description": "Spec-Driven Development for research papers: a /research.* pipeline (proposal, related work, feasibility, tasks, then parallel design/eval/paper lanes, analyze, review) that turns each stage of paper writing into a reviewable artifact on disk.",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "author": {
     "name": "Jian Cui"
   }
