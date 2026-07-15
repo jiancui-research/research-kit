@@ -77,3 +77,24 @@ def test_write_doc_roundtrip_and_conflict(repo):
 def test_write_doc_creates_parents(repo):
     m.write_doc(repo, "paper/new/intro.md", "hi\n", None)
     assert (repo / "paper" / "new" / "intro.md").read_text(encoding="utf-8") == "hi\n"
+
+
+def test_comments_crud(repo):
+    rel = ".research/proposal.md"
+    assert m.load_comments(repo, rel) == []
+    c = m.add_comment(repo, rel, "Prior work does X", "", ".", "too vague - name the work")
+    assert c["resolved"] is False and len(c["id"]) == 12
+    assert (repo / ".mdreview" / ".research" / "proposal.md.json").is_file()
+    got = m.load_comments(repo, rel)
+    assert len(got) == 1 and got[0]["comment"] == "too vague - name the work"
+    upd = m.update_comment(repo, rel, c["id"], {"resolved": True})
+    assert upd["resolved"] is True
+    m.delete_comment(repo, rel, c["id"])
+    assert m.load_comments(repo, rel) == []
+
+
+def test_comment_unknown_id(repo):
+    rel = ".research/proposal.md"
+    with pytest.raises(m.RequestError) as e:
+        m.update_comment(repo, rel, "deadbeef0000", {"resolved": True})
+    assert e.value.status == 404
