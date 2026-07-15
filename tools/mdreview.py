@@ -512,13 +512,33 @@ function jumpToSource(renderedCtx, selectWord) {
     }
   }
 }
+function caretTop(ed, pos) {
+  // mirror the textarea's text up to pos in a hidden div with identical wrapping,
+  // so soft-wrapped long lines measure at their true visual height
+  const div = document.createElement("div");
+  const style = getComputedStyle(ed);
+  for (const p of ["fontFamily","fontSize","fontWeight","lineHeight","letterSpacing",
+                   "paddingTop","paddingRight","paddingBottom","paddingLeft","boxSizing"])
+    div.style[p] = style[p];
+  div.style.position = "absolute";
+  div.style.visibility = "hidden";
+  div.style.whiteSpace = "pre-wrap";
+  div.style.wordWrap = "break-word";
+  div.style.width = ed.clientWidth + "px";
+  div.textContent = ed.value.slice(0, pos);
+  const marker = document.createElement("span");
+  marker.textContent = "​";
+  div.appendChild(marker);
+  document.body.appendChild(div);
+  const top = marker.offsetTop;
+  div.remove();
+  return top;
+}
 function placeCursor(pos, end) {
   const ed = $("editor");
   ed.focus();
   ed.setSelectionRange(pos, end ?? pos);
-  const line = ed.value.slice(0, pos).split("\n").length - 1;
-  const lh = parseFloat(getComputedStyle(ed).lineHeight) || 20;
-  ed.scrollTop = Math.max(0, line * lh - ed.clientHeight / 2);
+  ed.scrollTop = Math.max(0, caretTop(ed, pos) - ed.clientHeight / 2);
 }
 
 /* ---------- save + export ---------- */
