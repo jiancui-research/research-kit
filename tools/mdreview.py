@@ -208,6 +208,21 @@ PAGE = r"""<!doctype html>
   #doc table { border-collapse:collapse; } #doc td,#doc th { border:1px solid var(--line); padding:4px 9px; }
   #doc blockquote { border-left:3px solid var(--line); margin-left:0; padding-left:14px; color:#555; }
   #doc mark { background:var(--hl); cursor:pointer; border-bottom:2px solid var(--hl-strong); }
+  @keyframes flashbg { 0%,100% { background:transparent; } 50% { background:var(--hl-strong); } }
+  #doc span.flash { animation: flashbg .55s ease-in-out 3; border-radius:3px; }
+  #doc .mermaid { position:relative; }
+  .zoombtn { position:absolute; top:6px; right:6px; opacity:0; transition:opacity .15s;
+             border:1px solid var(--line); background:#fff; border-radius:6px; padding:2px 8px;
+             cursor:pointer; font-size:14px; }
+  #doc .mermaid:hover .zoombtn { opacity:1; }
+  #overlay { position:fixed; inset:0; background:rgba(15,18,22,.6); display:none;
+             align-items:center; justify-content:center; z-index:30; }
+  #stage { background:#fff; border-radius:10px; padding:24px; width:86vw; height:86vh;
+           overflow:hidden; cursor:grab; display:flex; align-items:center; justify-content:center; }
+  #stage svg { width:100%; height:auto; max-width:none; }
+  #zctrl { position:fixed; top:18px; right:22px; display:flex; gap:6px; z-index:31; }
+  #zctrl button { border:0; background:#fff; border-radius:7px; padding:6px 13px;
+                  cursor:pointer; font:15px inherit; }
   #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px; }
   .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px; }
   .card.resolved { opacity:.55; }
@@ -236,6 +251,7 @@ PAGE = r"""<!doctype html>
     <div id="bar" style="visibility:hidden">
       <span class="path" id="path"></span>
       <button id="saveBtn">Save</button>
+      <button id="revealBtn" title="Blink the preview text matching the cursor position">Reveal →</button>
       <button id="exportBtn">Export</button>
     </div>
     <textarea id="editor" spellcheck="false" placeholder="Pick a file on the left."></textarea>
@@ -249,6 +265,15 @@ PAGE = r"""<!doctype html>
 </div>
 <div id="pop"><textarea id="popText" placeholder="Comment..."></textarea><br>
   <button id="popAdd">Add comment</button></div>
+<div id="overlay">
+  <div id="zctrl">
+    <button id="zOut" title="zoom out">−</button>
+    <button id="zIn" title="zoom in">+</button>
+    <button id="zReset" title="reset">reset</button>
+    <button id="zClose" title="close">✕</button>
+  </div>
+  <div id="stage"></div>
+</div>
 <div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script>
@@ -338,6 +363,14 @@ async function renderMermaid() {
   }
   try { await mermaid.run({ nodes: $("doc").querySelectorAll(".mermaid") }); }
   catch (e) { /* invalid diagram mid-typing: leave the source text visible */ }
+  for (const div of $("doc").querySelectorAll(".mermaid")) {
+    if (div.dataset.zoomable || !div.querySelector("svg")) continue;
+    div.dataset.zoomable = "1";
+    const b = document.createElement("button");
+    b.className = "zoombtn"; b.textContent = "⤢"; b.title = "Enlarge diagram (zoom + pan)";
+    b.onclick = () => openDiagram(div.querySelector("svg"));
+    div.appendChild(b);
+  }
 }
 async function rerender() {
   if (!state) return;
@@ -364,27 +397,34 @@ function findAnchor(text, c) {
   }
   return text.indexOf(c.quote);
 }
+function wrapTextRange(container, start, end, makeEl) {
+  // wrap [start,end) of container's text, segment-wise per text node, with makeEl()
+  let pos = 0, first = null;
+  for (const node of textNodesUnder(container)) {
+    const len = node.length, a = Math.max(start - pos, 0), b = Math.min(end - pos, len);
+    if (a < b) {
+      const r = document.createRange();
+      r.setStart(node, a); r.setEnd(node, b);
+      const el = makeEl();
+      try { r.surroundContents(el); first = first || el; } catch (e) {}
+    }
+    pos += len;
+    if (pos >= end) break;
+  }
+  return first;
+}
 function applyHighlights() {
   const article = $("doc");
   for (const c of state.comments) {
     const start = findAnchor(article.textContent, c);
     c.anchored = start >= 0 && c.quote.length > 0;
     if (!c.anchored) continue;
-    const end = start + c.quote.length;
-    let pos = 0;
-    for (const node of textNodesUnder(article)) {
-      const len = node.length, a = Math.max(start - pos, 0), b = Math.min(end - pos, len);
-      if (a < b) {
-        const r = document.createRange();
-        r.setStart(node, a); r.setEnd(node, b);
-        const mk = document.createElement("mark");
-        mk.dataset.id = c.id;
-        mk.onclick = ev => { ev.stopPropagation(); focusCard(c.id); };
-        try { r.surroundContents(mk); } catch (e) {}
-      }
-      pos += len;
-      if (pos >= end) break;
-    }
+    wrapTextRange(article, start, start + c.quote.length, () => {
+      const mk = document.createElement("mark");
+      mk.dataset.id = c.id;
+      mk.onclick = ev => { ev.stopPropagation(); focusCard(c.id); };
+      return mk;
+    });
   }
 }
 function renderPanel() {
@@ -582,6 +622,86 @@ $("exportBtn").onclick = async () => {
   await navigator.clipboard.writeText(await res.text());
   toast("Copied document + comments to clipboard");
 };
+
+/* ---------- reveal: cursor in raw -> blink in rendered ---------- */
+function revealInRendered() {
+  if (!state) return;
+  const ed = $("editor");
+  const src = ed.value;
+  const cur = ed.selectionStart;
+  const docText = $("doc").textContent;
+  const ratio = cur / (src.length || 1);
+  let tail = src.slice(Math.max(0, cur - 60), cur).trim();
+  while (tail.length >= 5) {
+    const hits = [];
+    let i = docText.indexOf(tail);
+    while (i >= 0 && hits.length < 50) { hits.push(i); i = docText.indexOf(tail, i + 1); }
+    if (hits.length) {
+      const best = hits.reduce((a, b) =>
+        Math.abs(b / docText.length - ratio) < Math.abs(a / docText.length - ratio) ? b : a);
+      flashRendered(best, tail.length);
+      return;
+    }
+    tail = tail.slice(Math.max(1, Math.ceil(tail.length / 4)));  // markdown syntax in the way
+  }
+  toast("No matching text in the preview (markup-only region?)");
+}
+function flashRendered(start, len) {
+  const article = $("doc");
+  const first = wrapTextRange(article, start, start + len,
+    () => Object.assign(document.createElement("span"), {className: "flash"}));
+  if (first) first.scrollIntoView({behavior: "smooth", block: "center"});
+  setTimeout(() => {
+    for (const s of article.querySelectorAll("span.flash")) s.replaceWith(...s.childNodes);
+  }, 2000);
+}
+$("revealBtn").onclick = revealInRendered;
+
+/* ---------- mermaid lightbox: zoom + pan ---------- */
+let zoom = 1, panX = 0, panY = 0;
+function applyStage() {
+  $("stage").firstElementChild.style.transform =
+    `translate(${panX}px, ${panY}px) scale(${zoom})`;
+}
+function openDiagram(svg) {
+  const stage = $("stage");
+  stage.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.appendChild(svg.cloneNode(true));
+  wrap.style.width = "100%";
+  stage.appendChild(wrap);
+  zoom = 1; panX = panY = 0;
+  applyStage();
+  $("overlay").style.display = "flex";
+}
+function closeDiagram() { $("overlay").style.display = "none"; }
+$("zIn").onclick = () => { zoom = Math.min(8, zoom * 1.25); applyStage(); };
+$("zOut").onclick = () => { zoom = Math.max(0.3, zoom / 1.25); applyStage(); };
+$("zReset").onclick = () => { zoom = 1; panX = panY = 0; applyStage(); };
+$("zClose").onclick = closeDiagram;
+$("overlay").addEventListener("wheel", ev => {
+  ev.preventDefault();
+  zoom = Math.min(8, Math.max(0.3, zoom * (ev.deltaY < 0 ? 1.12 : 1 / 1.12)));
+  applyStage();
+}, {passive: false});
+{
+  let dragging = false, moved = false, sx = 0, sy = 0;
+  $("stage").addEventListener("mousedown", ev => {
+    dragging = true; moved = false; sx = ev.clientX - panX; sy = ev.clientY - panY;
+    $("stage").style.cursor = "grabbing"; ev.preventDefault();
+  });
+  document.addEventListener("mousemove", ev => {
+    if (!dragging) return;
+    panX = ev.clientX - sx; panY = ev.clientY - sy; moved = true; applyStage();
+  });
+  document.addEventListener("mouseup", () => { dragging = false; $("stage").style.cursor = "grab"; });
+  $("overlay").addEventListener("click", ev => {
+    if (ev.target === $("overlay") && !moved) closeDiagram();
+  });
+}
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && $("overlay").style.display === "flex") closeDiagram();
+});
 
 /* ---------- draggable pane divider ---------- */
 $("gutter").addEventListener("mousedown", e => {
