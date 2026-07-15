@@ -2,5 +2,7 @@
 *.log
 *.swp
 __pycache__/
+.pytest_cache/
+.mdreview/
 .venv/
 node_modules/

@@ -24,7 +24,7 @@ from urllib.parse import parse_qs, urlparse
 
 import markdown as md_lib
 
-SKIP_DIRS = {".git", "node_modules", ".venv", ".mdreview"}
+SKIP_DIRS = {".git", "node_modules", ".venv", ".mdreview", ".pytest_cache", "__pycache__"}
 MAX_BYTES = 2 * 1024 * 1024
 SIDECAR_DIR = ".mdreview"
 
@@ -469,3 +469,69 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
         return e.status, "application/json", {"error": e.message}
     except (KeyError, IndexError):
         return 400, "application/json", {"error": "missing parameter"}
+
+
+class Handler(BaseHTTPRequestHandler):
+    root: Path = Path(".")
+
+    def log_message(self, fmt, *args):  # quiet
+        pass
+
+    def _send(self, status: int, ctype: str, payload) -> None:
+        if isinstance(payload, str):
+            data = payload.encode("utf-8")
+        else:
+            data = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def do_GET(self):
+        u = urlparse(self.path)
+        self._send(*route(self.root, "GET", u.path, parse_qs(u.query), {}))
+
+    def do_POST(self):
+        u = urlparse(self.path)
+        n = int(self.headers.get("Content-Length") or 0)
+        try:
+            body = json.loads(self.rfile.read(n) or b"{}")
+        except json.JSONDecodeError:
+            self._send(400, "application/json", {"error": "invalid JSON body"})
+            return
+        self._send(*route(self.root, "POST", u.path, parse_qs(u.query), body))
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description="mdreview: local markdown review UI")
+    ap.add_argument("--port", type=int, default=8377)
+    ap.add_argument("--open", action="store_true", help="open the browser")
+    ap.add_argument("--root", default=".", help="repo root to serve (default: cwd)")
+    args = ap.parse_args()
+    root = Path(args.root).resolve()
+    if not root.is_dir():
+        raise SystemExit(f"error: not a directory: {root}")
+    Handler.root = root
+    server = None
+    for port in range(args.port, args.port + 20):
+        try:
+            server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+            break
+        except OSError:
+            print(f"port {port} in use, trying {port + 1}")
+    if server is None:
+        raise SystemExit("error: no free port found")
+    url = f"http://127.0.0.1:{server.server_address[1]}/"
+    print(f"mdreview serving {root}")
+    print(f"  {url}   (Ctrl-C to stop; comments land in {root / SIDECAR_DIR}/)")
+    if args.open:
+        webbrowser.open(url)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nstopped")
+
+
+if __name__ == "__main__":
+    main()

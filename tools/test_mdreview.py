@@ -149,3 +149,9 @@ def test_route_save_and_comment_flow(repo):
     assert status == 200 and c2["resolved"] is True
     status, _, _ = m.route(repo, "POST", "/api/comment/delete", {}, {"path": rel, "id": c["id"]})
     assert status == 200 and m.load_comments(repo, rel) == []
+
+
+def test_missing_body_keys_are_400(repo):
+    status, _, _ = m.route(repo, "POST", "/api/doc", {}, {})
+    assert status == 400  # route() itself: missing keys
+    # the handler maps unparseable JSON to 400 before route(); covered via curl smoke test
