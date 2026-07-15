@@ -55,3 +55,38 @@ def list_md_files(root: Path) -> list[str]:
             if f.endswith(".md"):
                 out.append(str((Path(dirpath) / f).relative_to(root)))
     return out
+
+
+def read_doc(root: Path, rel: str) -> dict:
+    """Read a UTF-8 markdown file under root; refuse missing, huge, or binary files."""
+    p = safe_resolve(root, rel)
+    if not p.is_file():
+        raise RequestError(404, f"no such file: {rel}")
+    if p.stat().st_size > MAX_BYTES:
+        raise RequestError(413, f"file over {MAX_BYTES // (1024 * 1024)} MB: {rel}")
+    try:
+        content = p.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        raise RequestError(415, f"not UTF-8 text: {rel}")
+    return {"content": content, "mtime": p.stat().st_mtime}
+
+
+def _atomic_write(path: Path, data: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".mdreview-tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(data)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def write_doc(root: Path, rel: str, content: str, expected_mtime: float | None) -> dict:
+    """Atomically save content. 409 if the file changed since expected_mtime (None skips)."""
+    p = safe_resolve(root, rel)
+    if p.exists() and expected_mtime is not None and abs(p.stat().st_mtime - expected_mtime) > 1e-6:
+        raise RequestError(409, "file changed on disk since it was loaded")
+    _atomic_write(p, content)
+    return {"mtime": p.stat().st_mtime}

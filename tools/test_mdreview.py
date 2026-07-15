@@ -33,3 +33,47 @@ def test_safe_resolve_blocks_traversal(repo):
 
 def test_list_md_files_skips_pruned_dirs(repo):
     assert m.list_md_files(repo) == ["README.md", ".research/proposal.md"]
+
+
+def test_read_doc(repo):
+    doc = m.read_doc(repo, ".research/proposal.md")
+    assert doc["content"].startswith("# Prop")
+    assert isinstance(doc["mtime"], float)
+
+
+def test_read_doc_missing(repo):
+    with pytest.raises(m.RequestError) as e:
+        m.read_doc(repo, "nope.md")
+    assert e.value.status == 404
+
+
+def test_read_doc_rejects_non_utf8(repo):
+    (repo / "bin.md").write_bytes(b"\xff\xfe\x00bad")
+    with pytest.raises(m.RequestError) as e:
+        m.read_doc(repo, "bin.md")
+    assert e.value.status == 415
+
+
+def test_read_doc_rejects_huge(repo):
+    (repo / "big.md").write_text("a" * (m.MAX_BYTES + 1), encoding="utf-8")
+    with pytest.raises(m.RequestError) as e:
+        m.read_doc(repo, "big.md")
+    assert e.value.status == 413
+
+
+def test_write_doc_roundtrip_and_conflict(repo):
+    rel = ".research/proposal.md"
+    doc = m.read_doc(repo, rel)
+    res = m.write_doc(repo, rel, "# New\n", doc["mtime"])
+    assert m.read_doc(repo, rel)["content"] == "# New\n"
+    stale = res["mtime"] - 100
+    with pytest.raises(m.RequestError) as e:
+        m.write_doc(repo, rel, "# Newer\n", stale)
+    assert e.value.status == 409
+    m.write_doc(repo, rel, "# Forced\n", None)  # None skips the guard
+    assert m.read_doc(repo, rel)["content"] == "# Forced\n"
+
+
+def test_write_doc_creates_parents(repo):
+    m.write_doc(repo, "paper/new/intro.md", "hi\n", None)
+    assert (repo / "paper" / "new" / "intro.md").read_text(encoding="utf-8") == "hi\n"
