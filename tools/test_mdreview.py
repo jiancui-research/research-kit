@@ -155,3 +155,8 @@ def test_missing_body_keys_are_400(repo):
     status, _, _ = m.route(repo, "POST", "/api/doc", {}, {})
     assert status == 400  # route() itself: missing keys
     # the handler maps unparseable JSON to 400 before route(); covered via curl smoke test
+
+
+def test_route_render_live_preview(repo):
+    status, _, res = m.route(repo, "POST", "/api/render", {}, {"content": "# Hi\n\n*there*"})
+    assert status == 200 and "<h1>" in res["html"] and "<em>there</em>" in res["html"]
