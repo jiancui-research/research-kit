@@ -16,6 +16,7 @@ import json
 import os
 import tempfile
 import time
+import urllib.request
 import uuid
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -739,6 +740,8 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
     try:
         if method == "GET" and path == "/":
             return 200, "text/html; charset=utf-8", PAGE
+        if method == "GET" and path == "/api/root":
+            return 200, "application/json", {"root": str(root)}
         if method == "GET" and path == "/api/files":
             return 200, "application/json", list_md_files(root)
         if method == "GET" and path == "/api/doc":
@@ -804,6 +807,18 @@ class Handler(BaseHTTPRequestHandler):
         self._send(*route(self.root, "POST", u.path, parse_qs(u.query), body))
 
 
+def find_existing(root: Path, start: int) -> str | None:
+    """Probe nearby ports for an mdreview instance already serving this root."""
+    for port in range(start, start + 20):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/root", timeout=0.3) as r:
+                if json.loads(r.read()).get("root") == str(root):
+                    return f"http://127.0.0.1:{port}/"
+        except (OSError, ValueError):
+            continue
+    return None
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="mdreview: local markdown review UI")
     ap.add_argument("--port", type=int, default=8377)
@@ -813,6 +828,13 @@ def main() -> None:
     root = Path(args.root).resolve()
     if not root.is_dir():
         raise SystemExit(f"error: not a directory: {root}")
+    existing = find_existing(root, args.port)
+    if existing:
+        print(f"mdreview already serving {root}")
+        print(f"  {existing}   (reusing the running instance)")
+        if args.open:
+            webbrowser.open(existing)
+        return
     Handler.root = root
     server = None
     for port in range(args.port, args.port + 20):
