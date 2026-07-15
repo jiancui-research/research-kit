@@ -210,6 +210,15 @@ stage_templates() {
     fi
 }
 
+stage_tools() {
+    if [ -d "$SCRIPT_DIR/tools" ]; then
+        mkdir -p "$BUNDLE_HOME"
+        rm -rf "$BUNDLE_HOME/tools"
+        cp -R "$SCRIPT_DIR/tools" "$BUNDLE_HOME/tools"
+        echo "  staged   $BUNDLE_HOME/tools (optional tools, e.g. mdreview for /research.mdreview)"
+    fi
+}
+
 uninstall_dir() {
     agent="$1"
     dest="$2"
@@ -245,7 +254,8 @@ for agent in $AGENTS; do
     install_agent "$agent"
 done
 
-# Stage the bundled templates once, regardless of how many agents were installed.
+# Stage the bundled templates and tools once, regardless of how many agents were installed.
 stage_templates
+stage_tools
 
 echo "Done. In your paper repo, run /research.init once, then /research.constitution."
