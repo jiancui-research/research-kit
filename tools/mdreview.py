@@ -146,3 +146,28 @@ def delete_comment(root: Path, rel: str, cid: str) -> None:
     c = _find_comment(comments, cid)
     comments.remove(c)
     _save_comments(root, rel, comments)
+
+
+def render_md(text: str) -> str:
+    return md_lib.markdown(text, extensions=["tables", "fenced_code"])
+
+
+def export_text(root: Path, rel: str) -> str:
+    """Document + unresolved comments as one AI-ready markdown blob."""
+    doc = read_doc(root, rel)
+    open_comments = [c for c in load_comments(root, rel) if not c["resolved"]]
+    parts = [
+        "Review this document; address the inline reviewer comments.",
+        "",
+        "---",
+        "",
+        doc["content"].rstrip(),
+        "",
+    ]
+    if open_comments:
+        parts += ["---", "", "## Reviewer comments", ""]
+        for i, c in enumerate(open_comments, 1):
+            parts.append(f'{i}. > "{c["quote"]}"')
+            parts.append(f"   {c['comment']}")
+            parts.append("")
+    return "\n".join(parts)
