@@ -54,7 +54,7 @@ def list_md_files(root: Path) -> list[str]:
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
         for f in sorted(filenames):
             if f.endswith(".md"):
-                out.append(str((Path(dirpath) / f).relative_to(root)))
+                out.append((Path(dirpath) / f).relative_to(root).as_posix())
     return out
 
 
