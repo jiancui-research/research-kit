@@ -116,3 +116,36 @@ def test_export_includes_unresolved_only(repo):
     assert "name the actual papers" in out        # unresolved comment present
     assert "old note" not in out                  # resolved comment omitted
     assert "## Reviewer comments" in out
+
+
+def test_route_files_and_doc(repo):
+    status, ctype, payload = m.route(repo, "GET", "/api/files", {}, {})
+    assert status == 200 and payload == ["README.md", ".research/proposal.md"]
+    status, _, doc = m.route(repo, "GET", "/api/doc", {"path": [".research/proposal.md"]}, {})
+    assert status == 200 and "<h1>" in doc["html"] and doc["comments"] == []
+
+
+def test_route_error_mapping(repo):
+    status, _, err = m.route(repo, "GET", "/api/doc", {"path": ["../evil.md"]}, {})
+    assert status == 400 and "escapes root" in err["error"]
+    status, _, _ = m.route(repo, "GET", "/api/doc", {}, {})
+    assert status == 400
+    status, _, _ = m.route(repo, "GET", "/api/nope", {}, {})
+    assert status == 404
+
+
+def test_route_save_and_comment_flow(repo):
+    rel = ".research/proposal.md"
+    _, _, doc = m.route(repo, "GET", "/api/doc", {"path": [rel]}, {})
+    status, _, res = m.route(repo, "POST", "/api/doc",
+                             {}, {"path": rel, "content": "# Edited\n", "mtime": doc["mtime"]})
+    assert status == 200 and "mtime" in res
+    status, _, c = m.route(repo, "POST", "/api/comment/add",
+                           {}, {"path": rel, "quote": "Edited", "prefix": "# ",
+                                "suffix": "", "comment": "why edited?"})
+    assert status == 200 and c["quote"] == "Edited"
+    status, _, c2 = m.route(repo, "POST", "/api/comment/update",
+                            {}, {"path": rel, "id": c["id"], "resolved": True})
+    assert status == 200 and c2["resolved"] is True
+    status, _, _ = m.route(repo, "POST", "/api/comment/delete", {}, {"path": rel, "id": c["id"]})
+    assert status == 200 and m.load_comments(repo, rel) == []

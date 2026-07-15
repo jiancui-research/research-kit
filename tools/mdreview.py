@@ -171,3 +171,42 @@ def export_text(root: Path, rel: str) -> str:
             parts.append(f"   {c['comment']}")
             parts.append("")
     return "\n".join(parts)
+
+
+PAGE = "<!doctype html><title>mdreview</title>"  # replaced by the full UI in the next commit
+
+
+def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[int, str, object]:
+    """Pure dispatcher: (status, content-type, payload). Payload str => raw, else JSON."""
+    try:
+        if method == "GET" and path == "/":
+            return 200, "text/html; charset=utf-8", PAGE
+        if method == "GET" and path == "/api/files":
+            return 200, "application/json", list_md_files(root)
+        if method == "GET" and path == "/api/doc":
+            rel = query["path"][0]
+            doc = read_doc(root, rel)
+            return 200, "application/json", {
+                **doc, "path": rel,
+                "html": render_md(doc["content"]),
+                "comments": load_comments(root, rel),
+            }
+        if method == "GET" and path == "/api/export":
+            return 200, "text/plain; charset=utf-8", export_text(root, query["path"][0])
+        if method == "POST" and path == "/api/doc":
+            return 200, "application/json", write_doc(
+                root, body["path"], body["content"], body.get("mtime"))
+        if method == "POST" and path == "/api/comment/add":
+            return 200, "application/json", add_comment(
+                root, body["path"], body["quote"], body["prefix"], body["suffix"], body["comment"])
+        if method == "POST" and path == "/api/comment/update":
+            fields = {k: body[k] for k in ("resolved", "comment") if k in body}
+            return 200, "application/json", update_comment(root, body["path"], body["id"], fields)
+        if method == "POST" and path == "/api/comment/delete":
+            delete_comment(root, body["path"], body["id"])
+            return 200, "application/json", {"ok": True}
+        return 404, "application/json", {"error": f"no such route: {method} {path}"}
+    except RequestError as e:
+        return e.status, "application/json", {"error": e.message}
+    except (KeyError, IndexError):
+        return 400, "application/json", {"error": "missing parameter"}
