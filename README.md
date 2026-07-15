@@ -75,6 +75,27 @@ Each command writes its result into `./.research/` and suggests the next one. (P
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 | `/research.mdreview` | Open a local web UI to read, edit, comment on, and export the repo's markdown (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
 
+## The review UI (`/research.mdreview`)
+
+Read, edit, comment on, and export your paper's markdown in a local web UI - one file, localhost only, nothing beyond `uv` to install.
+
+![mdreview demo: click-to-source sync, commenting, export](docs/assets/mdreview-demo.gif)
+
+- **Overleaf-style split view** - raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
+- **Click-to-source sync** - click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor.
+- **Google-Docs-style comments** - select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: "read `.mdreview/` and address the comments on proposal.md".
+- **One-click export** - copies the document plus open comments to the clipboard, ready to paste into any AI for review.
+- **Mermaid diagrams** - ` ```mermaid ` fences render as diagrams (via CDN; they fall back to code blocks offline).
+- **Safe saves** - atomic writes with a conflict guard for when the file changed on disk mid-review (say, an agent edited it), plus a `.research/ only` sidebar filter that keeps the focus on the tracking docs.
+
+![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
+
+| Comment on a selection | Click-to-source sync + mermaid |
+| --- | --- |
+| ![commenting](docs/assets/mdreview-comment.png) | ![sync and mermaid](docs/assets/mdreview-sync.png) |
+
+Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
+
 ## Supported agents
 
 The same pipeline installs for three agents; pick one or more (`--all` for every one; default is Claude Code).

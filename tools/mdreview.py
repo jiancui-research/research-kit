@@ -250,6 +250,7 @@ PAGE = r"""<!doctype html>
 <div id="pop"><textarea id="popText" placeholder="Comment..."></textarea><br>
   <button id="popAdd">Add comment</button></div>
 <div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 let state = null;      // {path, mtime, comments:[{...,anchored}]}
@@ -322,7 +323,21 @@ async function openDoc(path) {
 function paint(html) {
   $("doc").innerHTML = html;
   applyHighlights();
+  renderMermaid();
   renderPanel();
+}
+async function renderMermaid() {
+  // ```mermaid fences arrive as <pre><code class="language-mermaid">; swap them for
+  // rendered diagrams when mermaid.js loaded (CDN - offline they stay as code blocks)
+  if (!window.mermaid) return;
+  for (const code of $("doc").querySelectorAll("pre code.language-mermaid")) {
+    const div = document.createElement("div");
+    div.className = "mermaid";
+    div.textContent = code.textContent;
+    code.parentElement.replaceWith(div);
+  }
+  try { await mermaid.run({ nodes: $("doc").querySelectorAll(".mermaid") }); }
+  catch (e) { /* invalid diagram mid-typing: leave the source text visible */ }
 }
 async function rerender() {
   if (!state) return;
@@ -593,6 +608,8 @@ $("gutter").addEventListener("dblclick", () => {
   $("app").style.gridTemplateColumns = "230px 1fr 6px 1fr 300px";
 });
 
+if (window.mermaid)
+  mermaid.initialize({ startOnLoad: false, theme: "neutral", suppressErrorRendering: true });
 loadFiles();
 </script></body></html>"""
 
