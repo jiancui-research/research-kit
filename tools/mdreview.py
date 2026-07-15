@@ -271,7 +271,10 @@ async function loadFiles() {
 $("scopeChk").onchange = renderSidebar;
 function renderSidebar() {
   const only = $("scope").style.display !== "none" && $("scopeChk").checked;
-  const files = only ? allFiles.filter(f => f.startsWith(".research/")) : allFiles;
+  // toggled: only the tracking docs sitting directly in .research/ (hides templates/, tasks/, memory/, ...)
+  const files = only
+    ? allFiles.filter(f => f.startsWith(".research/") && !f.slice(10).includes("/"))
+    : allFiles;
   const tree = {};
   for (const f of files) {
     const parts = f.split("/"); let node = tree;
@@ -416,6 +419,15 @@ $("doc").addEventListener("mouseup", ev => {
     if (!sel.rangeCount || sel.isCollapsed) { $("pop").style.display = "none"; return; }
     const range = sel.getRangeAt(0);
     if (!$("doc").contains(range.commonAncestorContainer)) return;
+    if (ev.detail > 1) {
+      // double/triple click: sync to source (select the word there), never open the comment box
+      $("pop").style.display = "none";
+      const pre = document.createRange();
+      pre.selectNodeContents($("doc"));
+      pre.setEnd(range.startContainer, range.startOffset);
+      jumpToSource(pre.toString(), sel.toString().trim());
+      return;
+    }
     const quote = sel.toString();
     if (!quote.trim()) return;
     const pre = document.createRange();
@@ -460,7 +472,7 @@ $("doc").addEventListener("click", ev => {
   try { pre.setEnd(node, offset); } catch (e) { return; }
   jumpToSource(pre.toString());
 });
-function jumpToSource(renderedCtx) {
+function jumpToSource(renderedCtx, selectWord) {
   const src = $("editor").value;
   const total = $("doc").textContent.length || 1;
   const ratio = renderedCtx.length / total;         // where the click sits in the doc
@@ -473,16 +485,33 @@ function jumpToSource(renderedCtx) {
       // among repeated matches, pick the one whose position best matches the click's
       const best = hits.reduce((a, b) =>
         Math.abs(b / src.length - ratio) < Math.abs(a / src.length - ratio) ? b : a);
-      placeCursor(best + tail.length);
+      const pos = best + tail.length;
+      if (selectWord) {
+        // double-click: select the corresponding word in the source, if it is right ahead
+        const wi = src.indexOf(selectWord, Math.max(0, pos - 2));
+        if (wi >= 0 && wi - pos < 80) { placeCursor(wi, wi + selectWord.length); return; }
+      }
+      placeCursor(pos);
       return;
     }
     tail = tail.slice(Math.max(1, Math.ceil(tail.length / 4)));  // markdown syntax in the way: shrink from the left
   }
+  // nothing matched (click landed on pure markup); with a word in hand, fall back to position-nearest word match
+  if (selectWord) {
+    const hits = [];
+    let i = src.indexOf(selectWord);
+    while (i >= 0 && hits.length < 200) { hits.push(i); i = src.indexOf(selectWord, i + 1); }
+    if (hits.length) {
+      const best = hits.reduce((a, b) =>
+        Math.abs(b / src.length - ratio) < Math.abs(a / src.length - ratio) ? b : a);
+      placeCursor(best, best + selectWord.length);
+    }
+  }
 }
-function placeCursor(pos) {
+function placeCursor(pos, end) {
   const ed = $("editor");
   ed.focus();
-  ed.setSelectionRange(pos, pos);
+  ed.setSelectionRange(pos, end ?? pos);
   const line = ed.value.slice(0, pos).split("\n").length - 1;
   const lh = parseFloat(getComputedStyle(ed).lineHeight) || 20;
   ed.scrollTop = Math.max(0, line * lh - ed.clientHeight / 2);
