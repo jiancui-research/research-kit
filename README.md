@@ -33,6 +33,8 @@ Asking one giant "write my paper" prompt produces plausible slop and hidden over
 
 ## 🗺️ The pipeline
 
+research-kit doesn't invent a process — it follows the workflow strong research already follows: sharpen a raw idea into a falsifiable proposal, position it against prior work, pilot the riskiest assumption before committing, plan the work, then build / evaluate / write in parallel, and review the paper before real reviewers do. The pipeline just makes each of those steps explicit and checkable:
+
 ```mermaid
 flowchart LR
     C[constitution] --> P[proposal] --> RW[relatedwork] --> F{feasibility<br/>GO / NO-GO / PIVOT}
@@ -47,9 +49,28 @@ flowchart LR
     R -.->|route findings| lanes
 ```
 
-After feasibility, `tasks` fans out into three parallel lanes that co-evolve: **design** builds the system (code), **eval** evaluates it, **paper** writes it up. The design lane is paper-type aware — heavy for systems/defense, skipped for measurement / SoK. Auxiliary commands: `rebuttal` (post-submission), `ae` (artifact evaluation), and `mdreview` (the review UI below). Run any subset, re-run any stage as your work evolves; commands only touch their own artifacts and never overwrite silently.
+Why this shape: **every stage ends in a Markdown doc under `./.research/` that you are meant to read, correct, and steer before the next stage builds on it.** The agent never runs ahead of your judgment, and the folder becomes the paper's committed decision record. After feasibility's GO, `tasks` fans out into three parallel lanes that co-evolve: **design** builds the system (code), **eval** evaluates it, **paper** writes it up — synced only through `claims.md`. The design lane is paper-type aware (heavy for systems/defense, skipped for measurement / SoK); auxiliaries: `rebuttal`, `ae`. Run any subset, re-run any stage; commands only touch their own artifacts and never overwrite silently.
 
 📐 **[Workflow diagram + per-command inputs/outputs →](docs/workflow.md)**
+
+## 🖥️ The review UI (`/research.mdreview`)
+
+Checking and editing that pipeline of docs *is* the workflow — so research-kit bundles **mdreview** to make the loop painless: a local web UI over your repo's markdown. One file, localhost only, nothing beyond `uv` to install.
+
+![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
+
+- ✂️ **Overleaf-style split view** — raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
+- 🎯 **Click-to-source sync** — click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor; the **Reveal →** button blinks the preview text matching your cursor.
+- 💬 **Google-Docs-style comments** — select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: *"read `.mdreview/` and address the comments on proposal.md"*.
+- 📋 **One-click export** — copies the document plus open comments to the clipboard, ready to paste into any AI for review.
+- 🧜 **Mermaid diagrams** — ` ```mermaid ` fences render as diagrams with a zoom + pan lightbox (via CDN; they fall back to code blocks offline).
+- 🔒 **Safe saves** — atomic writes with a conflict guard for when the file changed on disk mid-review (say, an agent edited it), plus a `.research/ only` sidebar filter that keeps the focus on the tracking docs.
+
+| Comment on a selection | Click-to-source sync + mermaid |
+| --- | --- |
+| ![commenting](docs/assets/mdreview-comment.png) | ![sync and mermaid](docs/assets/mdreview-sync.png) |
+
+Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
 
 ## ⚡ Quickstart
 
@@ -116,23 +137,6 @@ Then, in your paper repo, start with `/research.init` and follow the pipeline �
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 | `/research.mdreview` | Open a local web UI to read, edit, comment on, and export the repo's markdown (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
-
-## 🖥️ The review UI (`/research.mdreview`)
-
-Read, edit, comment on, and export your paper's markdown in a local web UI — one file, localhost only, nothing beyond `uv` to install. (Demo GIF at the top of this page.)
-
-- ✂️ **Overleaf-style split view** — raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
-- 🎯 **Click-to-source sync** — click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor; the **Reveal →** button blinks the preview text matching your cursor.
-- 💬 **Google-Docs-style comments** — select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: *"read `.mdreview/` and address the comments on proposal.md"*.
-- 📋 **One-click export** — copies the document plus open comments to the clipboard, ready to paste into any AI for review.
-- 🧜 **Mermaid diagrams** — ` ```mermaid ` fences render as diagrams with a zoom + pan lightbox (via CDN; they fall back to code blocks offline).
-- 🔒 **Safe saves** — atomic writes with a conflict guard for when the file changed on disk mid-review (say, an agent edited it), plus a `.research/ only` sidebar filter that keeps the focus on the tracking docs.
-
-| Comment on a selection | Click-to-source sync + mermaid |
-| --- | --- |
-| ![commenting](docs/assets/mdreview-comment.png) | ![sync and mermaid](docs/assets/mdreview-sync.png) |
-
-Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
 
 ## 🤖 Supported agents
 
