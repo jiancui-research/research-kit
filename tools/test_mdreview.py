@@ -98,3 +98,21 @@ def test_comment_unknown_id(repo):
     with pytest.raises(m.RequestError) as e:
         m.update_comment(repo, rel, "deadbeef0000", {"resolved": True})
     assert e.value.status == 404
+
+
+def test_render_md_tables_and_code():
+    html = m.render_md("**hi**\n\n| a |\n| - |\n| b |\n\n```py\nx=1\n```\n")
+    assert "<strong>hi</strong>" in html and "<table>" in html and "<code" in html
+
+
+def test_export_includes_unresolved_only(repo):
+    rel = ".research/proposal.md"
+    m.add_comment(repo, rel, "Prior work does X", "", ".", "name the actual papers")
+    done = m.add_comment(repo, rel, "# Prop", "", "", "old note")
+    m.update_comment(repo, rel, done["id"], {"resolved": True})
+    out = m.export_text(repo, rel)
+    assert out.startswith("Review this document; address the inline reviewer comments.")
+    assert "Prior work does X." in out            # full source present
+    assert "name the actual papers" in out        # unresolved comment present
+    assert "old note" not in out                  # resolved comment omitted
+    assert "## Reviewer comments" in out
