@@ -180,7 +180,10 @@ PAGE = r"""<!doctype html>
   :root { --line:#e2e2e2; --accent:#2563eb; --hl:#fff3b0; --hl-strong:#ffe066; }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#1f2328; }
-  #app { display:grid; grid-template-columns:230px 1fr 1fr 300px; height:100vh; }
+  #app { display:grid; grid-template-columns:230px 1fr 6px 1fr 300px; height:100vh; }
+  #gutter { cursor:col-resize; background:#fafafa; border-left:1px solid var(--line);
+            border-right:1px solid var(--line); }
+  #gutter:hover, #gutter.dragging { background:var(--accent); }
   #side { border-right:1px solid var(--line); overflow-y:auto; padding:10px; font-size:13px; }
   #scope { display:none; font-size:12px; color:#555; margin-bottom:8px; user-select:none; }
   #side .dir { font-weight:600; margin-top:6px; }
@@ -188,7 +191,7 @@ PAGE = r"""<!doctype html>
                  padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:#333; }
   #side button:hover { background:#f0f3f8; }
   #side button.active { background:#e3ecfd; color:var(--accent); }
-  #srcpane { display:flex; flex-direction:column; border-right:1px solid var(--line); min-width:0; }
+  #srcpane { display:flex; flex-direction:column; min-width:0; }
   #bar { display:flex; gap:8px; align-items:center; padding:9px 12px; border-bottom:1px solid var(--line); }
   #bar .path { font-weight:600; font-size:13px; margin-right:auto; overflow:hidden;
                text-overflow:ellipsis; white-space:nowrap; }
@@ -237,6 +240,7 @@ PAGE = r"""<!doctype html>
     </div>
     <textarea id="editor" spellcheck="false" placeholder="Pick a file on the left."></textarea>
   </section>
+  <div id="gutter" title="drag to resize; double-click to reset"></div>
   <section id="main">
     <article id="doc"><p class="empty">Raw markdown on the left, rendered preview here.
       Click rendered text to jump the cursor to its source. Select rendered text to comment.</p></article>
@@ -543,6 +547,31 @@ $("exportBtn").onclick = async () => {
   await navigator.clipboard.writeText(await res.text());
   toast("Copied document + comments to clipboard");
 };
+
+/* ---------- draggable pane divider ---------- */
+$("gutter").addEventListener("mousedown", e => {
+  e.preventDefault();
+  $("gutter").classList.add("dragging");
+  document.body.style.userSelect = "none";
+  const move = ev => {
+    const left = 230, right = 300, gw = 6;
+    const usable = innerWidth - left - right - gw;
+    let frac = (ev.clientX - left - gw / 2) / usable;
+    frac = Math.min(0.8, Math.max(0.2, frac));
+    $("app").style.gridTemplateColumns = `230px ${frac}fr 6px ${1 - frac}fr 300px`;
+  };
+  const up = () => {
+    $("gutter").classList.remove("dragging");
+    document.body.style.userSelect = "";
+    document.removeEventListener("mousemove", move);
+    document.removeEventListener("mouseup", up);
+  };
+  document.addEventListener("mousemove", move);
+  document.addEventListener("mouseup", up);
+});
+$("gutter").addEventListener("dblclick", () => {
+  $("app").style.gridTemplateColumns = "230px 1fr 6px 1fr 300px";
+});
 
 loadFiles();
 </script></body></html>"""
