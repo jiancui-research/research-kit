@@ -90,3 +90,59 @@ def write_doc(root: Path, rel: str, content: str, expected_mtime: float | None) 
         raise RequestError(409, "file changed on disk since it was loaded")
     _atomic_write(p, content)
     return {"mtime": p.stat().st_mtime}
+
+
+def _comments_path(root: Path, rel: str) -> Path:
+    safe_resolve(root, rel)  # validates rel; the sidecar mirrors it
+    return root / SIDECAR_DIR / (rel + ".json")
+
+
+def load_comments(root: Path, rel: str) -> list[dict]:
+    cp = _comments_path(root, rel)
+    if not cp.is_file():
+        return []
+    return json.loads(cp.read_text(encoding="utf-8"))
+
+
+def _save_comments(root: Path, rel: str, comments: list[dict]) -> None:
+    _atomic_write(_comments_path(root, rel), json.dumps(comments, ensure_ascii=False, indent=1))
+
+
+def add_comment(root: Path, rel: str, quote: str, prefix: str, suffix: str, comment: str) -> dict:
+    entry = {
+        "id": uuid.uuid4().hex[:12],
+        "quote": quote,
+        "prefix": prefix,
+        "suffix": suffix,
+        "comment": comment,
+        "created": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "resolved": False,
+    }
+    comments = load_comments(root, rel)
+    comments.append(entry)
+    _save_comments(root, rel, comments)
+    return entry
+
+
+def _find_comment(comments: list[dict], cid: str) -> dict:
+    for c in comments:
+        if c["id"] == cid:
+            return c
+    raise RequestError(404, f"no such comment: {cid}")
+
+
+def update_comment(root: Path, rel: str, cid: str, fields: dict) -> dict:
+    comments = load_comments(root, rel)
+    c = _find_comment(comments, cid)
+    for k in ("resolved", "comment"):
+        if k in fields:
+            c[k] = fields[k]
+    _save_comments(root, rel, comments)
+    return c
+
+
+def delete_comment(root: Path, rel: str, cid: str) -> None:
+    comments = load_comments(root, rel)
+    c = _find_comment(comments, cid)
+    comments.remove(c)
+    _save_comments(root, rel, comments)
