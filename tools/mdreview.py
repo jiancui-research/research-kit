@@ -259,6 +259,12 @@ PAGE = r"""<!doctype html>
                 padding:5px 12px; cursor:pointer; font:inherit; }
   #toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#1f2328; color:#fff;
            border-radius:7px; padding:8px 16px; display:none; font-size:13px; z-index:20; }
+  .fontctl { display:inline-flex; gap:3px; }
+  .fontctl button { border:1px solid var(--line); background:#fff; border-radius:5px;
+                    padding:1px 7px; cursor:pointer; font-size:11px; color:#555; }
+  .fontctl button:hover { border-color:var(--accent); color:var(--accent); }
+  #docctl { position:sticky; top:0; justify-content:flex-end; display:flex; z-index:5;
+            margin-bottom:2px; }
   .empty { color:#999; }
 </style></head><body>
 <div id="app">
@@ -271,6 +277,7 @@ PAGE = r"""<!doctype html>
   <section id="srcpane">
     <div id="bar" style="visibility:hidden">
       <span class="path" id="path"></span>
+      <span class="fontctl"><button data-f="editor" data-d="-1" title="Smaller editor text">A−</button><button data-f="editor" data-d="1" title="Larger editor text">A+</button></span>
       <button id="saveBtn">Save</button>
       <button id="revealBtn" title="Blink the preview text matching the cursor position">Reveal →</button>
     </div>
@@ -278,12 +285,14 @@ PAGE = r"""<!doctype html>
   </section>
   <div id="gutter" title="drag to resize; double-click to reset"></div>
   <section id="main">
+    <div id="docctl" class="fontctl"><button data-f="doc" data-d="-1" title="Smaller preview text">A−</button><button data-f="doc" data-d="1" title="Larger preview text">A+</button></div>
     <article id="doc"><p class="empty">Raw markdown on the left, rendered preview here.
       Click rendered text to jump the cursor to its source. Select rendered text to comment.</p></article>
   </section>
   <aside id="panel">
     <div id="panelHead">
       <span>Comments</span>
+      <span class="fontctl"><button data-f="panel" data-d="-1" title="Smaller comments text">A−</button><button data-f="panel" data-d="1" title="Larger comments text">A+</button></span>
       <button id="exportBtn" title="Copy document + open comments (with ids and reply instructions) for any AI">Export</button>
     </div>
     <div id="cards"><p class="empty">Comments appear here.</p></div>
@@ -814,6 +823,26 @@ $("gutter").addEventListener("mousedown", e => {
 $("gutter").addEventListener("dblclick", () => {
   $("app").style.gridTemplateColumns = "230px 1fr 6px 1fr 300px";
 });
+
+/* ---------- per-pane font size (persisted) ---------- */
+const FONT_DEFAULTS = { editor: 13, doc: 15, panel: 13 };
+const fonts = {};
+for (const k in FONT_DEFAULTS)
+  fonts[k] = +(localStorage.getItem("mdreview.font." + k) || FONT_DEFAULTS[k]);
+function applyFonts() {
+  $("editor").style.fontSize = fonts.editor + "px";
+  $("doc").style.fontSize = fonts.doc + "px";
+  $("panel").style.fontSize = fonts.panel + "px";
+}
+document.addEventListener("click", ev => {
+  const b = ev.target.closest(".fontctl button");
+  if (!b) return;
+  const k = b.dataset.f;
+  fonts[k] = Math.min(24, Math.max(10, fonts[k] + (+b.dataset.d)));
+  localStorage.setItem("mdreview.font." + k, fonts[k]);
+  applyFonts();
+});
+applyFonts();
 
 if (window.mermaid)
   mermaid.initialize({ startOnLoad: false, theme: "neutral", suppressErrorRendering: true });
