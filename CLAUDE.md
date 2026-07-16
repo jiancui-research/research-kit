@@ -19,14 +19,14 @@ When editing this repo you are authoring the **bundle**. The `.research/...` pat
 
 So: this repo's root `templates/` and `memory/constitution.md` are the **source** that gets *copied into* a user's `./.research/templates/` and `./.research/memory/constitution.md`. Command bodies read from the `.research/` copies, never from this repo's paths.
 
-## Distribution: one source, three agents, two mechanisms
+## Distribution: one source, four agents, two mechanisms
 
 Commands are authored **once** in the Claude/Codex slash-command form. Two install paths exist:
 
 1. **`install.sh`** (POSIX sh, idempotent, self-pruning) installs for Claude Code (`~/.claude/commands/`), Codex CLI (`~/.codex/prompts/`), or Copilot CLI (`~/.copilot/agents/`). For Claude/Codex it copies the raw `.md` verbatim. For **Copilot it transforms** each command into a `*.agent.md` custom agent, prepending an adapter note that maps `$ARGUMENTS` → the user's message and `Next: /research.<x>` → switching agents. You do **not** hand-write the Copilot copy - `install_copilot()` generates it.
-2. **Plugin marketplace** (`.claude-plugin/marketplace.json` + `plugin.json`) - zero-script path for Claude Code and Copilot CLI, both reading `commands/` directly. Stages get namespaced as `/research-kit:research.<name>`. Codex can't use this bundle (it needs a skill-based plugin), so Codex always goes through the script.
+2. **Plugin marketplace** (`.claude-plugin/marketplace.json` + `plugin.json`) - zero-script path for Claude Code, Copilot CLI, and OMP, all reading `commands/` directly. Stages get namespaced as `/research-kit:research.<name>`. Codex can't use this bundle (it needs a skill-based plugin), so Codex always goes through the script.
 
-Template resolution at runtime (see `commands/research.init.md`): templates live at `${CLAUDE_PLUGIN_ROOT}/templates` (plugin install) **or** `${RESEARCH_KIT_HOME:-$HOME/.research-kit}/templates` (staged by `install.sh`). `/research.init` checks both, then `cp -Rn` (no-clobber) into the user's `./.research/templates/`.
+Template resolution at runtime (see `commands/research.init.md`): templates live at `${CLAUDE_PLUGIN_ROOT}/templates` (Claude Code plugin), at the `installPath` recorded in OMP's installed-plugin registry (OMP plugin), **or** at `${RESEARCH_KIT_HOME:-$HOME/.research-kit}/templates` (staged by `install.sh`). `/research.init` checks these sources, then `cp -Rn` (no-clobber) into the user's `./.research/templates/`.
 
 ## The command contract
 
