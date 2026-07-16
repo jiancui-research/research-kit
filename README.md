@@ -4,12 +4,12 @@
 
 ### *Spec-Driven Development for research papers.*
 
-**A pipeline of slash commands for your AI coding agent — Claude Code, Codex CLI, or GitHub Copilot CLI.
+**A pipeline of slash commands for your AI coding agent — Claude Code, Codex CLI, GitHub Copilot CLI, or Oh My Pi (OMP).
 Every stage of paper writing becomes one reviewable artifact on disk. Pure Markdown: no build step, no lock-in.**
 
 [![License](https://img.shields.io/github/license/jiancui-research/research-kit)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/jiancui-research/research-kit)](https://github.com/jiancui-research/research-kit/commits/main)
-[![Agents](https://img.shields.io/badge/agents-Claude%20Code%20·%20Codex%20·%20Copilot-blueviolet)](#-supported-agents)
+[![Agents](https://img.shields.io/badge/agents-Claude%20Code%20·%20Codex%20·%20Copilot%20·%20OMP-blueviolet)](#-supported-agents)
 [![Form factor](https://img.shields.io/badge/pure%20markdown-no%20build%20step-brightgreen)](#-quickstart)
 [![GitHub stars](https://img.shields.io/github/stars/jiancui-research/research-kit?style=social)](https://github.com/jiancui-research/research-kit/stargazers)
 
@@ -83,6 +83,15 @@ Launch from any repo: `/research.mdreview` in your agent, or directly `uv run to
 
 Plugin stages are namespaced, e.g. `/research-kit:research.proposal …`; update later with `/plugin marketplace update`.
 
+**Oh My Pi (OMP) — plugin (no script):**
+
+```text
+/marketplace add jiancui-research/research-kit
+/marketplace install research-kit@research-kit
+```
+
+OMP reads the same `.claude-plugin` bundle directly, exposing the namespaced `/research-kit:research.*` stages. Update later with `/marketplace update research-kit`, then `/marketplace upgrade research-kit@research-kit`.
+
 **GitHub Copilot CLI — plugin (no script):**
 
 ```text
@@ -98,7 +107,7 @@ Copilot reads the same `.claude-plugin` bundle directly, exposing the namespaced
 ./install.sh            # Claude Code (default). Also: --codex, --copilot, --all
 ```
 
-Then, in your paper repo, start with `/research.init` and follow the pipeline — each command writes its result into `./.research/` and suggests the next one. (Plugin installs prefix every command with `research-kit:`.)
+Then, in your paper repo, start with `/research.init` (`/research-kit:research.init` for plugin installs) and follow the pipeline — each command writes its result into `./.research/` and suggests the next one.
 
 <details>
 <summary><b>The full run, stage by stage</b></summary>
@@ -140,11 +149,12 @@ Then, in your paper repo, start with `/research.init` and follow the pipeline �
 
 ## 🤖 Supported agents
 
-The same pipeline installs for three agents; pick one or more (`--all` for every one; default is Claude Code).
+The same pipeline installs for four agents; pick one or more (`--all` covers the three `install.sh` targets; OMP uses the plugin marketplace).
 
 | Agent | Install | How you invoke a stage |
 | --- | --- | --- |
 | **Claude Code** (plugin) | `/plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
+| **Oh My Pi (OMP)** (plugin) | `/marketplace add jiancui-research/research-kit` → `/marketplace install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **Claude Code** (script) | `./install.sh` | `/research.proposal <text>` |
 | **Codex CLI** | `./install.sh --codex` | `/research.proposal <text>` |
 | **GitHub Copilot CLI** (plugin) | `copilot plugin marketplace add jiancui-research/research-kit` → `copilot plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
@@ -153,6 +163,7 @@ The same pipeline installs for three agents; pick one or more (`--all` for every
 <details>
 <summary><b>Per-agent notes (Copilot bundle, Codex marketplace, self-pruning, overrides)</b></summary>
 
+- **OMP** installs the same `.claude-plugin` bundle through `/marketplace`, reading `commands/` directly. Plugin commands resolve bundled templates and tools through OMP's installed-plugin registry.
 - **Copilot** installs the same `.claude-plugin` bundle straight from its marketplace (`copilot plugin marketplace add …` → `copilot plugin install research-kit@research-kit`), reading `commands/` directly — no script needed. The `./install.sh --copilot` path stays as an alternative that instead generates `*.agent.md` custom agents (invoked via `/agent`).
 - **Codex** has its own plugin marketplace, but it expects a skill-based Codex plugin (`.agents/plugins/marketplace.json` + `.codex-plugin/`), not the `.claude-plugin` bundle — so Codex uses the script, which installs the commands into `~/.codex/prompts/` as native `/research.*` slash commands.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.

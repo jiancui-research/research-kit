@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "research-kit",
-      "source": ".",
+      "source": "./",
       "description": "Chained /research.* pipeline that turns each stage of paper writing into a reviewable artifact on disk."
     }
   ]
