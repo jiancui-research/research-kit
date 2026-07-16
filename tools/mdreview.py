@@ -269,6 +269,7 @@ PAGE = r"""<!doctype html>
   .fontctl button:hover { border-color:var(--accent); color:var(--accent); }
   #docctl { position:sticky; top:0; justify-content:flex-end; display:flex; z-index:5;
             margin-bottom:2px; }
+  #panelToggle.off { opacity:.4; }
   .empty { color:#999; }
 </style></head><body>
 <div id="app">
@@ -289,7 +290,7 @@ PAGE = r"""<!doctype html>
   </section>
   <div id="gutter" title="drag to resize; double-click to reset"></div>
   <section id="main">
-    <div id="docctl" class="fontctl"><button data-f="doc" data-d="-1" title="Smaller preview text">A−</button><button data-f="doc" data-d="1" title="Larger preview text">A+</button></div>
+    <div id="docctl" class="fontctl"><button data-f="doc" data-d="-1" title="Smaller preview text">A−</button><button data-f="doc" data-d="1" title="Larger preview text">A+</button><button id="panelToggle" title="Show / hide the comments panel">💬</button></div>
     <article id="doc"><p class="empty">Raw markdown on the left, rendered preview here.
       Click rendered text to jump the cursor to its source. Select rendered text to comment.</p></article>
   </section>
@@ -809,11 +810,10 @@ $("gutter").addEventListener("mousedown", e => {
   $("gutter").classList.add("dragging");
   document.body.style.userSelect = "none";
   const move = ev => {
-    const left = 230, right = 300, gw = 6;
+    const left = 230, right = panelVisible ? 300 : 0, gw = 6;
     const usable = innerWidth - left - right - gw;
-    let frac = (ev.clientX - left - gw / 2) / usable;
-    frac = Math.min(0.8, Math.max(0.2, frac));
-    $("app").style.gridTemplateColumns = `230px ${frac}fr 6px ${1 - frac}fr 300px`;
+    splitFrac = Math.min(0.8, Math.max(0.2, (ev.clientX - left - gw / 2) / usable));
+    applyLayout();
   };
   const up = () => {
     $("gutter").classList.remove("dragging");
@@ -825,7 +825,8 @@ $("gutter").addEventListener("mousedown", e => {
   document.addEventListener("mouseup", up);
 });
 $("gutter").addEventListener("dblclick", () => {
-  $("app").style.gridTemplateColumns = "230px 1fr 6px 1fr 300px";
+  splitFrac = 0.5;
+  applyLayout();
 });
 
 /* ---------- per-pane font size (persisted) ---------- */
@@ -840,13 +841,29 @@ function applyFonts() {
 }
 document.addEventListener("click", ev => {
   const b = ev.target.closest(".fontctl button");
-  if (!b) return;
+  if (!b || !b.dataset.f) return;
   const k = b.dataset.f;
   fonts[k] = Math.min(24, Math.max(10, fonts[k] + (+b.dataset.d)));
   localStorage.setItem("mdreview.font." + k, fonts[k]);
   applyFonts();
 });
 applyFonts();
+
+/* ---------- show/hide comments panel ---------- */
+let panelVisible = localStorage.getItem("mdreview.panel") !== "hidden";
+let splitFrac = 0.5;
+function applyLayout() {
+  $("panel").style.display = panelVisible ? "" : "none";
+  $("app").style.gridTemplateColumns =
+    `230px ${splitFrac}fr 6px ${1 - splitFrac}fr ${panelVisible ? "300px" : "0"}`;
+  $("panelToggle").classList.toggle("off", !panelVisible);
+}
+$("panelToggle").onclick = () => {
+  panelVisible = !panelVisible;
+  localStorage.setItem("mdreview.panel", panelVisible ? "shown" : "hidden");
+  applyLayout();
+};
+applyLayout();
 
 if (window.mermaid)
   mermaid.initialize({ startOnLoad: false, theme: "neutral", suppressErrorRendering: true });
