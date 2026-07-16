@@ -135,7 +135,7 @@ def _find_comment(comments: list[dict], cid: str) -> dict:
 def update_comment(root: Path, rel: str, cid: str, fields: dict) -> dict:
     comments = load_comments(root, rel)
     c = _find_comment(comments, cid)
-    for k in ("resolved", "comment"):
+    for k in ("resolved", "comment", "reply"):
         if k in fields:
             c[k] = fields[k]
     _save_comments(root, rel, comments)
@@ -154,11 +154,18 @@ def render_md(text: str) -> str:
 
 
 def export_text(root: Path, rel: str) -> str:
-    """Document + unresolved comments as one AI-ready markdown blob."""
+    """Document + unresolved comments as one AI-ready markdown blob with a reply loop."""
     doc = read_doc(root, rel)
     open_comments = [c for c in load_comments(root, rel) if not c["resolved"]]
+    sidecar = f"{SIDECAR_DIR}/{rel}.json"
     parts = [
-        "Review this document; address the inline reviewer comments.",
+        "Review this document and address each reviewer comment listed at the end.",
+        f"- If you can edit this repository: apply your fixes to `{rel}`, then for each",
+        f'  comment you addressed set `"resolved": true` and add a one-sentence `"reply"`',
+        f"  describing the fix in `{sidecar}` (match entries by id).",
+        "- If you cannot edit files: return the revised document, then end with a",
+        "  RESOLUTIONS block, one line per addressed comment, formatted",
+        "  `<id>: <one-sentence reply>`, so an in-repo agent can apply it.",
         "",
         "---",
         "",
@@ -168,7 +175,7 @@ def export_text(root: Path, rel: str) -> str:
     if open_comments:
         parts += ["---", "", "## Reviewer comments", ""]
         for i, c in enumerate(open_comments, 1):
-            parts.append(f'{i}. > "{c["quote"]}"')
+            parts.append(f'{i}. [id: {c["id"]}] > "{c["quote"]}"')
             parts.append(f"   {c['comment']}")
             parts.append("")
     return "\n".join(parts)
@@ -230,6 +237,10 @@ PAGE = r"""<!doctype html>
   .card .q { color:#666; font-style:italic; display:block; margin-bottom:5px; white-space:nowrap;
              overflow:hidden; text-overflow:ellipsis; }
   .card .orphan { color:#b45309; font-size:11px; font-weight:600; }
+  .card .reply { color:#0a7d33; font-style:italic; margin-top:5px; }
+  details.resolvedlist { margin-top:12px; }
+  details.resolvedlist summary { cursor:pointer; color:#666; font-weight:600;
+                                 font-size:12px; margin-bottom:8px; user-select:none; }
   .card .meta { color:#999; font-size:11px; margin-top:5px; display:flex; gap:8px; }
   .card .meta button { border:0; background:none; color:var(--accent); cursor:pointer; padding:0; font-size:11px; }
   #pop { position:fixed; display:none; background:#fff; border:1px solid var(--line); border-radius:8px;
@@ -428,33 +439,58 @@ function applyHighlights() {
     });
   }
 }
+let resolvedOpen = false;
+function commentCard(c) {
+  const card = document.createElement("div");
+  card.className = "card" + (c.resolved ? " resolved" : "");
+  card.id = "card-" + c.id;
+  const q = document.createElement("span"); q.className = "q"; q.textContent = '"' + c.quote + '"';
+  const body = document.createElement("div"); body.textContent = c.comment;
+  card.append(q, body);
+  if (c.reply) {
+    const rep = document.createElement("div"); rep.className = "reply";
+    rep.textContent = "↳ " + c.reply;
+    card.appendChild(rep);
+  }
+  const meta = document.createElement("div"); meta.className = "meta";
+  meta.textContent = c.created.slice(0, 16).replace("T", " ") + " ";
+  if (!c.anchored && !c.resolved) { const o = document.createElement("span"); o.className = "orphan";
+    o.textContent = "orphaned"; meta.appendChild(o); }
+  const res = document.createElement("button");
+  res.textContent = c.resolved ? "Reopen" : "Resolve";
+  res.onclick = async () => { await api("/api/comment/update",
+    {path: state.path, id: c.id, resolved: !c.resolved}); refreshComments(); };
+  const del = document.createElement("button");
+  del.textContent = "Delete";
+  del.onclick = async () => { await api("/api/comment/delete",
+    {path: state.path, id: c.id}); refreshComments(); };
+  meta.append(res, del);
+  card.appendChild(meta);
+  return card;
+}
 function renderPanel() {
   const panel = $("panel"); panel.innerHTML = "";
   if (!state.comments.length) {
     panel.innerHTML = '<p class="empty">No comments. Select rendered text to add one.</p>';
     return;
   }
-  for (const c of state.comments) {
-    const card = document.createElement("div");
-    card.className = "card" + (c.resolved ? " resolved" : "");
-    card.id = "card-" + c.id;
-    const q = document.createElement("span"); q.className = "q"; q.textContent = '"' + c.quote + '"';
-    const body = document.createElement("div"); body.textContent = c.comment;
-    const meta = document.createElement("div"); meta.className = "meta";
-    meta.textContent = c.created.slice(0, 16).replace("T", " ") + " ";
-    if (!c.anchored) { const o = document.createElement("span"); o.className = "orphan";
-      o.textContent = "orphaned"; meta.appendChild(o); }
-    const res = document.createElement("button");
-    res.textContent = c.resolved ? "Reopen" : "Resolve";
-    res.onclick = async () => { await api("/api/comment/update",
-      {path: state.path, id: c.id, resolved: !c.resolved}); refreshComments(); };
-    const del = document.createElement("button");
-    del.textContent = "Delete";
-    del.onclick = async () => { await api("/api/comment/delete",
-      {path: state.path, id: c.id}); refreshComments(); };
-    meta.append(res, del);
-    card.append(q, body, meta);
-    panel.appendChild(card);
+  const open = state.comments.filter(c => !c.resolved);
+  const done = state.comments.filter(c => c.resolved);
+  for (const c of open) panel.appendChild(commentCard(c));
+  if (!open.length) {
+    const p = document.createElement("p"); p.className = "empty";
+    p.textContent = "No open comments."; panel.appendChild(p);
+  }
+  if (done.length) {
+    const det = document.createElement("details");
+    det.className = "resolvedlist";
+    det.open = resolvedOpen;
+    det.addEventListener("toggle", () => { resolvedOpen = det.open; });
+    const sum = document.createElement("summary");
+    sum.textContent = "Resolved (" + done.length + ")";
+    det.appendChild(sum);
+    for (const c of done) det.appendChild(commentCard(c));
+    panel.appendChild(det);
   }
 }
 async function refreshComments() {
@@ -466,9 +502,12 @@ async function refreshComments() {
 }
 function focusCard(id) {
   const card = $("card-" + id);
-  if (card) { card.scrollIntoView({behavior:"smooth", block:"center"});
-    card.style.borderColor = "var(--accent)";
-    setTimeout(()=>card.style.borderColor = "", 1200); }
+  if (!card) return;
+  const det = card.closest("details");
+  if (det) { det.open = true; resolvedOpen = true; }
+  card.scrollIntoView({behavior:"smooth", block:"center"});
+  card.style.borderColor = "var(--accent)";
+  setTimeout(()=>card.style.borderColor = "", 1200);
 }
 
 /* ---------- select-to-comment ---------- */

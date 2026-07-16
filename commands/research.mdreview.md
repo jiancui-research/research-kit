@@ -14,8 +14,8 @@ mdreview is research-kit's optional review UI: rendered markdown, in-place editi
 2. Check `uv` is available (`command -v uv`). If missing, point to https://docs.astral.sh/uv/ and stop.
 3. From the repo root, run it in the background: `uv run <resolved-path> --open $ARGUMENTS`. Report the URL it prints.
 4. Tell the user both feedback paths:
-   - In-repo: comments live under `./.mdreview/` - asking an agent to "read .mdreview/ and address the comments on <file>" works with no export.
-   - External: the Export button copies document + open comments for pasting into any AI.
+   - In-repo: comments live under `./.mdreview/` - asking an agent to "read .mdreview/ and address the comments on <file>" works with no export. When YOU address a comment as the agent, set its `"resolved": true` and add a one-sentence `"reply"` describing the fix in the sidecar JSON (match by id); the UI shows replies in its Resolved list.
+   - External: the Export button copies document + open comments (with ids and the same reply instructions) for pasting into any AI.
 
 ## Completion
 Report the URL and note the server runs until stopped (Ctrl-C in its terminal, or kill the background job). End with: `Next: /research.paper` (act on review comments), or keep working in any lane.

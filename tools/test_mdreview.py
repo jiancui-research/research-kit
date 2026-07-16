@@ -107,15 +107,26 @@ def test_render_md_tables_and_code():
 
 def test_export_includes_unresolved_only(repo):
     rel = ".research/proposal.md"
-    m.add_comment(repo, rel, "Prior work does X", "", ".", "name the actual papers")
+    keep = m.add_comment(repo, rel, "Prior work does X", "", ".", "name the actual papers")
     done = m.add_comment(repo, rel, "# Prop", "", "", "old note")
     m.update_comment(repo, rel, done["id"], {"resolved": True})
     out = m.export_text(repo, rel)
-    assert out.startswith("Review this document; address the inline reviewer comments.")
+    assert out.startswith("Review this document and address each reviewer comment")
+    assert ".mdreview/.research/proposal.md.json" in out   # tells file-access AIs where to reply
+    assert "RESOLUTIONS" in out                            # fallback block for clipboard AIs
+    assert f"[id: {keep['id']}]" in out                    # ids included for the reply loop
     assert "Prior work does X." in out            # full source present
     assert "name the actual papers" in out        # unresolved comment present
     assert "old note" not in out                  # resolved comment omitted
     assert "## Reviewer comments" in out
+
+
+def test_update_comment_stores_reply(repo):
+    rel = ".research/proposal.md"
+    c = m.add_comment(repo, rel, "12 CWE classes", "", "", "list them")
+    upd = m.update_comment(repo, rel, c["id"], {"resolved": True, "reply": "added appendix table A1"})
+    assert upd["resolved"] is True and upd["reply"] == "added appendix table A1"
+    assert m.load_comments(repo, rel)[0]["reply"] == "added appendix table A1"
 
 
 def test_route_files_and_doc(repo):
