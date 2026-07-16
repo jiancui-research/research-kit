@@ -105,6 +105,17 @@ def test_render_md_tables_and_code():
     assert "<strong>hi</strong>" in html and "<table>" in html and "<code" in html
 
 
+def test_render_md_nested_lists_two_space_indent():
+    # GitHub-style 2-space nesting must produce nested lists (python-markdown wanted 4)
+    html = m.render_md("- **Probe, two parts.**\n  - **Part 1** check\n  - **Part 2** estimate\n")
+    assert html.count("<ul>") == 2 and "<strong>Part 1</strong>" in html
+
+
+def test_render_md_mermaid_fence_keeps_language_class():
+    html = m.render_md("```mermaid\nflowchart LR\nA-->B\n```\n")
+    assert 'class="language-mermaid"' in html
+
+
 def test_export_includes_unresolved_only(repo):
     rel = ".research/proposal.md"
     keep = m.add_comment(repo, rel, "Prior work does X", "", ".", "name the actual papers")

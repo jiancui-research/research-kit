@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["markdown"]
+# dependencies = ["markdown-it-py"]
 # ///
 """mdreview: a local web UI to read, edit, comment on, and export a repo's markdown.
 
@@ -23,7 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-import markdown as md_lib
+from markdown_it import MarkdownIt
 
 SKIP_DIRS = {".git", "node_modules", ".venv", ".mdreview", ".pytest_cache", "__pycache__"}
 MAX_BYTES = 2 * 1024 * 1024
@@ -149,8 +149,12 @@ def delete_comment(root: Path, rel: str, cid: str) -> None:
     _save_comments(root, rel, comments)
 
 
+# CommonMark semantics (2-space list nesting, GitHub-style) + GFM tables/strikethrough
+_md = MarkdownIt("commonmark", {"html": True}).enable("table").enable("strikethrough")
+
+
 def render_md(text: str) -> str:
-    return md_lib.markdown(text, extensions=["tables", "fenced_code"])
+    return _md.render(text)
 
 
 def export_text(root: Path, rel: str) -> str:

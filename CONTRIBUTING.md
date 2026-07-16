@@ -4,7 +4,7 @@ Thanks for helping improve research-kit. It is a small, MIT-licensed toolkit: sl
 
 ## Guiding principles
 
-- **Simplicity first.** Markdown only. No new machinery, no speculative features. If a change adds a moving part, it needs a strong reason. The one existing moving part is `tools/mdreview.py` (the optional review UI behind `/research.mdreview`): a leaf utility, staged like the templates, that no pipeline command depends on. Test it with `uv run --with pytest,markdown pytest tools/test_mdreview.py`.
+- **Simplicity first.** Markdown only. No new machinery, no speculative features. If a change adds a moving part, it needs a strong reason. The one existing moving part is `tools/mdreview.py` (the optional review UI behind `/research.mdreview`): a leaf utility, staged like the templates, that no pipeline command depends on. Test it with `uv run --with pytest,markdown-it-py pytest tools/test_mdreview.py`.
 - **Original and generalizable.** Write guidance that works for any researcher. Never copy verbatim sentences, unpublished drafts, person names, or other identifying details from private notes. Distill principles and rewrite them cleanly.
 - **Stay consistent.** One namespace (`/research.*`), one working directory (`./.research/...`), one pipeline order, everywhere. A change in one place that contradicts another is a bug.
 
