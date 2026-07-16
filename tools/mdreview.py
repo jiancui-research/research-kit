@@ -217,7 +217,7 @@ PAGE = r"""<!doctype html>
   #doc blockquote { border-left:3px solid var(--line); margin-left:0; padding-left:14px; color:#555; }
   #doc mark { background:var(--hl); cursor:pointer; border-bottom:2px solid var(--hl-strong); }
   @keyframes flashbg { 0%,100% { background:transparent; } 50% { background:var(--hl-strong); } }
-  #doc span.flash { animation: flashbg .55s ease-in-out 3; border-radius:3px; }
+  #doc span.flash, #doc mark.flash { animation: flashbg .55s ease-in-out 3; border-radius:3px; }
   #doc .mermaid { position:relative; }
   .zoombtn { position:absolute; top:6px; right:6px; opacity:0; transition:opacity .15s;
              border:1px solid var(--line); background:#fff; border-radius:6px; padding:2px 8px;
@@ -232,6 +232,13 @@ PAGE = r"""<!doctype html>
   #zctrl button { border:0; background:#fff; border-radius:7px; padding:6px 13px;
                   cursor:pointer; font:15px inherit; }
   #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px; }
+  #panelHead { display:flex; align-items:center; justify-content:space-between;
+               font-weight:600; margin-bottom:10px; }
+  #panelHead button { border:1px solid var(--line); background:#fff; border-radius:6px;
+                      padding:4px 11px; cursor:pointer; font:13px inherit; }
+  #panelHead button:hover { border-color:var(--accent); color:var(--accent); }
+  #doc mark.resolvedmark { background:#e8f5ec; border-bottom:2px solid #bfe3ca; }
+  .card .q:hover { text-decoration:underline; }
   .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px; }
   .card.resolved { opacity:.55; }
   .card .q { color:#666; font-style:italic; display:block; margin-bottom:5px; white-space:nowrap;
@@ -264,7 +271,6 @@ PAGE = r"""<!doctype html>
       <span class="path" id="path"></span>
       <button id="saveBtn">Save</button>
       <button id="revealBtn" title="Blink the preview text matching the cursor position">Reveal →</button>
-      <button id="exportBtn">Export</button>
     </div>
     <textarea id="editor" spellcheck="false" placeholder="Pick a file on the left."></textarea>
   </section>
@@ -273,7 +279,13 @@ PAGE = r"""<!doctype html>
     <article id="doc"><p class="empty">Raw markdown on the left, rendered preview here.
       Click rendered text to jump the cursor to its source. Select rendered text to comment.</p></article>
   </section>
-  <aside id="panel"><p class="empty">Comments appear here.</p></aside>
+  <aside id="panel">
+    <div id="panelHead">
+      <span>Comments</span>
+      <button id="exportBtn" title="Copy document + open comments (with ids and reply instructions) for any AI">Export</button>
+    </div>
+    <div id="cards"><p class="empty">Comments appear here.</p></div>
+  </aside>
 </div>
 <div id="pop"><textarea id="popText" placeholder="Comment..."></textarea><br>
   <button id="popAdd">Add comment</button></div>
@@ -434,6 +446,7 @@ function applyHighlights() {
     wrapTextRange(article, start, start + c.quote.length, () => {
       const mk = document.createElement("mark");
       mk.dataset.id = c.id;
+      if (c.resolved) mk.className = "resolvedmark";
       mk.onclick = ev => { ev.stopPropagation(); focusCard(c.id); };
       return mk;
     });
@@ -445,6 +458,9 @@ function commentCard(c) {
   card.className = "card" + (c.resolved ? " resolved" : "");
   card.id = "card-" + c.id;
   const q = document.createElement("span"); q.className = "q"; q.textContent = '"' + c.quote + '"';
+  q.title = "Show this passage in the document";
+  q.style.cursor = "pointer";
+  q.onclick = () => locateComment(c);
   const body = document.createElement("div"); body.textContent = c.comment;
   card.append(q, body);
   if (c.reply) {
@@ -468,8 +484,15 @@ function commentCard(c) {
   card.appendChild(meta);
   return card;
 }
+function locateComment(c) {
+  const mk = document.querySelector('#doc mark[data-id="' + c.id + '"]');
+  if (!mk) { toast("This comment's text is no longer in the document"); return; }
+  mk.scrollIntoView({behavior: "smooth", block: "center"});
+  mk.classList.add("flash");
+  setTimeout(() => mk.classList.remove("flash"), 2000);
+}
 function renderPanel() {
-  const panel = $("panel"); panel.innerHTML = "";
+  const panel = $("cards"); panel.innerHTML = "";
   if (!state.comments.length) {
     panel.innerHTML = '<p class="empty">No comments. Select rendered text to add one.</p>';
     return;
