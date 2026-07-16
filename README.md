@@ -2,10 +2,10 @@
 
 # 🔬 research-kit
 
-### *Spec-Driven Development for research papers.*
+### *Do research in documents, not code.*
 
-**A pipeline of slash commands for your AI coding agent — Claude Code, Codex CLI, GitHub Copilot CLI, or Oh My Pi (OMP).
-Every stage of paper writing becomes one reviewable artifact on disk. Pure Markdown: no build step, no lock-in.**
+**Spec-Driven Development for research papers: a pipeline of slash commands for your AI coding agent — Claude Code, Codex CLI, GitHub Copilot CLI, or Oh My Pi (OMP).
+Every stage produces one reviewable Markdown document. The documents are what you check; the code is written from them.**
 
 [![License](https://img.shields.io/github/license/jiancui-research/research-kit)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/jiancui-research/research-kit)](https://github.com/jiancui-research/research-kit/commits/main)
@@ -25,11 +25,13 @@ Every stage of paper writing becomes one reviewable artifact on disk. Pure Markd
 
 ## 🤔 Why
 
-Asking one giant "write my paper" prompt produces plausible slop and hidden overclaims. research-kit splits the work the way strong labs do:
+The document is the only thing you, the researcher, need to check — the code gets written from it.
 
-- **One command per stage, one artifact per command.** Each stage reads what came before, takes your steering, and writes a single reviewable document under `./.research/` — your decision record, committed with the paper.
-- **A kill-switch before you over-invest.** `feasibility` runs one small probe and returns **GO / NO-GO / PIVOT** before the full build.
-- **Claims that can't drift from evidence.** The build (`design`), evaluation (`eval`), and writing (`paper`) lanes co-evolve in parallel, synced only through a claim ↔ evidence matrix (`claims.md`); `analyze` catches drift and names the exact re-run, and `review` simulates a reviewer panel reading only the paper.
+- **You review documents, never code.** Every stage produces one Markdown doc under `./.research/` — the spec, the record, and the thing you actually check. The implementation plan derives from these docs, the agent builds from the plan, and results flow back into `claims.md` and the draft, where you judge them.
+- **Each document is iterated, not just generated.** You refine it with your AI as advisor and peer — critiques, comments, replies — plus your own edits, until it says what you mean. Only then does the next stage build on it.
+- **A kill-switch and a drift-catcher keep it honest.** `feasibility` returns **GO / NO-GO / PIVOT** before you over-invest; `analyze` catches the lanes drifting from the docs and names the exact re-run; `review` simulates a reviewer panel reading only the paper.
+
+Checking and refining documents is the whole job — which is why research-kit bundles [mdreview](#-the-review-ui-researchmdreview) to make it comfortable.
 
 ## 🗺️ The pipeline
 
