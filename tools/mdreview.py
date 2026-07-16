@@ -135,7 +135,7 @@ def _find_comment(comments: list[dict], cid: str) -> dict:
 def update_comment(root: Path, rel: str, cid: str, fields: dict) -> dict:
     comments = load_comments(root, rel)
     c = _find_comment(comments, cid)
-    for k in ("resolved", "comment", "reply"):
+    for k in ("resolved", "comment", "reply", "fixed"):
         if k in fields:
             c[k] = fields[k]
     _save_comments(root, rel, comments)
@@ -161,8 +161,10 @@ def export_text(root: Path, rel: str) -> str:
     parts = [
         "Review this document and address each reviewer comment listed at the end.",
         f"- If you can edit this repository: apply your fixes to `{rel}`, then for each",
-        f'  comment you addressed set `"resolved": true` and add a one-sentence `"reply"`',
-        f"  describing the fix in `{sidecar}` (match entries by id).",
+        f'  comment you addressed, update its entry in `{sidecar}` (match by id): set',
+        f'  `"resolved": true`, add a one-sentence `"reply"` describing the fix, and a',
+        f'  `"fixed"` field quoting a short exact snippet of the NEW text you wrote,',
+        "  so the UI can highlight where the fix landed.",
         "- If you cannot edit files: return the revised document, then end with a",
         "  RESOLUTIONS block, one line per addressed comment, formatted",
         "  `<id>: <one-sentence reply>`, so an in-repo agent can apply it.",
@@ -440,10 +442,14 @@ function wrapTextRange(container, start, end, makeEl) {
 function applyHighlights() {
   const article = $("doc");
   for (const c of state.comments) {
-    const start = findAnchor(article.textContent, c);
-    c.anchored = start >= 0 && c.quote.length > 0;
+    // resolved comments with a recorded fix anchor on the NEW text; otherwise the original quote
+    const target = (c.resolved && c.fixed) ? c.fixed : c.quote;
+    const start = (c.resolved && c.fixed)
+      ? article.textContent.indexOf(c.fixed)
+      : findAnchor(article.textContent, c);
+    c.anchored = start >= 0 && target.length > 0;
     if (!c.anchored) continue;
-    wrapTextRange(article, start, start + c.quote.length, () => {
+    wrapTextRange(article, start, start + target.length, () => {
       const mk = document.createElement("mark");
       mk.dataset.id = c.id;
       if (c.resolved) mk.className = "resolvedmark";
@@ -485,11 +491,29 @@ function commentCard(c) {
   return card;
 }
 function locateComment(c) {
+  // chain: anchored mark (fixed or original text) -> stored context -> give up
   const mk = document.querySelector('#doc mark[data-id="' + c.id + '"]');
-  if (!mk) { toast("This comment's text is no longer in the document"); return; }
-  mk.scrollIntoView({behavior: "smooth", block: "center"});
-  mk.classList.add("flash");
-  setTimeout(() => mk.classList.remove("flash"), 2000);
+  if (mk) {
+    mk.scrollIntoView({behavior: "smooth", block: "center"});
+    mk.classList.add("flash");
+    setTimeout(() => mk.classList.remove("flash"), 2000);
+    return;
+  }
+  const text = $("doc").textContent;
+  let start = -1, len = 40;
+  if (c.prefix) {
+    const i = text.indexOf(c.prefix);
+    if (i >= 0) start = i + c.prefix.length;
+  }
+  if (start < 0 && c.suffix) {
+    const i = text.indexOf(c.suffix);
+    if (i >= 0) { start = Math.max(0, i - 40); len = i - start; }
+  }
+  if (start < 0 || len <= 0) {
+    toast("Can't locate this passage anymore (text and its context both changed)");
+    return;
+  }
+  flashRendered(start, Math.min(len, text.length - start));
 }
 function renderPanel() {
   const panel = $("cards"); panel.innerHTML = "";

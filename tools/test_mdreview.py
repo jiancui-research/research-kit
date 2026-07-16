@@ -121,12 +121,23 @@ def test_export_includes_unresolved_only(repo):
     assert "## Reviewer comments" in out
 
 
-def test_update_comment_stores_reply(repo):
+def test_update_comment_stores_reply_and_fixed(repo):
     rel = ".research/proposal.md"
     c = m.add_comment(repo, rel, "12 CWE classes", "", "", "list them")
-    upd = m.update_comment(repo, rel, c["id"], {"resolved": True, "reply": "added appendix table A1"})
+    upd = m.update_comment(repo, rel, c["id"],
+                           {"resolved": True, "reply": "added appendix table A1",
+                            "fixed": "all 12 classes are listed in Table A1"})
     assert upd["resolved"] is True and upd["reply"] == "added appendix table A1"
-    assert m.load_comments(repo, rel)[0]["reply"] == "added appendix table A1"
+    saved = m.load_comments(repo, rel)[0]
+    assert saved["reply"] == "added appendix table A1"
+    assert saved["fixed"] == "all 12 classes are listed in Table A1"
+
+
+def test_export_mentions_fixed_field(repo):
+    rel = ".research/proposal.md"
+    m.add_comment(repo, rel, "Prior work does X", "", ".", "name the papers")
+    out = m.export_text(repo, rel)
+    assert '"fixed"' in out and '"reply"' in out
 
 
 def test_route_files_and_doc(repo):
