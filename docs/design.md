@@ -4,7 +4,7 @@
 
 Writing a research paper is a long-lived, multi-stage process with the same failure modes as building software: vague problem statements, untracked assumptions, claims that drift from evidence, and rework caused by skipping steps. **Spec-Driven Development** addresses these in code by making intent explicit before execution. research-kit applies the same discipline to papers.
 
-It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates and a default research "constitution", installable for Claude Code, Codex CLI, or GitHub Copilot CLI. Each command turns one fuzzy stage of paper writing - proposal, related work, feasibility, tasks, evals, drafting, rebuttal - into a concrete, reviewable artifact on disk. The artifacts form a chain, so later stages inherit the decisions made earlier instead of re-deriving them, and a claim-to-evidence matrix keeps the eventual paper honest.
+It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates and a default research "constitution", installable for Claude Code, Codex CLI, GitHub Copilot CLI, or Oh My Pi (OMP). Each command turns one fuzzy stage of paper writing - proposal, related work, feasibility, tasks, evals, drafting, rebuttal - into a concrete, reviewable artifact on disk. The artifacts form a chain, so later stages inherit the decisions made earlier instead of re-deriving them, and a claim-to-evidence matrix keeps the eventual paper honest.
 
 Simplicity is the top priority: Markdown in, Markdown out, no runtime.
 
@@ -101,7 +101,7 @@ Pure agent slash commands — no runtime of its own. Each command is a Markdown 
 
 The default (no flag) installs for Claude Code, preserving the original behavior; `--all` covers every agent. Templates ship as plain Markdown; `install.sh` stages them to `~/.research-kit/` (override with `RESEARCH_KIT_HOME`) and `/research.init` copies them into a paper repo's `.research/templates/`. The default constitution is embedded in `/research.constitution`.
 
-The repo also doubles as a **plugin marketplace**, a zero-script path shared by two agents. `.claude-plugin/marketplace.json` lists a single plugin whose source is the repo root, and `.claude-plugin/plugin.json` is its manifest; the existing `commands/` directory is the plugin's command set with no file movement. **Claude Code:** `/plugin marketplace add jiancui-research/research-kit` then `/plugin install research-kit@research-kit`, namespacing the stages as `/research-kit:research.<name>`. **GitHub Copilot CLI reads the same `.claude-plugin` bundle:** `copilot plugin marketplace add jiancui-research/research-kit` then `copilot plugin install research-kit@research-kit`, exposing the same namespaced `/research-kit:research.<name>` stages (verified against Copilot CLI 1.0.40). In Claude's mode the plugin bundle (including `templates/`) is copied to Claude's cache, so `/research.init` reads templates from `${CLAUDE_PLUGIN_ROOT}/templates`, falling back to the `install.sh` staging dir otherwise. This is packaging only — no hooks, MCP servers, or runtime are added.
+The repo also doubles as a **plugin marketplace**, a zero-script path shared by three agents. `.claude-plugin/marketplace.json` lists a single plugin whose source is the repo root, and `.claude-plugin/plugin.json` is its manifest; the existing `commands/` directory is the plugin's command set with no file movement. **Claude Code:** `/plugin marketplace add jiancui-research/research-kit` then `/plugin install research-kit@research-kit`, namespacing the stages as `/research-kit:research.<name>`. **GitHub Copilot CLI reads the same `.claude-plugin` bundle:** `copilot plugin marketplace add jiancui-research/research-kit` then `copilot plugin install research-kit@research-kit`, exposing the same namespaced `/research-kit:research.<name>` stages (verified against Copilot CLI 1.0.40). **OMP reads the same bundle too:** `/marketplace add jiancui-research/research-kit` then `/marketplace install research-kit@research-kit`; its commands resolve bundled templates and tools through the `installPath` in OMP's installed-plugin registry. In Claude's mode the plugin bundle (including `templates/`) is copied to Claude's cache, so `/research.init` reads templates from `${CLAUDE_PLUGIN_ROOT}/templates`, falling back to the `install.sh` staging dir otherwise. This is packaging only — no hooks, MCP servers, or runtime are added.
 
 There is no Python CLI, no daemon, no build step. The model does the work; the files are the interface.
 
@@ -111,7 +111,7 @@ Full paper lifecycle: from a raw idea (via the proposal entry point) through rel
 
 ## Non-goals
 
-- No Python CLI or any other CLI - commands run inside the AI coding agent (Claude Code, Codex CLI, or Copilot CLI).
+- No Python CLI or any other CLI - commands run inside the AI coding agent (Claude Code, Codex CLI, Copilot CLI, or OMP).
 - No hooks, MCP servers, or runtime machinery. The optional Claude Code plugin packaging (`.claude-plugin/`) is just a manifest around the same command files - no event handlers or background processes.
 - No daemon, server, or hosted state.
 - No speculative abstractions. If a feature is not needed for the lifecycle above, it is out.
