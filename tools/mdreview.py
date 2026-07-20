@@ -21,13 +21,22 @@ import uuid
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from markdown_it import MarkdownIt
 
 SKIP_DIRS = {".git", "node_modules", ".venv", ".mdreview", ".pytest_cache", "__pycache__"}
 MAX_BYTES = 2 * 1024 * 1024
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
 SIDECAR_DIR = ".mdreview"
+IMAGE_TYPES = {
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "gif": "image/gif",
+    "svg": "image/svg+xml",
+    "webp": "image/webp",
+}
 
 
 class RequestError(Exception):
@@ -221,6 +230,7 @@ PAGE = r"""<!doctype html>
   #doc code { background:#f6f8fa; padding:1px 4px; border-radius:4px; font-size:90%; }
   #doc table { border-collapse:collapse; } #doc td,#doc th { border:1px solid var(--line); padding:4px 9px; }
   #doc blockquote { border-left:3px solid var(--line); margin-left:0; padding-left:14px; color:#555; }
+  #doc img { max-width:100%; }
   #doc mark { background:var(--hl); cursor:pointer; border-bottom:2px solid var(--hl-strong); }
   @keyframes flashbg { 0%,100% { background:transparent; } 50% { background:var(--hl-strong); } }
   #doc span.flash, #doc mark.flash { animation: flashbg .55s ease-in-out 3; border-radius:3px; }
@@ -387,9 +397,20 @@ async function openDoc(path) {
 }
 function paint(html) {
   $("doc").innerHTML = html;
+  fixImagePaths();
   applyHighlights();
   renderMermaid();
   renderPanel();
+}
+function fixImagePaths() {
+  // relative image refs resolve against the DOC's directory (GitHub semantics),
+  // not the server root the page is served from
+  const dir = state.path.includes("/") ? state.path.slice(0, state.path.lastIndexOf("/") + 1) : "";
+  for (const img of $("doc").querySelectorAll("img")) {
+    const src = img.getAttribute("src") || "";
+    if (/^(https?:|data:|\/)/.test(src)) continue;
+    img.src = "/" + dir + src;
+  }
 }
 async function renderMermaid() {
   // ```mermaid fences arrive as <pre><code class="language-mermaid">; swap them for
@@ -904,6 +925,16 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
         if method == "POST" and path == "/api/comment/delete":
             delete_comment(root, body["path"], body["id"])
             return 200, "application/json", {"ok": True}
+        if method == "GET" and "." in path:
+            # serve repo images so ![](figures/x.png) renders in the preview
+            ext = path.rsplit(".", 1)[-1].lower()
+            if ext in IMAGE_TYPES:
+                p = safe_resolve(root, unquote(path).lstrip("/"))
+                if not p.is_file():
+                    raise RequestError(404, f"no such file: {path}")
+                if p.stat().st_size > MAX_IMAGE_BYTES:
+                    raise RequestError(413, f"image over {MAX_IMAGE_BYTES // (1024 * 1024)} MB")
+                return 200, IMAGE_TYPES[ext], p.read_bytes()
         return 404, "application/json", {"error": f"no such route: {method} {path}"}
     except RequestError as e:
         return e.status, "application/json", {"error": e.message}
@@ -918,7 +949,9 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _send(self, status: int, ctype: str, payload) -> None:
-        if isinstance(payload, str):
+        if isinstance(payload, (bytes, bytearray)):
+            data = bytes(payload)
+        elif isinstance(payload, str):
             data = payload.encode("utf-8")
         else:
             data = json.dumps(payload).encode("utf-8")

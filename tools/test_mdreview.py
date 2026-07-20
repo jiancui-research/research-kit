@@ -198,3 +198,28 @@ def test_route_render_live_preview(repo):
 def test_route_root_identity(repo):
     status, _, res = m.route(repo, "GET", "/api/root", {}, {})
     assert status == 200 and res == {"root": str(repo)}
+
+
+def test_route_serves_repo_images(repo):
+    png = b"\x89PNG\r\n\x1a\nfakepngdata"
+    (repo / ".research" / "figs").mkdir()
+    (repo / ".research" / "figs" / "plot.png").write_bytes(png)
+    status, ctype, payload = m.route(repo, "GET", "/.research/figs/plot.png", {}, {})
+    assert status == 200 and ctype == "image/png" and payload == png
+
+
+def test_route_image_with_encoded_space(repo):
+    (repo / "my plot.svg").write_text("<svg/>", encoding="utf-8")
+    status, ctype, payload = m.route(repo, "GET", "/my%20plot.svg", {}, {})
+    assert status == 200 and ctype == "image/svg+xml" and payload == b"<svg/>"
+
+
+def test_route_image_traversal_blocked(repo):
+    status, _, err = m.route(repo, "GET", "/../evil.png", {}, {})
+    assert status == 400 and "escapes root" in err["error"]
+
+
+def test_route_non_image_files_stay_404(repo):
+    (repo / "x.exe").write_bytes(b"MZ")
+    status, _, _ = m.route(repo, "GET", "/x.exe", {}, {})
+    assert status == 404
