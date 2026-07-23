@@ -23,26 +23,35 @@ Runs in **parallel** with `/research.eval`: eval writes verdicts into `claims.md
    - Determine the paper type (measurement / attack / defense / benchmark / systematization (SoK)) from the proposal; default to the closest match and say which you chose. Load the matching skeleton from `.research/templates/paper/<type>.md`.
    - Load the relevant craft guide: `.research/templates/sections/abstract-intro.md` for abstract/intro, `.research/templates/sections/figures-tables.md` for results/figures/tables.
 
-2. **Pick the section and the mode.**
+2. **Resolve the manuscript repo (once; idempotent).**
+   - If `./.research/paper-repo` exists and its first line is a valid directory, that is the manuscript root — skip the rest of this step.
+   - Otherwise ask the user: "Is there already a paper repo for this project? Give me its URL or local path — or I'll create one."
+     - **URL** → clone it as a sibling of this project (`git clone <url> ../<name>`; let the user override the location).
+     - **Local path** → use as-is.
+     - **None** → derive `<shortname>-<venueabbrev><yy>-latex` (lowercase; e.g. `codary-sp27-latex`) from `proposal.md`'s project name + target venue + 2-digit year, **confirm the name with the user**, then `gh repo create <name> --private` and clone it as a sibling. If `gh` is missing or unauthenticated, print the exact `gh`/`git` commands for the user and stop. Never overwrite an existing repo.
+   - **Seed a newly created repo from the venue's actual CFP.** The format is whatever the call for papers says — find the venue's current CFP / official LaTeX template (ask the user for the link or template if you can't determine it; don't trust a format from memory when the CFP is checkable). Scaffold: `main.tex` from the official template, `refs.bib`, a LaTeX `.gitignore`, a `README.md` (venue, deadline, format, status), and section stubs tagged READY/BLOCKED from `tasks/paper.md`. Anonymize if the venue is double-blind.
+   - Record the result in `./.research/paper-repo`: line 1 the path, optional line 2 the git URL. Later runs and the review/analyze stages resolve the manuscript from this pointer.
+
+3. **Pick the section and the mode.**
    - Section: from `$ARGUMENTS`, else the next non-`done` section in skeleton order (abstract usually last).
    - Mode: **CRITIQUE** if a draft is pasted or pointed to; **DRAFT** if `$ARGUMENTS` explicitly asks; otherwise **OUTLINE**.
-   - `mkdir -p ./paper`. Write to `./paper/<section>.md` (or `<section>.outline.md` / `<section>.critique.md`). Never overwrite the user's existing prose — append your outline/critique under a clearly labeled heading and say what you did. (Your outlines, drafts, and the manuscript source — LaTeX, figures — all live in `./paper/` at the project root; `.research/` keeps only the planning doc `tasks/paper.md`.)
+   - Write to `<manuscript>/<section>.md` (or `<section>.outline.md` / `<section>.critique.md`) in the resolved manuscript root (fallback `./paper/` for older projects). Never overwrite the user's existing prose — append your outline/critique under a clearly labeled heading and say what you did. (`.research/` keeps only the planning doc `tasks/paper.md`; to review manuscript markdown in mdreview, launch it in the manuscript repo — one instance per repo works side by side.)
 
-3. **OUTLINE mode (default).** For the named section, lay out the argument the *user* will write:
+4. **OUTLINE mode (default).** For the named section, lay out the argument the *user* will write:
    - The **beats in order** following the type skeleton (one line each: what this beat must establish).
    - For each result beat, the **claim id(s)** it must hit (e.g. `→ C3`) and the **evidence** (eval id / figure / table) backing it; if no backing entry exists, mark `[UNVERIFIED — add to claims.md]`.
    - The **citations** to slot in, pulled from `related-work.md` only; mark missing ones `[cite?]`, never invented.
-   - The **load-bearing reminders** for this section (see step 5) as short notes against the relevant beat — not prose.
+   - The **load-bearing reminders** for this section (see step 6) as short notes against the relevant beat — not prose.
    Hand back a skeleton, not paragraphs. The user fills the words.
 
-4. **CRITIQUE mode.** Read the user's draft and return located, specific findings (file + line/quote), grouped:
+5. **CRITIQUE mode.** Read the user's draft and return located, specific findings (file + line/quote), grouped:
    - **Voice** — drift from the constitution voice; passive where active "we" belongs; hedging or filler.
    - **Claim traceability** — every empirical sentence mapped to a `claims.md` id; flag any unmapped sentence `[UNVERIFIED — add to claims.md]` and any claim stated stronger than its verdict in `claims.md`.
    - **Overclaims** — bare `first`/`solves`/`guarantees`/`proves` without a scope qualifier or sufficient evidence; superlatives without a number.
    - **Tightening** — sentences to cut or merge, motivation buried under method, missing "so what" on a finding.
    Do not rewrite the draft. Give the user the findings; they revise.
 
-5. **Load-bearing craft (apply in every mode).**
+6. **Load-bearing craft (apply in every mode).**
    - **Lead with motivation, not method.** Open the intro with why the target matters (named example, dated incident, or concrete number), surface the tension, then state the gap in one recitable sentence.
    - **Scope every novelty claim** (first *systematic* / *large-scale* study of X *on* Y). Bare "first" invites counterexamples.
    - **Use active "we" voice** for what you did; reserve passive for stated facts and system behavior.
@@ -53,12 +62,12 @@ Runs in **parallel** with `/research.eval`: eval writes verdicts into `claims.md
    - **Be honest:** report effectiveness *and* cost/overhead; state limitations plainly; don't inflate confirmatory results into discoveries.
    - In related work, synthesize prior work into themes and end each paragraph with an explicit delta ("Unlike these, we...").
 
-6. **Paper-type and venue awareness.**
+7. **Paper-type and venue awareness.**
    - Place the threat model per venue: a standalone, labeled section (adversary goal, knowledge, capabilities, out-of-scope) at security venues; folded into the intro at ML venues.
    - Include the beats the skeleton marks load-bearing for the type (methodology/ground-truth for measurement, countermeasures for attack, security+performance evaluation for defense, task tuple + construction filters for benchmark, taxonomy axes for SoK).
    - Add the roadmap sentence and standalone ethics/disclosure section when the venue expects them; omit gracefully otherwise.
 
-7. **Update `tasks/paper.md`.** Set the section's status (e.g. `outlined`, `drafted`, `critiqued`, or `blocked`) and note any `[UNVERIFIED]`/`[cite?]` markers blocking it. Don't invent tasks the file doesn't have; just update status for the section you touched.
+8. **Update `tasks/paper.md`.** Set the section's status (e.g. `outlined`, `drafted`, `critiqued`, or `blocked`) and note any `[UNVERIFIED]`/`[cite?]` markers blocking it. Don't invent tasks the file doesn't have; just update status for the section you touched.
 
 ## Validate (short checklist)
 - Default behavior produced an **outline**, not ghostwritten prose; full prose only on explicit `draft` request.
@@ -70,4 +79,4 @@ Runs in **parallel** with `/research.eval`: eval writes verdicts into `claims.md
 - No user prose was overwritten; critique findings are located, not vague.
 
 ## Completion
-Report the path(s) touched (e.g. `./paper/intro.outline.md`) and the updated `./.research/tasks/paper.md` status. List any `[UNVERIFIED]` or `[cite?]` markers the user must resolve. Then end with: `Next: /research.analyze` (or `Next: /research.paper <next-section>` if sections remain, and rerun `/research.eval` to land the evidence that unblocks result sections).
+Report the manuscript root and the path(s) touched (e.g. `../codary-sp27-latex/intro.outline.md`) and the updated `./.research/tasks/paper.md` status. List any `[UNVERIFIED]` or `[cite?]` markers the user must resolve. Then end with: `Next: /research.analyze` (or `Next: /research.paper <next-section>` if sections remain, and rerun `/research.eval` to land the evidence that unblocks result sections).

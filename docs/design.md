@@ -69,7 +69,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   feasibility/             throwaway probe code
   design/                  THE SYSTEM CODE (built by /research.design)
   eval/                    eval writeups + index + scripts, data, results
-  paper/                   outlines, drafts, and the manuscript source (LaTeX, figures)
+  paper/                   outlines + manuscript - or a dedicated sibling repo recorded in .research/paper-repo
 ```
 
 Command contract:

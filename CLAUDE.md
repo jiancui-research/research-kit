@@ -15,7 +15,7 @@ Because the shipped Markdown *is* the product (read by AI agents and users, neve
 When editing this repo you are authoring the **bundle**. The `.research/...` paths written inside command bodies refer to the **end user's paper repo at runtime**, not to this repo.
 
 - **This repo (the bundle):** `commands/`, `templates/` (root), `tools/` (optional utilities), `memory/constitution.md` (root), `install.sh`, `.claude-plugin/`.
-- **The user's paper repo (runtime, never exists here):** `./.research/` holds tracking docs - `.research/templates/` (copied in by `/research.init`), `.research/memory/constitution.md`, `proposal.md`, `claims.md`, `tasks/`, etc. Work products (`design/`, `eval/`, `paper/`, `feasibility/`) are sibling root folders.
+- **The user's paper repo (runtime, never exists here):** `./.research/` holds tracking docs - `.research/templates/` (copied in by `/research.init`), `.research/memory/constitution.md`, `proposal.md`, `claims.md`, `tasks/`, etc. Work products (`design/`, `eval/`, `paper/`, `feasibility/`) are sibling root folders; the manuscript may instead be a dedicated sibling repo (`<name>-<venue><yy>-latex`) recorded in `.research/paper-repo`, which paper-stage commands resolve (fallback `./paper/`).
 
 So: this repo's root `templates/` and `memory/constitution.md` are the **source** that gets *copied into* a user's `./.research/templates/` and `./.research/memory/constitution.md`. Command bodies read from the `.research/` copies, never from this repo's paths.
 

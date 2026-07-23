@@ -99,7 +99,7 @@ each, leading with the strongest result and citing it exactly.]
 
 ## How to use
 - Read `./.research/memory/constitution.md` first for venue and paper-type, then
-  review ONLY the submitted paper (`./paper/`) - a real reviewer does not see your
+  review ONLY the submitted paper (the manuscript root from `.research/paper-repo`, fallback `./paper/`) - a real reviewer does not see your
   `claims.md`, `eval/`, or task lists, so judge every claim against the paper's own
   evidence. (Internal consistency vs. those docs is `/research.analyze`'s job.)
 - Be paper-type aware: a benchmark paper adds checks (data construction transparency,

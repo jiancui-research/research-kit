@@ -35,7 +35,7 @@ flowchart TD
 
 ## Input → output, per command
 
-All research-kit **tracking docs** live under `./.research/`; the actual **work products** (code, data, paper source) live in sibling root folders — `feasibility/`, `design/`, `eval/`, `paper/`. The whole project is one repo under `~/Projects`, outside the vault.
+All research-kit **tracking docs** live under `./.research/`; the actual **work products** (code, data, paper source) live in sibling root folders — `feasibility/`, `design/`, `eval/`, `paper/`. The whole project is one repo under `~/Projects`, outside the vault. Exception: the manuscript may live in a **dedicated sibling repo** (`<shortname>-<venue><yy>-latex`, e.g. `codary-sp27-latex`) resolved by `/research.paper` and recorded in `.research/paper-repo`; paper-stage commands read that pointer and fall back to `./paper/`.
 
 | Command | Reads (input) | Writes (new) | Updates (existing) |
 | --- | --- | --- | --- |
@@ -46,7 +46,7 @@ All research-kit **tracking docs** live under `./.research/`; the actual **work 
 | `tasks` | `proposal.md` + `feasibility.md` | `tasks/design.md`, `tasks/eval.md`, `tasks/paper.md` | — |
 | `design` (build) | `tasks/design.md` | **code in `./design/`** | `tasks/design.md` (build status) |
 | `eval` | `tasks/eval.md` | `eval/NN-*.md`, `eval/index.md` | **`claims.md`** |
-| `paper` (human-led) | `tasks/paper.md`, `tasks/design.md`, `proposal`, `related-work`, `claims.md` | `paper/<section>.md` | `tasks/paper.md` (status) |
+| `paper` (human-led) | `tasks/paper.md`, `tasks/design.md`, `proposal`, `related-work`, `claims.md` | `<manuscript>/<section>.md` | `tasks/paper.md` (status), `paper-repo` pointer |
 | `analyze` (+ sync) | everything (read-only) | `analyze-report.md` | — (routes re-runs) |
 | `review` (loop) | `paper` only (+ constitution) | `review/round-N.md` | — (suggests a fix command per finding; you route) |
 | `rebuttal` (aux) | reviewer comments | `rebuttal/rebuttal.md` | — |

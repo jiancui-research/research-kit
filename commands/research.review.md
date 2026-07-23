@@ -9,7 +9,7 @@ The user request arrives via the `$ARGUMENTS` placeholder. It may narrow the rou
 
 ## What this phase is
 
-This is the **self-review loop**: review your draft the way a skeptical program-committee panel will, **before** submission. A real reviewer sees **only the submitted paper**, so this command reads **only `./paper/`** (plus venue/paper-type context). It never opens your `claims.md`, `eval/`, `proposal.md`, or task lists — judging from internal docs would give it insider knowledge a reviewer does not have and make the simulation less faithful.
+This is the **self-review loop**: review your draft the way a skeptical program-committee panel will, **before** submission. A real reviewer sees **only the submitted paper**, so this command reads **only the manuscript** (plus venue/paper-type context). It never opens your `claims.md`, `eval/`, `proposal.md`, or task lists — judging from internal docs would give it insider knowledge a reviewer does not have and make the simulation less faithful.
 
 It is **report-only**: it writes mock reviews + scores to `review/round-N.md` and nothing else. It does not edit the paper and does not write into any other lane (no auto-appending to `tasks/`). Each finding carries a **suggested fix command** so you can route it yourself, then re-run `/research.review` for the next round.
 
@@ -19,7 +19,7 @@ Division of labor: `/research.analyze` is the *internal* audit with full access 
 
 1. **Read the paper only.**
    - Read `./.research/memory/constitution.md` if present, for venue, paper-type, and voice (a reviewer knows the venue and its norms); skip silently if absent.
-   - Read `./paper/` — the submitted manuscript. This is the *only* artifact you review. If a section is missing or still an outline, treat it exactly as a reviewer would: a gap in the submission.
+   - Read the manuscript — resolve its root from `./.research/paper-repo` (first line is the path; fall back to `./paper/` if the pointer is absent). This is the *only* artifact you review. If a section is missing or still an outline, treat it exactly as a reviewer would: a gap in the submission.
    - Determine the **paper type** (measurement / attack / defense / benchmark / systematization (SoK)) from the constitution, or failing that the paper itself, and load `.research/templates/paper/<type>.md` if present so venue-appropriate expectations apply. Do **not** open `claims.md`, `eval/`, `proposal.md`, `related-work.md`, or the task lists.
    - Determine the round number **N**: the next integer after the highest existing `./.research/review/round-*.md` (start at 1).
 
@@ -52,7 +52,7 @@ Write `./.research/review/round-N.md` (start from `.research/templates/review-te
 
 ## Validate (short checklist)
 
-- Only `./paper/` (+ venue context) was read; `claims.md` / `eval/` / `proposal.md` / task lists were not opened.
+- Only the manuscript (+ venue context) was read; `claims.md` / `eval/` / `proposal.md` / task lists were not opened.
 - 3–4 distinct reviewer lenses, not one voice repeated.
 - Every weakness is specific, located in the paper, and paired with a concrete fix; none could apply to any paper.
 - The unfair reflexes are absent or explicitly justified; fatal flaws separated from fixable and minor.

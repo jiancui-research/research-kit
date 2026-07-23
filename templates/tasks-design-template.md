@@ -47,7 +47,8 @@ code is built into `./design/`.]
     design/         [THE SYSTEM CODE — what /research.design builds]
       src/  ...     [internal structure: modules / entrypoints]
     eval/     [evaluation scripts, data, results]
-    paper/          [the actual paper source — LaTeX, figures]
+    paper/          [manuscript; often a dedicated sibling repo <name>-<venue><yy>-latex
+                     recorded in .research/paper-repo - resolved by /research.paper]
   ```
 - `design/` internal structure: [src / modules / entrypoints].
 - Naming conventions: [the shared rule for files, modules, and eval scripts].

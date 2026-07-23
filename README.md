@@ -196,7 +196,8 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   feasibility/             throwaway probe code
   design/                  the system code (built by /research.design)
   eval/                    eval writeups + index + scripts, data, results
-  paper/                   outlines, drafts, and the manuscript source (LaTeX, figures)
+  paper/                   outlines + manuscript source - or a dedicated sibling repo
+                           <name>-<venue><yy>-latex recorded in .research/paper-repo
 ```
 
 </details>
