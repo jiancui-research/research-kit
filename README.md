@@ -41,17 +41,17 @@ research-kit doesn't invent a process — it follows the workflow strong researc
 flowchart LR
     C[constitution] --> P[proposal] --> RW[relatedwork] --> F{feasibility<br/>GO / NO-GO / PIVOT}
     F -.->|NO-GO / PIVOT| P
-    F -->|GO| T[tasks]
-    subgraph lanes["parallel lanes (co-evolve)"]
-        D["design<br/>→ ./design/ code"] ~~~ E["eval<br/>→ claims.md"] ~~~ PA["paper<br/>reads claims.md"]
-    end
-    T --> lanes
-    lanes --> A["analyze<br/>(sync check)"] --> R["review<br/>(paper-only)"]
-    A -.->|re-run stale lane| lanes
-    R -.->|route findings| lanes
+    F -->|GO| PL["plan<br/>study design"]
+    PL --> T["tasks<br/>single queue"]
+    T --> I["implement<br/>code + evals → claims.md"]
+    T --> PA["paper<br/>human-led, reads claims.md"]
+    I --> A["analyze<br/>(sync check)"] --> R["review<br/>(paper-only)"]
+    PA --> A
+    A -.->|re-run what is stale| T
+    R -.->|route findings| PA
 ```
 
-Why this shape: **every stage ends in a Markdown doc under `./.research/` that you are meant to read, correct, and steer before the next stage builds on it.** The agent never runs ahead of your judgment, and the folder becomes the paper's committed decision record. After feasibility's GO, `tasks` fans out into three parallel lanes that co-evolve: **design** builds the system (code), **eval** evaluates it, **paper** writes it up — synced only through `claims.md`. The design lane is paper-type aware (heavy for systems/defense, skipped for measurement / SoK); auxiliaries: `rebuttal`, `ae`. Run any subset, re-run any stage; commands only touch their own artifacts and never overwrite silently.
+Why this shape: **every stage ends in a Markdown doc under `./.research/` that you are meant to read, correct, and steer before the next stage builds on it.** The agent never runs ahead of your judgment, and the folder becomes the paper's committed decision record. After feasibility's GO, `plan` fixes the **study design** (stable) and `tasks` derives a **single work queue** from it (expected to churn — that's why they're separate). `implement` works the queue: code into the folder the plan declares, eval verdicts into `claims.md`. The **paper** lane stays human-led and outside the queue, reading `claims.md` in parallel. The Build section is paper-type aware (heavy for systems/defense, minimal for measurement / SoK); auxiliaries: `rebuttal`, `ae`. Run any subset, re-run any stage; commands only touch their own artifacts and never overwrite silently.
 
 📐 **[Workflow diagram + per-command inputs/outputs →](docs/workflow.md)**
 
@@ -120,9 +120,9 @@ Then, in your paper repo, start with `/research.init` (`/research-kit:research.i
 /research.proposal <your raw idea>   # pipeline entry
 /research.relatedwork
 /research.feasibility
-/research.tasks                      # writes three plans: design, eval, paper
-/research.design                     # build-papers only: implement the system into ./design/
-/research.eval                       # evaluate the build; runs parallel with paper, synced via claims.md
+/research.plan                       # study design: architecture + eval design (plan.md)
+/research.tasks                      # one work queue derived from the plan (tasks.md)
+/research.implement                  # work the queue: build + run evals, fill claims.md
 /research.paper
 /research.analyze                    # also a "sync" check: what drifted, what to re-run
 /research.review
@@ -139,11 +139,11 @@ Then, in your paper repo, start with `/research.init` (`/research-kit:research.i
 | `/research.proposal` | Pipeline entry: turn a raw idea into a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue and paper type). |
 | `/research.relatedwork` | Survey prior work into `related-work.md` and sharpen the proposal's gap and positioning. |
 | `/research.feasibility` | De-risk the central result with a quick probe and return a GO / NO-GO / PIVOT verdict before you invest in the full build. |
-| `/research.tasks` | Produce three paper-type-aware plans: the design/build plan, the eval plan, and the paper task list (READY vs blocked-on-claim). |
-| `/research.design` | Build lane (build-papers only): implement the system from `tasks/design.md` into actual code in the project's `./design/` folder. Skipped for measurement / SoK. |
-| `/research.eval` | Run the eval tasks that evaluate the built system and keep the claim-evidence matrix current. |
-| `/research.paper` | Human-led writing: outline a section or critique your draft, every claim traceable to the evidence matrix; System Design sourced from `tasks/design.md`. |
-| `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across the design/eval/paper lanes: flags drift and names the exact re-run. Outputs a prioritized gap report. |
+| `/research.plan` | The study's technical design into `plan.md`: architecture, evaluation design, key decisions, project layout. Stable; tasks derive from it. |
+| `/research.tasks` | Derive the single work queue `tasks.md` from the plan (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine, preserving checkbox states. |
+| `/research.implement` | Work the queue: build into the declared code folder, run evals and keep `claims.md` current, tick checkboxes. Skips `[HUMAN]` paper tasks. |
+| `/research.paper` | Human-led writing: outline a section or critique your draft, every claim traceable to the evidence matrix; System Design sourced from `plan.md`. |
+| `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across plan, tasks, code, evidence, and manuscript: flags drift and names the exact re-run. |
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
@@ -187,14 +187,13 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
     proposal.md              problem, NABC, gap, contributions, RQs, venue, paper type
     related-work.md          prior work + positioning
     feasibility.md           de-risk probe + GO / NO-GO / PIVOT
-    tasks/design.md          system architecture + project layout + build tasks (build-papers)
-    tasks/eval.md            evaluation design + eval task list
-    tasks/paper.md           paper section tasks (READY vs blocked-on-claim)
+    plan.md                  study design: architecture + eval design + layout (stable)
+    tasks.md                 the single work queue: Setup/Build/Eval/Paper/Polish (churns)
     claims.md                claim ↔ evidence matrix (the shared sync point)
     analyze-report.md        prioritized gap + sync report
     review/ rebuttal/ ae/    outputs of those commands
   feasibility/             throwaway probe code
-  design/                  the system code (built by /research.design)
+  src/                     the system code (built by /research.implement; folder declared in plan.md, legacy design/)
   eval/                    eval writeups + index + scripts, data, results
   paper/                   outlines + manuscript source - or a dedicated sibling repo
                            <name>-<venue><yy>-latex recorded in .research/paper-repo

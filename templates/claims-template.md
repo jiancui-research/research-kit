@@ -11,7 +11,7 @@ without tight support is an overclaim: rescope the claim or add the evidence.
 
 ## How to use
 
-- Maintain this file across the pipeline: `/research.eval` adds and updates
+- Maintain this file across the pipeline: `/research.implement` adds and updates
   rows as evidence lands; `/research.analyze` audits the whole matrix before drafting.
 - Fill columns precisely:
   - **Claim / Contribution** - the claim exactly as it appears (or will appear) in the
@@ -23,7 +23,7 @@ without tight support is an overclaim: rescope the claim or add the evidence.
   - **Status** - one of `pending` / `partial` / `supported` / `refuted`. Use
     `pending` until evidence lands and `refuted` when the eval contradicts the
     claim. A claim is `supported` only when the evidence backs it with no
-    extrapolation. This is the same vocabulary `/research.eval` and
+    extrapolation. This is the same vocabulary `/research.implement` and
     `/research.analyze` use, so verdicts stay consistent across the pipeline.
   - **Where in paper** - the section/figure/table where the claim and its evidence
     appear, so a reader (and a reviewer) can verify in one hop.

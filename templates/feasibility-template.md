@@ -55,4 +55,4 @@ A probe that exposes a fatal flaw is a SUCCESS of this phase. Do not sanitize.]
 - [ ] A NO-GO / PIVOT names what to change and points back to `/research.proposal`.
 
 ---
-Next: `/research.tasks` on a GO, or `/research.proposal` to reshape the idea on a NO-GO / PIVOT.
+Next: `/research.plan` on a GO, or `/research.proposal` to reshape the idea on a NO-GO / PIVOT.

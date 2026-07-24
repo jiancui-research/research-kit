@@ -36,8 +36,8 @@ Division of labor: `/research.analyze` is the *internal* audit with full access 
 5. **Suggest a fix command per finding (do not run it or write to its file).** For each finding, name the one command the *user* would run to fix it — a suggestion in the report, not an action this command takes:
    - unsupported / overclaimed text, framing, voice → `/research.paper <section>`
    - weak related-work delta → `/research.relatedwork`
-   - a claim that needs new or stronger evidence → `/research.eval` (add / run the experiment)
-   - a number that looks wrong or internally inconsistent → `/research.eval` (re-check) or `/research.analyze` (trace it across artifacts)
+   - a claim that needs new or stronger evidence → `/research.implement` (add / run the experiment)
+   - a number that looks wrong or internally inconsistent → `/research.implement` (re-check) or `/research.analyze` (trace it across artifacts)
    - a contribution or feasibility concern → `/research.proposal` or `/research.feasibility`
    This command writes none of those files; the user routes the findings by hand and loops.
 
@@ -61,4 +61,4 @@ Write `./.research/review/round-N.md` (start from `.research/templates/review-te
 
 ## Completion
 
-Report the path `./.research/review/round-N.md`, the panel score range, and the counts (fatal / major / minor findings). Then end with: `Next: resolve findings via their suggested commands (/research.paper, /research.relatedwork, /research.eval, ...), then re-run /research.review for round N+1; loop until no high-severity findings remain. (/research.rebuttal is auxiliary — post-submission.)`
+Report the path `./.research/review/round-N.md`, the panel score range, and the counts (fatal / major / minor findings). Then end with: `Next: resolve findings via their suggested commands (/research.paper, /research.relatedwork, /research.implement, ...), then re-run /research.review for round N+1; loop until no high-severity findings remain. (/research.rebuttal is auxiliary — post-submission.)`

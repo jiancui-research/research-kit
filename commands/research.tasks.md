@@ -1,65 +1,32 @@
 ---
-description: Turn the proposal + feasibility into three paper-type-aware plans (a design/build plan, an eval plan, and a paper section plan) in .research/tasks/.
-argument-hint: optional steering (e.g. "security venue, focus coverage over severity" or "system build is heavy, use spec-kit")
+description: Derive the single work queue .research/tasks.md from plan.md - Setup/Build/Eval/Paper/Polish sections, T-ids, claim links; re-runs refine and preserve checkbox states.
+argument-hint: optional steering (e.g. "prioritize the kill-shot eval" or "paper tasks for sections 1-3 only")
 ---
 
 ## User input
-
-The user request arrives via the $ARGUMENTS placeholder. Treat it as steering on emphasis, venue, or how heavy the build is — not the whole task list.
+The user request arrives via the $ARGUMENTS placeholder: steering for the queue (priorities, scope, what to defer). May be empty.
 
 ## What this phase is
-
-This is the planning phase. It absorbs the old plan stage and fans out into **three** parallel work plans, one per lane:
-
-- **`tasks/design.md`** — the system's architecture, project layout & naming, and the **build** task list. `/research.design` turns this into actual code. **Paper-type aware:** heavy for systems/defense, medium for attack/benchmark, **skipped or minimal for measurement / SoK** (nothing is built).
-- **`tasks/eval.md`** — the **evaluation** plan: an evaluation-design header (methodology, baselines, datasets, metrics, threat model, evaluation design, ethics) plus an eval task list. Build no longer lives here; it moved to the design lane.
-- **`tasks/paper.md`** — one task per section, tagged READY vs BLOCKED-on-claim.
-
-The three are the parallel work plan: `design` builds the system, `eval` evaluates it (filling `claims.md`), and `paper` writes sections — kept in sync by `claims.md` and `/research.analyze`.
+The spec-kit `tasks` analogue: one ordered, checkable work queue for the whole study, derived from the stable `plan.md`. The queue is **expected to churn** - that is why it is separate from the plan. `/research.implement` works every section except **Paper**, whose `[HUMAN]` tasks belong to you via `/research.paper`.
 
 ## Steps
+1. Read `./.research/memory/constitution.md` if it exists; skip silently otherwise.
+2. Read `./.research/plan.md` (required - stop and route to `/research.plan` if missing) and `./.research/proposal.md` (contributions + claim ids). Read `./.research/claims.md` if present.
+3. **Legacy migration.** If pre-0.7 `tasks/design.md` / `tasks/eval.md` / `tasks/paper.md` exist and `tasks.md` does not, offer to fold their task lists (with current checkbox states) into the new single file; leave the old files untouched.
+4. Write `./.research/tasks.md` from `.research/templates/tasks-template.md`:
+   - **Setup** - environment, repos, data access.
+   - **Build** (paper-type aware) - what must exist before evaluation: system / PoC / harness+dataset / collection pipeline; absent for SoK with a one-line note. Code targets the folder `plan.md` declares. Tag heavy builds `[spec-kit]`.
+   - **Eval** - one task per eval, kill-shot first, each `-> C#`, naming dataset/baselines/metric/falsifier from `plan.md`'s evaluation design.
+   - **Paper `[HUMAN]`** - one task per section in the paper-type skeleton's order, tagged READY or BLOCKED on its claim id.
+   - **Polish** - artifact, reproduction pass, figures.
+   - Continuous T-ids, `[P]` for parallelizable, `(after Txxx)` dependencies.
+5. **Re-run = refine.** Preserve existing checkbox states and done-notes; add/remove/reword tasks to match the current `plan.md`; report what changed in one short list. Never renumber a task that has a state.
 
-1. **Read context.**
-   - Read `./.research/memory/constitution.md` if it exists (skip silently otherwise) and honor its principles and writing voice.
-   - Read `./.research/proposal.md` (required upstream). If missing, stop and tell the user to run `/research.proposal` first.
-   - Read `./.research/feasibility.md` (required upstream — it gates this phase). If missing, stop and tell the user to run `/research.feasibility` first. If its verdict is NO-GO or PIVOT, stop and route back to `/research.proposal` instead of planning.
-   - Read `./.research/related-work.md` if present (for baselines and the closest prior systems to compare against).
-   - From `proposal.md`, extract: paper type (measurement / attack / defense / benchmark / systematization (SoK)), target venue, the gap, the contributions, the research questions, and assign each contribution a claim id (C1, C2, …) if one is not already assigned.
-
-2. **Load the skeletons.**
-   - `tasks/design.md` from `.research/templates/tasks-design-template.md` (skip for measurement / SoK — see step 3).
-   - `tasks/eval.md` from `.research/templates/tasks-eval-template.md`.
-   - `tasks/paper.md` from `.research/templates/tasks-paper-template.md`.
-   - Layer in the matching `.research/templates/paper/<type>.md` so all three files inherit that type's proof obligation and section order:
-     - measurement -> defensible dataset + methodology + a surprising finding
-     - attack -> a working exploit + evidence it is not a corner case
-     - defense -> a mechanism that stops the threat + a quantified cost
-     - benchmark -> concrete task tuple + dataset + metrics + 3-5 baselines
-     - systematization (SoK) -> a novel, MECE-ish taxonomy + lessons found in no single prior paper
-
-3. **Write `tasks/design.md` — the design / build lane (paper-type aware).** For papers that build something (systems, defense, attack tool / PoC, benchmark harness), fill the design template: the **system overview + a workflow diagram**, the **key design decisions + rejected alternatives**, the **project layout & naming** (code goes in the project's `./design/` folder, a sibling of `.research/`; `.research/` stays for docs), and the **build task list** (one task per component, a done-when criterion, `[spec-kit]` / `[dev]` flag on heavy builds). This doc is both the spec `/research.design` implements and the source for the paper's System Design section. **For measurement / SoK** there is no system to build: skip this file and keep any light data-obtain tasks in `tasks/eval.md` instead (note that choice in one line).
-
-4. **Write the evaluation-design header of `tasks/eval.md`** — the PLAN-KEEP block of `.research/templates/tasks-eval-template.md`. This is the **evaluation** plan. Fill every dimension it lists (methodology, baselines, datasets, metrics, threat model, evaluation design, ethics/disclosure/artifact); keep it tight and specific — numbers and named artifacts over adjectives — and let the layered `paper/<type>.md` say which dimensions are load-bearing for this type. For a build-paper, reference the system in `tasks/design.md` rather than re-describing its architecture here. Do not restate the dimension definitions; they live in the template.
-
-5. **Write the eval task list of `tasks/eval.md`**, sequenced so the eval that would kill the paper if it fails runs first. One task per eval, each tied to exactly one primary claim id (`-> C2`); each names dataset, baselines, metric, and the predicted result / falsifier. Every contribution's claim id must appear on at least one eval task; every eval task must serve a claim. Flag any contribution with no eval as an **overclaim to rescope** and any eval serving no claim as **scope creep**. (The system under evaluation is built by `/research.design`; only measurement / SoK, which have no design lane, may keep a light **obtain / construct data** task here.)
-
-6. **Write `tasks/paper.md`** from its template: one task per section, in the paper-type skeleton's order (from `.research/templates/paper/<type>.md`). Tag each task:
-   - **READY** — framing sections that need no result: intro, related work, method / attack-design / construction, threat model, background. These can be written immediately, in parallel with evals.
-   - **BLOCKED on claim Cx** — results-dependent sections: evaluation / findings, abstract, conclusion (and any discussion that quotes a number). Name the exact claim id(s) each section waits on, so it unblocks the moment `claims.md` marks them supported.
-   - Keep one task per section, in order; do not invent sections the skeleton does not have, and drop a skeleton section only with a one-line reason.
-
-7. **Validate** against this short checklist before writing:
-   - For a build-paper, `tasks/design.md` has a system diagram, design decisions with rejected alternatives, a concrete project layout, and build tasks with done-when criteria; for measurement / SoK, the design lane is correctly skipped.
-   - The eval header discharges the paper type's proof obligation; nothing load-bearing is hand-waved.
-   - Every contribution / research question maps to at least one eval task via a claim id; every eval task serves a claim.
-   - Baselines, datasets, and metrics are concrete (named, sized, operationally defined), not placeholders.
-   - Threat model is present and venue-appropriate for attack / defense, with an out-of-scope line.
-   - Each metric has a variance-reporting plan; any automatic / LLM-judge metric has a validation step.
-   - Heavy builds are flagged `[spec-kit]` or `[dev]` and point at a repo (in `tasks/design.md`); build does not leak back into the eval task list.
-   - `tasks/paper.md` has one task per skeleton section in order, each tagged READY or BLOCKED-on-claim with the right claim ids.
-
-8. **Write** the files (`mkdir -p ./.research/tasks` first): `./.research/tasks/design.md` (unless skipped for measurement / SoK), `./.research/tasks/eval.md`, and `./.research/tasks/paper.md`. Do not overwrite existing user content silently: if any file exists, preserve its text and clearly mark what you changed.
+## Validate (short checklist)
+- Every task has a done-when criterion; every BLOCKED paper task names a claim id that also appears on an Eval task.
+- Build matches the paper type; dependencies exist where Eval needs Build.
+- No plan content restated here - methodology and architecture live in `plan.md`.
+- Re-runs preserved states and reported the diff.
 
 ## Completion
-
-Report the paths written (`./.research/tasks/design.md` if applicable, `./.research/tasks/eval.md`, `./.research/tasks/paper.md`). End with: `Next: /research.design, /research.eval, and /research.paper (run in parallel; eval and paper share claims.md, and /research.analyze keeps all three lanes in sync)`.
+Report `./.research/tasks.md` (sections + task counts, and the diff if refining). End with: `Next: /research.implement` (work the queue) - and `/research.paper` for the `[HUMAN]` tasks, in parallel.

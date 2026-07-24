@@ -23,9 +23,9 @@ reads this file, so keep it durable, paper-type-agnostic, and project-wide.
    (`proposal.md`, `related-work.md`, `feasibility.md`, `claims.md`, and
    `analyze-report.md` are flat files at `.research/` root - no dirs needed. Each
    lane's actual work lands in a root-level folder created by its own command -
-   `feasibility/`, `design/`, `eval/`, `paper/` - never inside `.research/`. The
-   manuscript may instead live in a dedicated sibling repo recorded in
-   `.research/paper-repo`.)
+   `feasibility/`, the code folder `plan.md` declares (default `src/`, legacy
+   `design/`), `eval/`, `paper/` - never inside `.research/`. The manuscript may
+   instead live in a dedicated sibling repo recorded in `.research/paper-repo`.)
 
 2. **Read existing constitution if present.** If `.research/memory/constitution.md`
    already exists, read it and treat this run as an UPDATE: preserve the user's

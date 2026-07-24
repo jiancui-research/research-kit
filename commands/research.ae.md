@@ -7,7 +7,7 @@ argument-hint: optional — venue (e.g. usenix, acm), badge targets, or notes ab
 The user request arrives via the $ARGUMENTS placeholder. Treat it as venue hints (USENIX / ACM / other), which badges to target, and what the artifact actually contains (code, data, models, proofs).
 
 ## Steps
-1. Read `./.research/memory/constitution.md` if present. Read upstream artifacts when available: `./.research/claims.md` (which results need to be reproducible), `./.research/tasks/eval.md` (datasets, baselines, hardware, hyperparameters), and `./eval/` (concrete commands and configs).
+1. Read `./.research/memory/constitution.md` if present. Read upstream artifacts when available: `./.research/claims.md` (which results need to be reproducible), `./.research/plan.md` (datasets, baselines, hardware, hyperparameters), and `./eval/` (concrete commands and configs).
 2. Start from `.research/templates/ae-checklist.md`. Work through it venue-agnostically; apply the venue-specific notes below only where $ARGUMENTS names a venue.
 3. Map the paper's headline claims to artifact components: for each claim in `claims.md`, identify the script/dataset/config that regenerates its result, and flag any claim with no runnable backing as a reproducibility gap.
 4. Pick a badge plan and be explicit about what each tier requires:

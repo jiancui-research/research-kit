@@ -128,4 +128,4 @@ central claim to a command and an expected result.
 ---
 
 Output to `.research/ae/`. Next: `/research.review` to self-review the paper, or
-revisit `/research.eval` to keep the claim-evidence matrix in sync.
+revisit `/research.implement` to keep the claim-evidence matrix in sync.

@@ -1,6 +1,6 @@
 # Eval [NN-slug]: [short name of what this run tests]
 
-> Produced by `/research.eval`. Lives at `./eval/NN-slug.md`.
+> Produced by `/research.implement` (Eval tasks). Lives at `./eval/NN-slug.md`.
 > One file per eval. The index is `./eval/index.md`.
 > Fill every bracket. An eval that does not test a stated claim is not yet an eval.
 
@@ -94,4 +94,4 @@ Then state how the claim's wording in `claims.md` should change, if at all.]
 - [ ] The takeaway updates `claims.md` honestly - refuted claims get rescoped, not hidden.
 
 ---
-Next: `/research.eval` (next eval) or `/research.analyze` when the batch is done.
+Next: `/research.implement` (next eval task) or `/research.analyze` when the batch is done.

@@ -1,7 +1,7 @@
 # Measurement paper: [system / ecosystem under study]
 
 > Paper-type skeleton for `/research.paper` (paper-type: measurement).
-> Read `./.research/proposal.md`, `./.research/tasks/paper.md`, and `./.research/claims.md` first.
+> Read `./.research/proposal.md`, `./.research/tasks.md`, and `./.research/claims.md` first.
 > Core question: *what is actually happening?* Proof obligation: a defensible
 > dataset + a sound methodology + a surprising, anchored finding.
 > Fill every bracket. Drop a section only with a one-line reason why it does not apply.
