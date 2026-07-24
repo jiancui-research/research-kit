@@ -261,6 +261,8 @@ PAGE = r"""<!doctype html>
              overflow:hidden; text-overflow:ellipsis; }
   .card .orphan { color:#b45309; font-size:11px; font-weight:600; }
   .card .reply { color:#0a7d33; font-style:italic; margin-top:5px; }
+  .card .editbox { width:100%; height:56px; font:inherit; border:1px solid var(--accent);
+                   border-radius:5px; padding:5px; margin-top:2px; }
   details.resolvedlist { margin-top:12px; }
   details.resolvedlist summary { cursor:pointer; color:#666; font-weight:600;
                                  font-size:12px; margin-bottom:8px; user-select:none; }
@@ -513,6 +515,24 @@ function commentCard(c) {
   meta.textContent = c.created.slice(0, 16).replace("T", " ") + " ";
   if (!c.anchored && !c.resolved) { const o = document.createElement("span"); o.className = "orphan";
     o.textContent = "orphaned"; meta.appendChild(o); }
+  const edit = document.createElement("button");
+  edit.textContent = "Edit";
+  edit.onclick = () => {
+    if (card.querySelector("textarea")) return;
+    const ta = document.createElement("textarea");
+    ta.value = c.comment;
+    ta.className = "editbox";
+    body.replaceWith(ta);
+    ta.focus();
+    ta.addEventListener("keydown", ev => { if (ev.key === "Escape") refreshComments(); });
+    edit.textContent = "Save";
+    edit.onclick = async () => {
+      const v = ta.value.trim();
+      if (v && v !== c.comment)
+        await api("/api/comment/update", {path: state.path, id: c.id, comment: v});
+      refreshComments();
+    };
+  };
   const res = document.createElement("button");
   res.textContent = c.resolved ? "Reopen" : "Resolve";
   res.onclick = async () => { await api("/api/comment/update",
@@ -521,7 +541,7 @@ function commentCard(c) {
   del.textContent = "Delete";
   del.onclick = async () => { await api("/api/comment/delete",
     {path: state.path, id: c.id}); refreshComments(); };
-  meta.append(res, del);
+  meta.append(edit, res, del);
   card.appendChild(meta);
   return card;
 }
