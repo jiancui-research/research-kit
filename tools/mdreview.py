@@ -398,6 +398,7 @@ async function openDoc(path) {
   renderSidebar();
 }
 function paint(html) {
+  lastSel = null;   // content changed; stale snapshots must not anchor comments
   $("doc").innerHTML = html;
   fixImagePaths();
   applyHighlights();
@@ -613,8 +614,35 @@ function focusCard(id) {
 }
 
 /* ---------- select-to-comment ---------- */
+let lastSel = null;   // snapshot of the most recent doc selection (survives focus steals)
+function captureSelection() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return null;
+  const range = sel.getRangeAt(0);
+  if (!$("doc").contains(range.commonAncestorContainer)) return null;
+  const quote = sel.toString();
+  if (!quote.trim()) return null;
+  const pre = document.createRange();
+  pre.selectNodeContents($("doc")); pre.setEnd(range.startContainer, range.startOffset);
+  const post = document.createRange();
+  post.selectNodeContents($("doc")); post.setStart(range.endContainer, range.endOffset);
+  lastSel = { quote, prefix: pre.toString().slice(-30), suffix: post.toString().slice(0, 30) };
+  return lastSel;
+}
+function openCommentPopover(x, y) {
+  // live selection if there is one; else the last snapshot (e.g. after a double-click sync)
+  const cap = captureSelection() || lastSel;
+  if (!cap) return false;
+  pending = cap;
+  const pop = $("pop");
+  pop.style.display = "block";
+  pop.style.left = Math.min(x, innerWidth - 300) + "px";
+  pop.style.top = (y + 8) + "px";
+  $("popText").value = ""; $("popText").focus();
+  return true;
+}
 $("doc").addEventListener("mouseup", ev => {
-  if (!state) return;
+  if (!state || ev.button !== 0) return;
   setTimeout(() => {
     const sel = window.getSelection();
     if (!sel.rangeCount || sel.isCollapsed) { $("pop").style.display = "none"; return; }
@@ -623,25 +651,22 @@ $("doc").addEventListener("mouseup", ev => {
     if (ev.detail > 1) {
       // double/triple click: sync to source (select the word there), never open the comment box
       $("pop").style.display = "none";
+      captureSelection();   // snapshot so a follow-up right-click can still comment on it
       const pre = document.createRange();
       pre.selectNodeContents($("doc"));
       pre.setEnd(range.startContainer, range.startOffset);
       jumpToSource(pre.toString(), sel.toString().trim());
       return;
     }
-    const quote = sel.toString();
-    if (!quote.trim()) return;
-    const pre = document.createRange();
-    pre.selectNodeContents($("doc")); pre.setEnd(range.startContainer, range.startOffset);
-    const post = document.createRange();
-    post.selectNodeContents($("doc")); post.setStart(range.endContainer, range.endOffset);
-    pending = { quote, prefix: pre.toString().slice(-30), suffix: post.toString().slice(0, 30) };
-    const pop = $("pop"), rect = range.getBoundingClientRect();
-    pop.style.display = "block";
-    pop.style.left = Math.min(rect.left, innerWidth - 300) + "px";
-    pop.style.top = (rect.bottom + 8) + "px";
-    $("popText").value = ""; $("popText").focus();
+    const rect = range.getBoundingClientRect();
+    openCommentPopover(rect.left, rect.bottom);
   }, 0);
+});
+$("doc").addEventListener("contextmenu", ev => {
+  // right-click on any selection (drag- or double-click-made) -> comment popover;
+  // with nothing selected the native context menu stays
+  if (!state) return;
+  if (openCommentPopover(ev.clientX, ev.clientY)) ev.preventDefault();
 });
 $("popAdd").onclick = async () => {
   const text = $("popText").value.trim();
