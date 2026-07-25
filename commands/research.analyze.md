@@ -11,7 +11,7 @@ The user request arrives via the `$ARGUMENTS` placeholder. It may narrow the aud
 
 Two jobs in one command, both **read-only**:
 
-1. **Sync checker (run anytime).** The study's moving parts — `plan.md` (the design), `tasks.md` (the queue), the built code (in the folder `plan.md` declares; legacy `./design/`), the evidence (`claims.md` + `./eval/`), and the manuscript (root from `.research/paper-repo`, fallback `./paper/`) — drift apart whenever one changes without the others. This command detects that drift and tells you **exactly what is stale and which command to re-run** (e.g. "plan's eval design changed → re-run `/research.tasks` (refine), then `/research.implement T034` and `/research.paper eval`"). It never edits anything to "fix" the drift; each owning command re-runs and updates its own artifact.
+1. **Sync checker (run anytime).** The study's plan, queue, built code, evidence, and manuscript can drift. Detect every stale artifact and name the exact re-run (e.g. "plan changed -> `/research.tasks` (refine), `/research.implement T034`, and `/research.implement paper eval`"). Never edit another artifact to make the audit pass.
 2. **Review-readiness audit (near submission).** Read the project the way a skeptical reviewer will and surface gaps before submission.
 
 It inspects `proposal.md`, `feasibility.md`, `plan.md`, `tasks.md`, `claims.md`, `eval/`, `related-work.md`, the built code, and the manuscript, but the **only** file it writes is `./.research/analyze-report.md`. Never edit a claim, eval, design, or section to make the audit pass; report the gap and route it to the command that owns the fix.
@@ -37,7 +37,7 @@ It inspects `proposal.md`, `feasibility.md`, `plan.md`, `tasks.md`, `claims.md`,
    - **plan → tasks**: no task references a part of the plan that changed; checkbox states match reality.
    - **plan → paper**: the System Design / Implementation section in the manuscript describes the architecture currently in `plan.md`, not an old one.
    - **evidence → paper**: result sections match the current `claims.md` verdicts.
-   For each drift, name **what is stale** and the **exact command to re-run** (e.g. "plan changed component X → re-run `/research.tasks` (refine), then `/research.implement T021` (tests X) and `/research.paper system-design`"). Do not edit the stale artifact yourself; the re-run is how it re-syncs. (For measurement / SoK the plan→code checks are minimal or absent.)
+   For each drift, name **what is stale** and the **exact command to re-run** (e.g. "plan changed component X -> re-run `/research.tasks` (refine), then `/research.implement T021` (tests X) and `/research.implement paper system-design`"). Do not edit the stale artifact yourself; the re-run is how it re-syncs. (For measurement / SoK the plan-to-code checks are minimal or absent.)
 
 7. **Reviewer-objection pre-emption.** Walk the five recurring review axes — **motivation, contribution, evaluation, related work, presentation** — and for each, write the single most specific, justified objection a reviewer could raise, then note whether the current artifacts already answer it. Also surface the common unfair-but-likely reactions (`obvious`, `too simple`, `too narrow`, `no SOTA win`) and whether the framing defuses each. Check evaluation rigor explicitly: fairly tuned baselines, variance reported, anomalies explained, no train/test leakage, and any automated/LLM judge validated against ground truth on this task.
 
@@ -52,7 +52,7 @@ Write **only** `./.research/analyze-report.md`, overwriting the prior report. St
 - **Summary line**: counts by severity, plus a one-line sync status (in sync / N stale lanes).
 - **Out-of-sync artifacts** (list first — this is the sync output): one row per drift as `stale artifact | what changed upstream | exact re-run command`. Empty when everything agrees.
 - **Critical** (desk-reject or invalidates a core claim) → **Major** (overclaim, unsupported contribution, missing variance) → **Minor** (presentation, polish).
-- Each gap: one line stating the gap, the artifact + location, and the single command to fix it (e.g. "rescope in `/research.paper intro`", "add eval via `/research.implement`", "tighten delta in `/research.relatedwork`").
+- Each gap: one line stating the gap, artifact + location, and one fix command (e.g. "rescope via `/research.implement paper intro`", "add eval via `/research.implement`", "tighten delta via `/research.relatedwork`").
 - A short **claim-evidence ledger** table: `contribution | claim id | eval id | verdict | scope OK? (Y/N)`.
 - A **rebuttal-readiness** note: the top 3–5 likely decision-driving concerns, each with a one-line evidence-backed response stub, prioritized.
 
@@ -67,4 +67,4 @@ Write **only** `./.research/analyze-report.md`, overwriting the prior report. St
 
 ## Completion
 
-Report the path `./.research/analyze-report.md`, the sync status (in sync / what is stale), and the count of critical/major gaps. Then: route each gap to the command that owns the fix (most often `/research.plan`, `/research.tasks`, `/research.implement`, or `/research.paper`), and once routed, `Next: /research.review`. This command is read-only and safe to run **anytime** — use it as a quick `sync` check whenever you change one artifact, not just near submission.
+Report `./.research/analyze-report.md`, sync status, and critical/major counts. Route each gap to its owner (usually `/research.plan`, `/research.tasks`, `/research.implement`, or explicit `/research.implement paper <section>`), then `Next: /research.review`. This command is read-only and safe to run anytime.

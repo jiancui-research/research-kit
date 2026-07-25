@@ -19,4 +19,4 @@ mdreview is research-kit's optional review UI: rendered markdown, in-place editi
    - External: the Export button copies document + open comments (with ids and the same reply instructions) for pasting into any AI.
 
 ## Completion
-Report the URL and note the server runs until stopped (Ctrl-C in its terminal, or kill the background job). End with: `Next: /research.paper` (act on review comments), or keep working in any lane.
+Report the URL and note the server runs until stopped (Ctrl-C in its terminal, or kill the background job). End with: `Next: /research.implement paper <section>` (act on manuscript comments), or keep working in any lane.

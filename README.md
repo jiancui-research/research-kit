@@ -35,7 +35,7 @@ Checking and refining documents is the whole job — which is why research-kit b
 
 ## 🗺️ The pipeline
 
-research-kit doesn't invent a process — it follows the workflow strong research already follows: sharpen a raw idea into a falsifiable proposal, position it against prior work, pilot the riskiest assumption before committing, plan the work, then build / evaluate / write in parallel, and review the paper before real reviewers do. The pipeline just makes each of those steps explicit and checkable:
+research-kit follows the workflow strong research already follows: sharpen an idea into a falsifiable proposal, position it, pilot the riskiest assumption, plan the study, derive one queue, then build, evaluate, and work on the manuscript through one executor before review. Each step stays explicit and checkable:
 
 ```mermaid
 flowchart LR
@@ -43,15 +43,13 @@ flowchart LR
     F -.->|NO-GO / PIVOT| P
     F -->|GO| PL["plan<br/>study design"]
     PL --> T["tasks<br/>single queue"]
-    T --> I["implement<br/>code + evals → claims.md"]
-    T --> PA["paper<br/>human-led, reads claims.md"]
+    T --> I["implement<br/>build + eval + explicit user-led paper work"]
     I --> A["analyze<br/>(sync check)"] --> R["review<br/>(paper-only)"]
-    PA --> A
     A -.->|re-run what is stale| T
-    R -.->|route findings| PA
+    R -.->|route findings| I
 ```
 
-Why this shape: **every stage ends in a Markdown doc under `./.research/` that you are meant to read, correct, and steer before the next stage builds on it.** The agent never runs ahead of your judgment, and the folder becomes the paper's committed decision record. After feasibility's GO, `plan` fixes the **study design** (stable) and `tasks` derives a **single work queue** from it (expected to churn — that's why they're separate). `implement` works the queue: code into the folder the plan declares, eval verdicts into `claims.md`. The **paper** lane stays human-led and outside the queue, reading `claims.md` in parallel. The Build section is paper-type aware (heavy for systems/defense, minimal for measurement / SoK); auxiliaries: `rebuttal`, `ae`. Run any subset, re-run any stage; commands only touch their own artifacts and never overwrite silently.
+Why this shape: every stage ends in a Markdown document under `./.research/` that you review before the next stage builds on it. After feasibility's GO, `plan` fixes the stable study design and `tasks` derives one queue. `implement` owns that queue: it builds code, runs evals, updates `claims.md`, and assists with `[USER-LED]` manuscript tasks only when you explicitly select them. Empty/default runs never start manuscript work. The Build section remains paper-type aware; `rebuttal` and `ae` are auxiliary.
 
 📐 **[Workflow diagram + per-command inputs/outputs →](docs/workflow.md)**
 
@@ -122,8 +120,8 @@ Then, in your paper repo, start with `/research.init` (`/research-kit:research.i
 /research.feasibility
 /research.plan                       # study design: architecture + eval design (plan.md)
 /research.tasks                      # one work queue derived from the plan (tasks.md)
-/research.implement                  # work the queue: build + run evals, fill claims.md
-/research.paper
+/research.implement                  # work automated queue tasks
+/research.implement paper intro      # explicitly outline a user-led manuscript task
 /research.analyze                    # also a "sync" check: what drifted, what to re-run
 /research.review
 ```
@@ -141,8 +139,7 @@ Then, in your paper repo, start with `/research.init` (`/research-kit:research.i
 | `/research.feasibility` | De-risk the central result with a quick probe and return a GO / NO-GO / PIVOT verdict before you invest in the full build. |
 | `/research.plan` | The study's technical design into `plan.md`: architecture, evaluation design, key decisions, project layout. Stable; tasks derive from it. |
 | `/research.tasks` | Derive the single work queue `tasks.md` from the plan (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine, preserving checkbox states. |
-| `/research.implement` | Work the queue: build into the declared code folder, run evals and keep `claims.md` current, tick checkboxes. Skips `[HUMAN]` paper tasks. |
-| `/research.paper` | Human-led writing: outline a section or critique your draft, every claim traceable to the evidence matrix; System Design sourced from `plan.md`. |
+| `/research.implement` | Execute the whole queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only when explicitly selected (`paper`, `outline`, `critique`, or `draft`). |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across plan, tasks, code, evidence, and manuscript: flags drift and names the exact re-run. |
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |

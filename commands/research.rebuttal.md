@@ -51,4 +51,4 @@ This is the response phase. You turn raw reviews into a tight, prioritized rebut
 
 ## Completion
 
-Write the result to `./.research/rebuttal/rebuttal.md` (`mkdir -p ./.research/rebuttal` first). Do not overwrite existing user content silently. Report the path and end with: `Next: revise the paper per your revision commitments, then /research.paper`.
+Write `./.research/rebuttal/rebuttal.md` (`mkdir -p` first), never overwriting user content silently. Report the path and end with: `Next: revise the manuscript via /research.implement paper <section>`.

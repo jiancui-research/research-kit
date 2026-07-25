@@ -12,7 +12,7 @@ Thanks for helping improve research-kit. It is a small, MIT-licensed toolkit: sl
 
 - **Namespace.** Every command is invoked as `/research.<name>` and lives at `commands/research.<name>.md`. `install.sh` installs those files for Claude Code, Codex CLI, and Copilot CLI: copied (or symlinked) into `~/.claude/commands/` for Claude Code and `~/.codex/prompts/` for Codex CLI, or transformed into custom agents in `~/.copilot/agents/` for Copilot CLI. OMP installs the shared `.claude-plugin` bundle through its marketplace and exposes namespaced `/research-kit:research.<name>` commands. Author each command once, in the Claude/Codex slash-command form; generated and plugin forms read that source directly.
 - **Working directory.** research-kit's tracking docs live under `./.research/` in the user's project. The actual work products live in sibling root folders — notably `implement` builds **code** in the folder `plan.md` declares (default `./src/`, legacy `./design/`). The project is one repo under `~/Projects`, outside the vault. Commands `mkdir -p` as needed and never overwrite user content without saying so.
-- **Pipeline order.** `constitution -> proposal -> relatedwork -> feasibility -> plan -> tasks -> implement (∥ paper, human-led) -> analyze -> review (loop)`, plus `rebuttal` and `ae` as needed. `plan` is the stable study design, `tasks.md` the churning single queue, `implement` the executor (skips `[HUMAN]` paper tasks); `analyze` keeps everything in sync. Don't reorder it casually.
+- **Pipeline order.** `constitution -> proposal -> relatedwork -> feasibility -> plan -> tasks -> implement -> analyze -> review (loop)`, plus `rebuttal` and `ae`. `implement` owns the single queue: automated work runs by default; `[USER-LED]` Paper tasks require explicit selection. `analyze` keeps artifacts in sync.
 - **Command contract.** Each command should: (1) read `./.research/memory/constitution.md` if it exists, skip silently otherwise; (2) read its upstream artifacts; (3) take user input via the `$ARGUMENTS` placeholder; (4) produce or update only its own artifact(s) and end by reporting the path(s) plus a one-line `Next: /research.<x>`; (5) be paper-type aware where relevant via `.research/templates/paper/<type>.md` (populated by `/research.init` from the bundled `templates/`); (6) stay focused and short - aim under ~120 lines, and reference templates instead of inlining long checklists.
 
 ## Adding a new command
@@ -36,7 +36,7 @@ Thanks for helping improve research-kit. It is a small, MIT-licensed toolkit: sl
 Paper-type-aware commands look for `.research/templates/paper/<type>.md` at runtime - authored under `templates/paper/` in this repo and copied into the paper repo by `/research.init` (measurement, attack, defense, benchmark, systematization today).
 
 1. Add `templates/paper/<newtype>.md`. Mirror the existing skeletons: a short header noting which artifacts to read first, the core question and proof obligation for that paper type, and bracketed `[...]` placeholders for each section.
-2. Make sure commands that infer paper type (such as `/research.proposal`) will recognize the new type, and confirm `/research.paper` reads the new skeleton.
+2. Ensure paper-type inference recognizes the new type and explicit `/research.implement paper <section>` mode loads the skeleton.
 3. Note the new type in the **Paper types** section of `README.md`.
 
 ## Before you open a PR
