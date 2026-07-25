@@ -11,7 +11,7 @@ The spec-kit `implement` analogue and the single queue executor. Setup/Build pro
 
 ## Dispatch before reading broad context
 1. Read `./.research/memory/constitution.md` if it exists and `./.research/tasks.md` (required; route to `/research.tasks` if missing).
-2. Enter **Manuscript mode** only when `$ARGUMENTS` explicitly names a `[USER-LED]` manuscript-setup or Paper task, starts with `paper`/`outline`/`critique`/`draft`, or points to a draft while naming its task. Otherwise enter **Execution mode**. Empty input always skips `[USER-LED]` tasks and reports which are READY/BLOCKED.
+2. Enter **Manuscript mode** only when `$ARGUMENTS` explicitly names a `[USER-LED]` manuscript-setup or Paper task, starts with `paper`/`outline`/`critique`/`draft`, or points to a draft while naming its task. Otherwise enter **Execution mode**. Empty input always skips `[USER-LED]` tasks and reports which are READY/BLOCKED. Treat a legacy `[HUMAN]` tag (pre-0.8 queues) exactly like `[USER-LED]` - never execute it by default.
 
 ## Execution mode: Setup, Build, Eval, Polish
 3. Read `./.research/plan.md` (required; route to `/research.plan` if missing) and `./.research/claims.md` if present. Work selected tasks in dependency order:
