@@ -20,7 +20,7 @@ The spec-kit `tasks` analogue: one ordered, checkable work queue for the whole s
    - **Paper `[USER-LED]`:** one task per section in skeleton order, tagged READY or BLOCKED on claim ids. `/research.implement` executes these only by explicit task id or manuscript-mode argument.
    - **Polish** - artifact, reproduction pass, figures.
    - Continuous T-ids, `[P]` for parallelizable, `(after Txxx)` dependencies.
-5. **Re-run = refine.** Preserve existing checkbox states and done-notes; add/remove/reword tasks to match the current `plan.md`; report what changed in one short list. Never renumber a task that has a state.
+5. **Re-run = refine.** Preserve existing checkbox states and done-notes; add/remove/reword tasks to match the current `plan.md`; report what changed in one short list. Never renumber a task that has a state. Rename legacy `[HUMAN]` tags (pre-0.8) to `[USER-LED]` while refining.
 
 ## Validate (short checklist)
 - Every task has a done-when criterion; every BLOCKED Paper task names a claim id that also appears on an Eval task; default implement execution cannot select `[USER-LED]` work.
