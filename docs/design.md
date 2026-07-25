@@ -1,4 +1,4 @@
-# research-kit — design (v0.3.0)
+# research-kit - design (v0.8.0)
 
 ## Vision
 
@@ -12,7 +12,7 @@ For the full pipeline diagram and the input/output of every command, see [workfl
 
 ## Spec-kit → research mapping
 
-research-kit mirrors the spec-kit pipeline (constitution → specify → plan → tasks → implement) stage for stage, then extends it with stages unique to academic work. The idea is folded into `proposal` (the pipeline entry point); `plan`, `tasks`, and `implement` map 1:1 to their spec-kit namesakes, with one deliberate exception: the human-led `paper` lane stays outside the implement queue.
+research-kit mirrors spec-kit's constitution -> specify -> plan -> tasks -> implement pipeline, then extends it with research-specific artifacts. `implement` remains the single queue executor; manuscript tasks are a `[USER-LED]` branch that requires explicit selection rather than a separate command.
 
 | research-kit stage | spec-kit analogue | What it maps to |
 |---|---|---|
@@ -22,8 +22,7 @@ research-kit mirrors the spec-kit pipeline (constitution → specify → plan �
 | `feasibility` | (de-risk gate) | A GO/NO-GO/PIVOT gate that de-risks the result before committing to the full build; a no-go or pivot points back to `proposal`. |
 | `plan` | plan | The study's technical design (`plan.md`): architecture, evaluation design, key decisions with rejected alternatives, project layout (declares the code folder). Stable; no task list. |
 | `tasks` | tasks | The single work queue (`tasks.md`): Setup / Build / Eval / Paper / Polish sections, continuous T-ids, `[P]` parallel markers, claim links. Expected to churn; re-runs refine and preserve states. |
-| `implement` | implement | Works the queue: Build tasks produce code in the folder `plan.md` declares (default `./src/`, legacy `./design/`); Eval tasks run and write verdicts to `claims.md`. Skips `[HUMAN]` Paper tasks. |
-| `paper` | — (kept human-led) | Section-by-section outlining/critique (human-led, never ghostwrites) where every claim traces back to evidence; the System Design section is sourced from `plan.md`. Runs in parallel with `implement`. |
+| `implement` | implement | Executes Setup/Build/Eval/Polish tasks and maintains claims; explicitly selected `[USER-LED]` manuscript tasks enter claim-aware outline, critique, or opt-in draft mode. Empty/default runs cannot start manuscript work. |
 | `analyze` | analyze | Read-only cross-artifact consistency + review-readiness audit, AND the **sync checker** across plan, tasks, code, evidence, and manuscript (detects drift, routes the re-run). |
 | `review` | — (research extension) | A self-review panel that reads **only the paper** (like a real reviewer), reports findings + scores with a suggested fix command each, and loops until no high-severity findings remain. Writes only its round file. |
 | `rebuttal` | — (research extension) | Evidence-backed response to reviewer comments, fitted to the venue limit. |
@@ -40,8 +39,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.feasibility` — De-risk the result with a quick check and emit a GO/NO-GO/PIVOT verdict; a no-go or pivot routes back to `/research.proposal`.
 - `/research.plan` — The study's technical design into `plan.md` (architecture, evaluation design, decisions, layout incl. the code-folder declaration). Stable; tasks derive from it.
 - `/research.tasks` — Derive the single work queue `tasks.md` from `plan.md` (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine and preserve checkbox states.
-- `/research.implement` — Work the queue: build into the declared code folder, run evals and keep `claims.md` current, tick checkboxes; skips `[HUMAN]` Paper tasks (those belong to `/research.paper`).
-- `/research.paper` — Outline or critique paper sections (human-led), paper-type aware, with every claim traceable to `claims.md`; the System Design section is sourced from `plan.md`.
+- `/research.implement` — Execute the single queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only after explicit task-id or Manuscript-mode input.
 - `/research.analyze` — Read-only cross-artifact consistency + review-readiness audit, and the sync checker across plan, tasks, code, evidence, and manuscript; routes findings and re-runs to the owning commands.
 - `/research.review` — Simulate a reviewer panel reading **only the paper**; report mock reviews + scores with a suggested fix command per finding (writes only `review/round-N.md`, never another artifact), and loop until clean.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
@@ -74,9 +72,9 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
 Command contract:
 
 1. Read `./.research/memory/constitution.md` if it exists (skip silently otherwise).
-2. Read its upstream artifacts (e.g. `plan` reads `proposal.md` + `feasibility.md`; `tasks` reads `plan.md`; `implement` reads `plan.md` + `tasks.md`; `paper` reads `tasks.md` + `plan.md` + `claims.md`).
+2. Read its upstream artifacts (for example, `plan` reads proposal + feasibility; `tasks` reads plan; `implement` reads plan + tasks and, only in Manuscript mode, proposal + related work + claims).
 3. Take user input via `$ARGUMENTS`.
-4. Produce or update only its own artifact(s) — implement's code and eval outputs are the ones written outside `.research/` (in the declared code folder and `./eval/`); end by reporting the path(s) and a one-line `Next: /research.<x>`.
+4. Produce or update only its owned work products; `implement` owns code/eval outputs, claims/task status, and explicitly selected manuscript work. End by reporting paths and `Next: /research.<x>`.
 5. Be paper-type aware where relevant (measurement / attack / defense / benchmark / systematization (SoK)) via `.research/templates/paper/<type>.md` (copied from the bundle by `/research.init`).
 
 Commands `mkdir -p` as needed and never overwrite user content without saying so.
@@ -84,11 +82,11 @@ Commands `mkdir -p` as needed and never overwrite user content without saying so
 ## Pipeline order
 
 ```
-constitution → proposal → relatedwork → feasibility → plan → tasks → implement (∥ paper) → analyze → review (loop)
+constitution -> proposal -> relatedwork -> feasibility -> plan -> tasks -> implement -> analyze -> review (loop)
             (+ rebuttal post-submission, ae once results exist, init for setup)
 ```
 
-After a GO, `plan` fixes the study design and `tasks` derives one work queue from it. `implement` works the queue (code into the declared folder, eval verdicts into `claims.md`) while the human-led `paper` lane runs in parallel, reading `claims.md` and tagging any unbacked claim `[UNVERIFIED]` - the two communicate only through documents they read, never by writing into each other. `feasibility` is a GO/NO-GO gate (a no-go or pivot routes back to `proposal`). `analyze` is the sync checker that detects drift among plan, tasks, code, evidence, and manuscript and routes the re-run, and `review` loops back into the fix-commands until no new high-severity findings remain. The Build section is paper-type aware: heavy for build-papers, minimal or absent for measurement / SoK.
+After a GO, `plan` fixes the study design and `tasks` derives one queue. `implement` works automated tasks by default and enters human-led manuscript mode only after explicit selection, reading `claims.md` and tagging unsupported beats `[UNVERIFIED]`. `analyze` detects drift and routes re-runs; `review` reads only the manuscript and routes fixes back to the appropriate explicit implement mode. Build remains paper-type aware.
 
 ## Form factor
 

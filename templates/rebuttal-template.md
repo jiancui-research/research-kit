@@ -98,5 +98,5 @@ industry/web sources, not only papers. Keep it tight.]
 - [ ] Trimmed to the word limit; only the final draft submitted (drafts may be visible).
 
 ---
-Next: `/research.paper` (fold accepted revisions into the draft) or resubmit, reusing
-this rebuttal text for the next venue.
+Next: `/research.implement paper <section>` (fold accepted revisions into the draft)
+or resubmit, reusing this rebuttal text for the next venue.

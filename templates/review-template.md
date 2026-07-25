@@ -113,4 +113,4 @@ each, leading with the strongest result and citing it exactly.]
   wasted.
 
 ---
-Next: `/research.rebuttal` (pre-draft responses) or back to `/research.paper` to fix what this surfaced.
+Next: `/research/rebuttal` (pre-draft responses) or `/research.implement paper <section>` to fix what this surfaced.

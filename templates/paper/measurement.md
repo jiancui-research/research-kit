@@ -1,6 +1,6 @@
 # Measurement paper: [system / ecosystem under study]
 
-> Paper-type skeleton for `/research.paper` (paper-type: measurement).
+> Paper-type skeleton for explicit `/research.implement paper <section>` mode (paper type: measurement).
 > Read `./.research/proposal.md`, `./.research/tasks.md`, and `./.research/claims.md` first.
 > Core question: *what is actually happening?* Proof obligation: a defensible
 > dataset + a sound methodology + a surprising, anchored finding.

@@ -63,7 +63,7 @@ existing projects using `./design/` keep it (legacy).]
 - Implementation code: `./src/` [or the project's own convention - declare it here]
 - Evaluation scripts / data / results: `./eval/`
 - Feasibility probe (throwaway): `./feasibility/`
-- Manuscript: sibling repo recorded in `.research/paper-repo` (resolved by `/research.paper`)
+- Manuscript: sibling repo recorded in `.research/paper-repo` (resolved by explicit `/research.implement paper <section>` mode)
 - Naming conventions: [shared rule for files, modules, eval scripts]
 
 ## Paper skeleton

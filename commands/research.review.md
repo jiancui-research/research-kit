@@ -34,7 +34,7 @@ Division of labor: `/research.analyze` is the *internal* audit with full access 
 4. **Score.** Give each reviewer a recommendation in the venue's terms (`reject` / `weak reject` / `borderline` / `weak accept` / `accept`) with a 2–3 sentence rationale that traces to its findings, plus a confidence level. Summarize the panel verdict (range + the single biggest driver up or down).
 
 5. **Suggest a fix command per finding (do not run it or write to its file).** For each finding, name the one command the *user* would run to fix it — a suggestion in the report, not an action this command takes:
-   - unsupported / overclaimed text, framing, voice → `/research.paper <section>`
+   - unsupported / overclaimed text, framing, voice -> `/research.implement paper <section>`
    - weak related-work delta → `/research.relatedwork`
    - a claim that needs new or stronger evidence → `/research.implement` (add / run the experiment)
    - a number that looks wrong or internally inconsistent → `/research.implement` (re-check) or `/research.analyze` (trace it across artifacts)
@@ -61,4 +61,4 @@ Write `./.research/review/round-N.md` (start from `.research/templates/review-te
 
 ## Completion
 
-Report the path `./.research/review/round-N.md`, the panel score range, and the counts (fatal / major / minor findings). Then end with: `Next: resolve findings via their suggested commands (/research.paper, /research.relatedwork, /research.implement, ...), then re-run /research.review for round N+1; loop until no high-severity findings remain. (/research.rebuttal is auxiliary — post-submission.)`
+Report `./.research/review/round-N.md`, the panel score range, and finding counts. Then: resolve findings via their suggested commands (`/research.implement paper <section>`, `/research.relatedwork`, `/research.implement`, ...), and re-run `/research.review` until no high-severity findings remain. (`/research.rebuttal` is auxiliary and post-submission.)

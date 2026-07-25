@@ -1,4 +1,4 @@
-> Loaded by /research.paper when drafting the abstract or introduction. Cross-cutting craft (applies to every paper type).
+> Loaded by explicit `/research.implement paper <section>` mode for the abstract or introduction. Cross-cutting craft for every paper type.
 
 # Abstract & introduction
 

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 research-kit is **not an application** - it is a bundle of AI-agent slash commands authored as Markdown, plus Markdown templates and a default research constitution. There is no runtime, no build step, no Python CLI, no hooks, no tests in the conventional sense. "The model does the work; the files are the interface." A command is just `commands/research.<name>.md`: YAML frontmatter (`description`, optional `argument-hint`) + a prompt body. Keep it that way - a change that adds a moving part needs a strong reason (see `CONTRIBUTING.md`).
 
-The product is a Spec-Driven Development pipeline for writing research papers. Each command turns one fuzzy stage (proposal, related work, feasibility, plan, tasks, implement, paper, analyze, review, ...) into one reviewable artifact on disk.
+The product is a Spec-Driven Development pipeline for research papers. Each command turns one fuzzy stage (proposal, related work, feasibility, plan, tasks, implement, analyze, review, ...) into reviewable artifacts on disk.
 
 Because the shipped Markdown *is* the product (read by AI agents and users, never compiled), editing prose is the main activity here - match the existing voice: sentence-case headers, spaced hyphens not em-dashes, distilled/original guidance (never paste private notes, names, or unpublished drafts), and the writing-voice rules in `memory/constitution.md`.
 
@@ -15,7 +15,7 @@ Because the shipped Markdown *is* the product (read by AI agents and users, neve
 When editing this repo you are authoring the **bundle**. The `.research/...` paths written inside command bodies refer to the **end user's paper repo at runtime**, not to this repo.
 
 - **This repo (the bundle):** `commands/`, `templates/` (root), `tools/` (optional utilities), `memory/constitution.md` (root), `install.sh`, `.claude-plugin/`.
-- **The user's paper repo (runtime, never exists here):** `./.research/` holds tracking docs - `.research/templates/` (copied in by `/research.init`), `.research/memory/constitution.md`, `proposal.md`, `plan.md`, `tasks.md`, `claims.md`, etc. Work products (the code folder `plan.md` declares - default `src/`, legacy `design/` - plus `eval/`, `paper/`, `feasibility/`) are sibling root folders; the manuscript may instead be a dedicated sibling repo (`<name>-<venue><yy>-latex`) recorded in `.research/paper-repo`, which paper-stage commands resolve (fallback `./paper/`).
+- **The user's paper repo (runtime, never exists here):** `./.research/` holds tracking docs; code, eval, feasibility, and manuscript work live outside it. The manuscript may be a dedicated sibling repo (`<name>-<venue><yy>-latex`) recorded in `.research/paper-repo`, resolved by explicit implement Manuscript mode; manuscript readers fall back to `./paper/`.
 
 So: this repo's root `templates/` and `memory/constitution.md` are the **source** that gets *copied into* a user's `./.research/templates/` and `./.research/memory/constitution.md`. Command bodies read from the `.research/` copies, never from this repo's paths.
 
@@ -32,18 +32,18 @@ Template resolution at runtime (see `commands/research.init.md`): templates live
 
 Every command body must:
 1. Read `./.research/memory/constitution.md` if it exists; skip silently otherwise.
-2. Read its upstream artifacts (e.g. `plan` reads `proposal.md` + `feasibility.md`; `tasks` reads `plan.md`; `implement` reads `plan.md` + `tasks.md`; `paper` reads `tasks.md` + `plan.md` + `claims.md`).
+2. Read upstream artifacts appropriate to its mode (e.g. `plan` reads proposal + feasibility; `tasks` reads plan; `implement` reads plan + tasks and reads proposal + related work + claims only for explicit Manuscript mode).
 3. Take user input via the `$ARGUMENTS` placeholder.
 4. Produce/update **only its own artifact(s)**, `mkdir -p` as needed, never overwrite user content silently, and end by reporting the path(s) + a one-line `Next: /research.<x>`.
 5. Be paper-type aware where relevant, via `.research/templates/paper/<type>.md` (types: measurement, attack, defense, benchmark, systematization/SoK).
 6. Stay short (aim < ~120 lines); reference templates instead of inlining long checklists.
 
-## Pipeline and the parallel lanes
+## Pipeline and queue execution
 
 ```
-constitution → proposal → relatedwork → feasibility(GO/NO-GO/PIVOT gate) → plan → tasks → implement (∥ paper, human-led) → analyze → review (loop)
+constitution -> proposal -> relatedwork -> feasibility(GO/NO-GO/PIVOT) -> plan -> tasks -> implement -> analyze -> review (loop)
 ```
-Plus `rebuttal` (post-submission) and `ae` (artifact eval). `plan` holds the stable study design; `tasks` derives the single queue `tasks.md` from it (re-runs refine, preserving checkbox states); `implement` works the queue (code into the folder `plan.md` declares, eval verdicts into `claims.md`) and **never executes `[HUMAN]` Paper tasks** - the human-led `paper` lane runs in parallel reading `claims.md`; the two **communicate only through shared docs they read, never by writing into each other**. Only **two** commands ever write into another command's doc: `relatedwork → proposal.md` (sharpens the gap) and `implement → claims.md`. `analyze` and `review` are **report-only** - they detect drift / findings and route a re-run to the owning command rather than editing other artifacts. The Build section is paper-type aware: heavy for build-papers (systems/defense/attack/benchmark), minimal or absent for measurement/SoK.
+Plus `rebuttal` and `ae`. `plan` is stable; `tasks` is the single queue; `implement` executes automated work by default and `[USER-LED]` manuscript work only after explicit selection. Eval mode writes `claims.md`; Manuscript mode reads it and labels unsupported beats `[UNVERIFIED]`. `analyze` and `review` remain report-only. The only semantic cross-writes are `relatedwork -> proposal.md` and Eval-mode `implement -> claims.md`.
 
 Authoritative references: `docs/workflow.md` (per-command input→output table + write-edges) and `docs/design.md` (spec-kit mapping, form factor, scope/non-goals).
 
@@ -64,7 +64,7 @@ There is no test runner or linter. The validation loop (from `CONTRIBUTING.md`) 
 - Create `commands/research.<x>.md`, follow the command contract, read input from `$ARGUMENTS`.
 - New structure goes in a `templates/<x>-template.md` the command reads from `.research/templates/...` - don't inline long skeletons.
 - Update the **Commands** table in `README.md` (and the pipeline description if it's in the main flow); mirror in `docs/workflow.md` / `docs/design.md` if the flow changes.
-- New paper type → add `templates/paper/<type>.md`, ensure type-inferring commands (e.g. `research.proposal`) recognize it.
+- New paper type -> add `templates/paper/<type>.md`, ensure type-inferring commands recognize it, and verify explicit `/research.implement paper <section>` mode loads it.
 - Keep consistency invariant: one namespace (`/research.*`), one working dir (`./.research/...`), one pipeline order, everywhere. A change in one place that contradicts another is a bug. Bump `version` in `.claude-plugin/plugin.json` when the bundle changes meaningfully.
 
 ## Gotchas
