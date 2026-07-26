@@ -204,6 +204,10 @@ PAGE = r"""<!doctype html>
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#1f2328; }
   #app { display:grid; grid-template-columns:230px 1fr 6px 1fr 300px; height:100vh; }
+  /* grid/flex items default to min-height:auto, so a long document would stretch the
+     grid past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
+  #app > * { min-width:0; min-height:0; }
+  #main, #editor { min-height:0; }
   #gutter { cursor:col-resize; background:#fafafa; border-left:1px solid var(--line);
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
