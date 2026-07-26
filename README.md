@@ -13,11 +13,11 @@ Every stage produces one reviewable Markdown document. The documents are what yo
 [![Form factor](https://img.shields.io/badge/pure%20markdown-no%20build%20step-brightgreen)](#-quickstart)
 [![GitHub stars](https://img.shields.io/github/stars/jiancui-research/research-kit?style=social)](https://github.com/jiancui-research/research-kit/stargazers)
 
-[Quickstart](#-quickstart) · [Commands](#-commands) · [Review UI](#-the-review-ui-researchmdreview) · [Workflow docs](docs/workflow.md) · [Design](docs/design.md)
+[Quickstart](#-quickstart) · [Commands](#-commands) · [Review UI](#review-ui) · [Workflow docs](docs/workflow.md) · [Design](docs/design.md)
 
 ![mdreview demo: click-to-source sync, commenting, export](docs/assets/mdreview-demo.gif)
 
-*The bundled review UI: Overleaf-style split view, click-to-source sync, Google-Docs-style comments, one-click export to any AI — [details below](#-the-review-ui-researchmdreview).*
+*The bundled review surfaces: Overleaf-style split view for your docs **and** your LaTeX paper, click-to-source sync, Google-Docs-style comments an agent can act on — [details below](#review-ui).*
 
 </div>
 
@@ -30,8 +30,9 @@ The document is the only thing you, the researcher, need to check — the code g
 - **You review documents, never code.** Every stage produces one Markdown doc under `./.research/` — the spec, the record, and the thing you actually check. The implementation plan derives from these docs, the agent builds from the plan, and results flow back into `claims.md` and the draft, where you judge them.
 - **Each document is iterated, not just generated.** You refine it with your AI as advisor and peer — critiques, comments, replies — plus your own edits, until it says what you mean. Only then does the next stage build on it.
 - **A kill-switch and a drift-catcher keep it honest.** `feasibility` returns **GO / NO-GO / PIVOT** before you over-invest; `analyze` catches the lanes drifting from the docs and names the exact re-run; `review` simulates a reviewer panel reading only the paper.
+- **The agent's work stays visible.** Implementation and evaluation are the agent's job; reading and judging are yours. So every artifact it produces — the tracking docs and the paper itself — opens in a [bundled review UI](#review-ui) where you comment in place, and the agent picks those comments up from the repo and acts on them.
 
-Checking and refining documents is the whole job — which is why research-kit bundles [mdreview](#-the-review-ui-researchmdreview) to make it comfortable.
+Checking and refining documents is the whole job — which is why research-kit bundles two review UIs to make it comfortable.
 
 ## 🗺️ The pipeline
 
@@ -53,9 +54,29 @@ Why this shape: every stage ends in a Markdown document under `./.research/` tha
 
 📐 **[Workflow diagram + per-command inputs/outputs →](docs/workflow.md)**
 
-## 🖥️ The review UI (`/research.mdreview`)
+<a id="review-ui"></a>
 
-Checking and editing that pipeline of docs *is* the workflow — so research-kit bundles **mdreview** to make the loop painless: a local web UI over your repo's markdown. One file, localhost only, nothing beyond `uv` to install.
+## 🖥️ Where you watch the agent work
+
+Handing the build and the evaluation to an agent only works if you can *see* what it did. So research-kit ships two review surfaces — one for the tracking documents, one for the paper itself. Both are local web UIs, one Python file each, localhost only, nothing beyond `uv` to install. You read, you comment, you edit a line; the agent picks the comments up from the repo and does the work.
+
+### 📄 The paper: `/research.texreview`
+
+**A single-user local Overleaf with the review loop built in.** LaTeX source on the left, the compiled PDF on the right, and comments that know which line of which `.tex` file they belong to.
+
+![texreview: LaTeX source left, compiled PDF right, a comment carrying its file:line target](docs/assets/texreview-hero.png)
+
+- 💬 **Comment on the PDF, fix in the source.** Select text in the rendered paper and attach a note. Each comment records the quote *and* the SyncTeX-resolved `file.tex:line`, so an agent working in the paper repo knows exactly where to edit — *"read `.texreview/comments.json` and address the open comments"*. It replies with what it changed and marks them resolved; the fix is highlighted on the next compile.
+- 🎯 **Click the PDF, land on the line.** Click any rendered word and the editor jumps to its source. When SyncTeX can only point at a structural line — `acmart` typesets `\begin{abstract}` during `\maketitle`, the `comment` package routes blocks through a generated file — texreview falls back to searching the sources for the words you actually clicked, so you land somewhere you can edit. **Reveal →** goes the other way, flashing the PDF box for your cursor line.
+- 🔨 **Save and it recompiles.** `⌘S` runs `latexmk -pdf -synctex=1` and reloads the pane; saves landing mid-compile queue one follow-up instead of stacking. Errors show a parsed log. Compile in a terminal instead and the pane still refreshes.
+- ⌨️ **Editor basics that matter in LaTeX** — find in file (`⌘F`) with a live match count, comment toggle (`⌘/`) over the selection, collapsible folders so a 25-file paper repo opens at six rows.
+- 📋 **Export with targets** — open comments copy to the clipboard with ids, `file:line` targets, and reply instructions, for any AI outside the repo.
+
+Launch from the manuscript repo, or from the research repo (it follows `.research/paper-repo`): `/research.texreview`, or directly `uv run tools/texreview.py --open`. Needs `uv` plus a TeX install (`latexmk` / `synctex`, bundled with MacTeX and TeX Live).
+
+### 📝 The documents: `/research.mdreview`
+
+Checking and editing that pipeline of docs *is* the workflow — so **mdreview** gives the Markdown side the same treatment: a local web UI over your repo's docs.
 
 ![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
 
@@ -71,19 +92,6 @@ Checking and editing that pipeline of docs *is* the workflow — so research-kit
 | ![commenting](docs/assets/mdreview-comment.png) | ![sync and mermaid](docs/assets/mdreview-sync.png) |
 
 Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
-
-### The same loop for the manuscript (`/research.texreview`)
-
-When the work moves from markdown to LaTeX, **texreview** gives the paper the same treatment: a single-user local Overleaf with the review loop built in — editable LaTeX source on the left, the compiled PDF on the right.
-
-![texreview: LaTeX source left, compiled PDF right, comments carry file:line targets](docs/assets/texreview-hero.png)
-
-- 🎯 **SyncTeX both ways** — click PDF text and the editor jumps to the matching `file.tex:line`; **Reveal →** flashes the PDF box for your cursor line.
-- 💬 **Comments on the PDF itself** — select rendered text to comment; each comment stores the quote *and* its SyncTeX-resolved source location, as sidecar JSON in the paper repo's `.texreview/`.
-- 🔨 **Recompile in place** — one button runs `latexmk -pdf -synctex=1`, shows the error log on failure, and the pane auto-reloads when you compile in a terminal instead.
-- 📋 **Export with targets** — open comments copy to the clipboard with `file:line` targets and reply instructions, ready for any AI working in the paper repo.
-
-Launch from the manuscript repo, or from the research repo (it follows `.research/paper-repo`): `/research.texreview`, or directly `uv run tools/texreview.py --open`. Needs `uv` plus a TeX install (`latexmk` / `synctex`, bundled with MacTeX and TeX Live).
 
 ## ⚡ Quickstart
 
@@ -160,7 +168,7 @@ Then, in your paper repo, start with `/research.init` (`/research-kit:research.i
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 | `/research.mdreview` | Open a local web UI to read, edit, comment on, and export the repo's markdown (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
-| `/research.texreview` | Review the compiled paper: LaTeX source left, PDF right, SyncTeX click-to-source, comments on PDF selections with `file:line` targets, Recompile, export (optional; requires `uv` + TeX). |
+| `/research.texreview` | Review the compiled paper: LaTeX source left, PDF right, SyncTeX click-to-source, comments on PDF selections carrying `file:line` targets, recompile on save, export (optional; requires `uv` + TeX). |
 
 ## 🤖 Supported agents
 
