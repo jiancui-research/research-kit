@@ -72,6 +72,19 @@ Checking and editing that pipeline of docs *is* the workflow — so research-kit
 
 Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
 
+### The same loop for the manuscript (`/research.texreview`)
+
+When the work moves from markdown to LaTeX, **texreview** gives the paper the same treatment: a single-user local Overleaf with the review loop built in — editable LaTeX source on the left, the compiled PDF on the right.
+
+![texreview: LaTeX source left, compiled PDF right, comments carry file:line targets](docs/assets/texreview-hero.png)
+
+- 🎯 **SyncTeX both ways** — click PDF text and the editor jumps to the matching `file.tex:line`; **Reveal →** flashes the PDF box for your cursor line.
+- 💬 **Comments on the PDF itself** — select rendered text to comment; each comment stores the quote *and* its SyncTeX-resolved source location, as sidecar JSON in the paper repo's `.texreview/`.
+- 🔨 **Recompile in place** — one button runs `latexmk -pdf -synctex=1`, shows the error log on failure, and the pane auto-reloads when you compile in a terminal instead.
+- 📋 **Export with targets** — open comments copy to the clipboard with `file:line` targets and reply instructions, ready for any AI working in the paper repo.
+
+Launch from the manuscript repo, or from the research repo (it follows `.research/paper-repo`): `/research.texreview`, or directly `uv run tools/texreview.py --open`. Needs `uv` plus a TeX install (`latexmk` / `synctex`, bundled with MacTeX and TeX Live).
+
 ## ⚡ Quickstart
 
 **Claude Code — plugin (recommended, no script):**
@@ -145,6 +158,7 @@ Then, in your paper repo, start with `/research.init` (`/research-kit:research.i
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
 | `/research.mdreview` | Open a local web UI to read, edit, comment on, and export the repo's markdown (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
+| `/research.texreview` | Review the compiled paper: LaTeX source left, PDF right, SyncTeX click-to-source, comments on PDF selections with `file:line` targets, Recompile, export (optional; requires `uv` + TeX). |
 
 ## 🤖 Supported agents
 

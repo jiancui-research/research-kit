@@ -45,6 +45,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
 - `/research.ae` — Prepare an artifact-evaluation submission (reproducibility checklist, artifact README, badge plan, archival link).
 - `/research.mdreview` — Optional review UI: launch `tools/mdreview.py` (local web server) to read, edit, comment on, and export the repo's markdown; comments land in `./.mdreview/` as sidecar JSON.
+- `/research.texreview` — Optional manuscript review UI: launch `tools/texreview.py` against the paper repo (the cwd if it holds a `\documentclass` `.tex`, else the repo `.research/paper-repo` points to) - editable LaTeX source beside the compiled PDF, SyncTeX click-to-source in both directions, comments on PDF selections with `file:line` targets in the paper repo's `.texreview/`, a latexmk Recompile button, and clipboard export for any AI.
 
 ## Working-directory model
 

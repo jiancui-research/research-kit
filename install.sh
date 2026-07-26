@@ -215,7 +215,7 @@ stage_tools() {
         mkdir -p "$BUNDLE_HOME"
         rm -rf "$BUNDLE_HOME/tools"
         cp -R "$SCRIPT_DIR/tools" "$BUNDLE_HOME/tools"
-        echo "  staged   $BUNDLE_HOME/tools (optional tools, e.g. mdreview for /research.mdreview)"
+        echo "  staged   $BUNDLE_HOME/tools (optional tools: mdreview, texreview)"
     fi
 }
 
