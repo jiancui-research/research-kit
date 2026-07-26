@@ -105,14 +105,16 @@ Plugin stages are namespaced, e.g. `/research-kit:research.proposal …`; update
 
 OMP reads the same `.claude-plugin` bundle directly, exposing the namespaced `/research-kit:research.*` stages. Update later with `/marketplace update research-kit`, then `/marketplace upgrade research-kit@research-kit`.
 
-**GitHub Copilot CLI — plugin (no script):**
+**Codex CLI and GitHub Copilot CLI — script:**
 
-```text
-copilot plugin marketplace add jiancui-research/research-kit
-copilot plugin install research-kit@research-kit
+```sh
+git clone https://github.com/jiancui-research/research-kit
+cd research-kit
+./install.sh --codex      # -> ~/.codex/prompts/     (all stages, /research.* )
+./install.sh --copilot    # -> ~/.copilot/agents/    (all stages as custom agents)
 ```
 
-Copilot reads the same `.claude-plugin` bundle directly, exposing the namespaced `/research-kit:research.*` stages; update later with `copilot plugin update research-kit`.
+Use the script for these two, not their plugin marketplaces. Codex installs a plugin fine but converts commands to skills and drops every stage that takes arguments, so you would get `research.init` alone; Copilot expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory, so a marketplace install exposes nothing. The script targets each agent's documented location: [Codex custom prompts](https://developers.openai.com/codex/custom-prompts) (deprecated in favour of skills, still supported with `$ARGUMENTS`, no removal date announced) and [Copilot personal custom agents](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli).
 
 **Any agent — script:**
 
