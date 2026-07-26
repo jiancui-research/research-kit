@@ -213,7 +213,8 @@ PAGE = r"""<!doctype html>
   #gutter:hover, #gutter.dragging { background:var(--accent); }
   #side { border-right:1px solid var(--line); overflow-y:auto; padding:10px; font-size:13px; }
   #scope { display:none; font-size:12px; color:#555; margin-bottom:8px; user-select:none; }
-  #side .dir { font-weight:600; margin-top:6px; }
+  #side .dir { font-weight:600; margin-top:6px; color:#555; }
+  #side .dir .count { font-weight:400; color:#aaa; }
   #side button { display:block; width:100%; text-align:left; border:0; background:none;
                  padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:#333; }
   #side button:hover { background:#f0f3f8; }
@@ -346,7 +347,8 @@ const toast = msg => { const t=$("toast"); t.textContent=msg; t.style.display="b
   setTimeout(()=>t.style.display="none", 2200); };
 const setDirty = d => { dirty = d; $("saveBtn").textContent = d ? "Save •" : "Save"; };
 
-/* ---------- sidebar ---------- */
+/* ---------- sidebar: collapsible folders ---------- */
+let collapsed = new Set(JSON.parse(localStorage.getItem("mdreview.collapsed") || "[]"));
 async function loadFiles() {
   allFiles = await (await api("/api/files")).json();
   const hasResearch = allFiles.some(f => f.startsWith(".research/"));
@@ -368,15 +370,32 @@ function renderSidebar() {
     node[parts.at(-1)] = f;
   }
   $("side").innerHTML = "";
-  renderTree(tree, $("side"), 0);
+  renderTree(tree, $("side"), 0, "");
 }
-function renderTree(node, el, depth) {
+function countFiles(node) {
+  let n = 0;
+  for (const k of Object.keys(node)) n += k.endsWith("/") ? countFiles(node[k]) : 1;
+  return n;
+}
+function renderTree(node, el, depth, prefix) {
   for (const key of Object.keys(node).sort((a,b)=>a.localeCompare(b))) {
     if (key.endsWith("/")) {
-      const d = document.createElement("div");
-      d.className = "dir"; d.textContent = key; d.style.paddingLeft = depth*12 + "px";
+      const path = prefix + key, open = !collapsed.has(path);
+      const d = document.createElement("button");
+      d.className = "dir";
+      d.style.paddingLeft = depth*12 + "px";
+      d.append((open ? "▾ " : "▸ ") + key);
+      const c = document.createElement("span");
+      c.className = "count"; c.textContent = " " + countFiles(node[key]);
+      d.appendChild(c);
+      d.title = (open ? "Hide " : "Show ") + path;
+      d.onclick = () => {
+        open ? collapsed.add(path) : collapsed.delete(path);
+        localStorage.setItem("mdreview.collapsed", JSON.stringify([...collapsed]));
+        renderSidebar();
+      };
       el.appendChild(d);
-      renderTree(node[key], el, depth + 1);
+      if (open) renderTree(node[key], el, depth + 1, path);
     } else {
       const b = document.createElement("button");
       b.textContent = key; b.dataset.path = node[key]; b.style.paddingLeft = (depth*12+6) + "px";

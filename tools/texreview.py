@@ -386,7 +386,8 @@ PAGE = r"""<!doctype html>
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
   #side { overflow-y:auto; border-right:1px solid var(--line); padding:10px; font-size:13px; }
-  #side .dir { font-weight:600; margin-top:6px; }
+  #side .dir { font-weight:600; margin-top:6px; color:#555; }
+  #side .dir .count { font-weight:400; color:#aaa; }
   #side button { display:block; width:100%; text-align:left; border:0; background:none;
                  padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:#333; }
   #side button:hover { background:#f0f3f8; }
@@ -522,25 +523,58 @@ const toast = msg => { const t=$("toast"); t.textContent=msg; t.style.display="b
 const setDirty = d => { dirty = d; $("saveBtn").textContent = d ? "Save •" : "Save"; };
 const el = n => n.nodeType === 1 ? n : n.parentElement;
 
-/* ---------- sidebar ---------- */
+/* ---------- sidebar: collapsible folders ---------- */
+let allFiles = [];
+let collapsed = new Set(JSON.parse(localStorage.getItem("texreview.collapsed") || "[]"));
+let collapsedSeeded = localStorage.getItem("texreview.collapsed") !== null;
 async function loadFiles() {
-  const files = await (await api("/api/files")).json();
+  allFiles = await (await api("/api/files")).json();
+  if (!collapsedSeeded) {
+    // first run: fold every folder except the one holding the open file - a paper repo
+    // is mostly tables/, code/ and figures/ you are not reading right now
+    const keep = state && state.path.includes("/") ? state.path.split("/")[0] + "/" : null;
+    for (const f of allFiles) {
+      const dir = f.includes("/") ? f.split("/")[0] + "/" : null;
+      if (dir && dir !== keep) collapsed.add(dir);
+    }
+    collapsedSeeded = true;
+  }
+  renderSidebar();
+}
+function renderSidebar() {
   const tree = {};
-  for (const f of files) {
+  for (const f of allFiles) {
     const parts = f.split("/"); let node = tree;
     for (const p of parts.slice(0, -1)) node = (node[p + "/"] ??= {});
     node[parts.at(-1)] = f;
   }
   $("side").innerHTML = "";
-  renderTree(tree, $("side"), 0);
+  renderTree(tree, $("side"), 0, "");
 }
-function renderTree(node, elx, depth) {
+function countFiles(node) {
+  let n = 0;
+  for (const k of Object.keys(node)) n += k.endsWith("/") ? countFiles(node[k]) : 1;
+  return n;
+}
+function renderTree(node, elx, depth, prefix) {
   for (const key of Object.keys(node).sort((a,b)=>a.localeCompare(b))) {
     if (key.endsWith("/")) {
-      const d = document.createElement("div");
-      d.className = "dir"; d.textContent = key; d.style.paddingLeft = depth*12 + "px";
+      const path = prefix + key, open = !collapsed.has(path);
+      const d = document.createElement("button");
+      d.className = "dir";
+      d.style.paddingLeft = depth*12 + "px";
+      d.append((open ? "▾ " : "▸ ") + key);
+      const c = document.createElement("span");
+      c.className = "count"; c.textContent = " " + countFiles(node[key]);
+      d.appendChild(c);
+      d.title = (open ? "Hide " : "Show ") + path;
+      d.onclick = () => {
+        open ? collapsed.add(path) : collapsed.delete(path);
+        localStorage.setItem("texreview.collapsed", JSON.stringify([...collapsed]));
+        renderSidebar();
+      };
       elx.appendChild(d);
-      renderTree(node[key], elx, depth + 1);
+      if (open) renderTree(node[key], elx, depth + 1, path);
     } else {
       const b = document.createElement("button");
       b.textContent = key; b.dataset.path = node[key]; b.style.paddingLeft = (depth*12+6) + "px";
@@ -562,7 +596,11 @@ async function openDoc(path) {
   setDirty(false);
   $("bar").style.visibility = "visible";
   $("path").textContent = path;
-  loadFiles();
+  // a file opened by a PDF click may live in a folded folder: reveal it so the
+  // active highlight is not hidden
+  const parts = path.split("/");
+  for (let i = 1; i < parts.length; i++) collapsed.delete(parts.slice(0, i).join("/") + "/");
+  renderSidebar();
 }
 $("editor").addEventListener("input", () => { if (state) setDirty(true); });
 async function save(overwrite) {
