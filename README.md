@@ -171,16 +171,16 @@ The same pipeline installs for four agents; pick one or more (`--all` covers the
 | **Claude Code** (plugin) | `/plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **Oh My Pi (OMP)** (plugin) | `/marketplace add jiancui-research/research-kit` → `/marketplace install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
 | **Claude Code** (script) | `./install.sh` | `/research.proposal <text>` |
-| **Codex CLI** | `./install.sh --codex` | `/research.proposal <text>` |
-| **GitHub Copilot CLI** (plugin) | `copilot plugin marketplace add jiancui-research/research-kit` → `copilot plugin install research-kit@research-kit` | `/research-kit:research.proposal <text>` |
-| **GitHub Copilot CLI** (script) | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |
+| **Codex CLI** (script only) | `./install.sh --codex` | `/research.proposal <text>` |
+| **GitHub Copilot CLI** (script only) | `./install.sh --copilot` | `/agent` → pick `research.proposal`, then type your input |
 
 <details>
-<summary><b>Per-agent notes (Copilot bundle, Codex marketplace, self-pruning, overrides)</b></summary>
+<summary><b>Per-agent notes (why Codex and Copilot need the script, self-pruning, overrides)</b></summary>
 
-- **OMP** installs the same `.claude-plugin` bundle through `/marketplace`, reading `commands/` directly. Plugin commands resolve bundled templates and tools through OMP's installed-plugin registry.
-- **Copilot** installs the same `.claude-plugin` bundle straight from its marketplace (`copilot plugin marketplace add …` → `copilot plugin install research-kit@research-kit`), reading `commands/` directly — no script needed. The `./install.sh --copilot` path stays as an alternative that instead generates `*.agent.md` custom agents (invoked via `/agent`).
-- **Codex** has its own plugin marketplace, but it expects a skill-based Codex plugin (`.agents/plugins/marketplace.json` + `.codex-plugin/`), not the `.claude-plugin` bundle — so Codex uses the script, which installs the commands into `~/.codex/prompts/` as native `/research.*` slash commands.
+- **OMP** installs the same `.claude-plugin` bundle through `/marketplace`, reading `commands/` directly (it falls back to `.claude-plugin/marketplace.json` when `.omp-plugin/` is absent). Plugin commands resolve bundled templates and tools through OMP's installed-plugin registry at `~/.omp/plugins/installed_plugins.json`.
+- **Codex** does have a marketplace and will happily install this bundle — but it converts commands into skills, and skills have no `$ARGUMENTS` substitution, so every stage that takes input is silently skipped. Only `research.init` survives. The script installs all stages into `~/.codex/prompts/` as native `/research.*` commands instead. (Custom prompts are marked deprecated in favour of skills, still support `$ARGUMENTS`, and have no announced removal date.)
+- **Copilot** expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory; it no longer surfaces a plugin's `commands/`, and an installed bundle reports zero available agents. This worked at Copilot CLI 1.0.40 and stopped by 1.0.63, so `./install.sh --copilot` (which generates `*.agent.md` custom agents in `~/.copilot/agents/`) is the supported path.
+- **One install for all four** would require shipping stages as `skills/<name>/SKILL.md`, the one format every agent here reads. The trade-off is that skills are model-invocable, so stages could fire without you asking; `docs/design.md` records the analysis.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
 
 </details>
