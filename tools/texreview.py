@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -317,6 +318,73 @@ def synctex_edit(root: Path, pdf_rel: str, page: int, x: float, y: float) -> dic
     return {"file": rel, "line": rec["line"]}
 
 
+_TEX_CMD = re.compile(r"\\[a-zA-Z@]+\*?(\[[^\]]*\])?")
+_COMMENT = re.compile(r"(?<!\\)%.*$")
+# lines that own no prose of their own: SyncTeX blames them for text declared
+# elsewhere (acmart typesets \begin{abstract} during \maketitle, for instance)
+_STRUCTURAL = re.compile(
+    r"^\s*\\(maketitle|begin\{document\}|end\{document\}|input|include|documentclass"
+    r"|title|author|affiliation|email|institution|thanks|tableofcontents"
+    r"|bibliography|bibliographystyle|newpage|clearpage|balance)\b", re.I)
+
+
+def _normalize(s: str) -> str:
+    """Source or PDF text -> comparable letters+digits, LaTeX markup removed."""
+    s = _COMMENT.sub("", s)
+    s = _TEX_CMD.sub(" ", s)
+    return re.sub(r"[^0-9a-zA-Z]+", " ", s).lower().strip()
+
+
+def _normalized_index(root: Path, rel: str) -> tuple[str, list[int]]:
+    """A file as one normalized string, plus offset -> source line number."""
+    try:
+        text = (root / rel).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return "", []
+    parts: list[str] = []
+    line_of: list[int] = []
+    for i, line in enumerate(text.splitlines(), 1):
+        n = _normalize(line)
+        if not n:
+            continue
+        parts.append(n)
+        line_of.extend([i] * (len(n) + 1))
+    return " ".join(parts), line_of
+
+
+def find_text(root: Path, needle: str) -> dict | None:
+    """Locate PDF text in the sources by normalized substring; -> {'file','line'}.
+
+    Longest probe wins across ALL files before any shorter one is tried, so a full
+    match in the section file beats an incidental prefix match in the title."""
+    key = _normalize(needle)
+    if len(key) < 25:
+        return None
+    files = [f for f in list_tex_files(root) if f.endswith(".tex")]
+    index = {rel: _normalized_index(root, rel) for rel in files}
+    for probe in (key, key[:80], key[:50], key[:30]):
+        if len(probe) < 25:
+            break
+        for rel in files:
+            hay, line_of = index[rel]
+            idx = hay.find(probe)
+            if idx >= 0 and line_of:
+                return {"file": rel, "line": line_of[min(idx, len(line_of) - 1)]}
+    return None
+
+
+def is_structural(root: Path, rel: str, line: int) -> bool:
+    """True when that source line carries no prose, so a text search would do better."""
+    try:
+        lines = (root / rel).read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return False
+    if not 1 <= line <= len(lines):
+        return False
+    raw = lines[line - 1]
+    return bool(_STRUCTURAL.match(raw)) or not _normalize(raw)
+
+
 def synctex_view(root: Path, pdf_rel: str, tex_rel: str, line: int) -> dict:
     """Source line -> PDF box. Tries the path as-is and ./-prefixed (synctex records vary)."""
     last: RequestError | None = None
@@ -402,6 +470,15 @@ PAGE = r"""<!doctype html>
   .bar button:disabled { opacity:.5; cursor:default; }
   #editor { flex:1; width:100%; border:0; outline:none; resize:none; padding:14px 16px;
             font:13px/1.55 ui-monospace,Menlo,monospace; color:#24292f; }
+  #findbar { display:none; align-items:center; gap:6px; padding:6px 12px;
+             border-bottom:1px solid var(--line); background:#fafbfc; }
+  #findbar input { flex:1; min-width:0; border:1px solid var(--line); border-radius:6px;
+                   padding:4px 8px; font:13px inherit; outline:none; }
+  #findbar input:focus { border-color:var(--accent); }
+  #findbar button { border:1px solid var(--line); background:#fff; border-radius:6px;
+                    padding:3px 9px; cursor:pointer; font:13px inherit; }
+  #findbar button:hover { border-color:var(--accent); color:var(--accent); }
+  #findCount { font-size:12px; color:#888; min-width:44px; text-align:right; }
   #pdfpane { display:flex; flex-direction:column; min-width:0; }
   #status { font-size:12px; color:#666; }
   #warnbar { display:none; background:#fff7e0; border-bottom:1px solid #eedc9a; color:#8a6d1a;
@@ -471,8 +548,16 @@ PAGE = r"""<!doctype html>
     <div class="bar" id="bar" style="visibility:hidden">
       <span class="path" id="path"></span>
       <span class="fontctl"><button data-f="editor" data-d="-1" title="Smaller editor text">A−</button><button data-f="editor" data-d="1" title="Larger editor text">A+</button></span>
+      <button id="findBtn" title="Find in this file (⌘F)">Find</button>
       <button id="saveBtn">Save</button>
       <button id="revealBtn" title="Highlight this cursor line in the PDF (SyncTeX)">Reveal →</button>
+    </div>
+    <div id="findbar">
+      <input id="findInput" type="text" placeholder="Find in file…" spellcheck="false">
+      <span id="findCount"></span>
+      <button id="findPrev" title="Previous (⇧⏎)">↑</button>
+      <button id="findNext" title="Next (⏎)">↓</button>
+      <button id="findClose" title="Close (Esc)">✕</button>
     </div>
     <textarea id="editor" spellcheck="false" placeholder="Loading LaTeX sources..."></textarea>
   </section>
@@ -619,8 +704,85 @@ async function save(overwrite) {
   toast("Saved - Recompile to update the PDF");
 }
 $("saveBtn").onclick = () => save(false);
+
+/* ---------- find in file ---------- */
+let findHits = [], findAt = -1;
+function openFind() {
+  $("findbar").style.display = "flex";
+  const sel = $("editor").value.slice($("editor").selectionStart, $("editor").selectionEnd);
+  if (sel && !sel.includes("\n")) $("findInput").value = sel;
+  $("findInput").select();
+  $("findInput").focus();
+  runFind();
+}
+function closeFind() {
+  $("findbar").style.display = "none";
+  findHits = []; findAt = -1;
+  $("editor").focus();
+}
+function runFind() {
+  const q = $("findInput").value;
+  findHits = [];
+  if (q) {
+    const hay = $("editor").value.toLowerCase(), needle = q.toLowerCase();
+    let i = hay.indexOf(needle);
+    while (i >= 0) { findHits.push(i); i = hay.indexOf(needle, i + Math.max(1, needle.length)); }
+  }
+  // jump to the first hit at or after the cursor
+  const cur = $("editor").selectionStart;
+  findAt = findHits.findIndex(i => i >= cur);
+  if (findAt < 0) findAt = findHits.length ? 0 : -1;
+  showFind();
+}
+function showFind() {
+  const q = $("findInput").value;
+  $("findCount").textContent = !q ? "" : findHits.length ? `${findAt + 1}/${findHits.length}` : "0/0";
+  if (findAt < 0) return;
+  placeCursor(findHits[findAt], findHits[findAt] + q.length);
+  $("findInput").focus();   // keep typing; the textarea keeps its selection
+}
+function stepFind(d) {
+  if (!findHits.length) return;
+  findAt = (findAt + d + findHits.length) % findHits.length;
+  showFind();
+}
+$("findBtn").onclick = openFind;
+$("findClose").onclick = closeFind;
+$("findNext").onclick = () => stepFind(1);
+$("findPrev").onclick = () => stepFind(-1);
+$("findInput").addEventListener("input", runFind);
+$("findInput").addEventListener("keydown", ev => {
+  if (ev.key === "Enter") { ev.preventDefault(); stepFind(ev.shiftKey ? -1 : 1); }
+  else if (ev.key === "Escape") { ev.preventDefault(); closeFind(); }
+});
+
+/* ---------- comment toggle (⌘/) ---------- */
+function toggleComment() {
+  const ed = $("editor"), v = ed.value;
+  const selStart = ed.selectionStart, selEnd = ed.selectionEnd;
+  const from = v.lastIndexOf("\n", selStart - 1) + 1;
+  let to = v.indexOf("\n", selEnd);
+  if (to < 0) to = v.length;
+  const lines = v.slice(from, to).split("\n");
+  const commented = lines.every(l => !l.trim() || /^\s*%/.test(l));
+  const out = lines.map(l => {
+    if (!l.trim()) return l;
+    if (commented) return l.replace(/^(\s*)%\s?/, "$1");
+    const indent = l.match(/^\s*/)[0];
+    return indent + "% " + l.slice(indent.length);
+  }).join("\n");
+  ed.setRangeText(out, from, to, "preserve");   // keeps the undo stack
+  ed.setSelectionRange(from, from + out.length);
+  setDirty(true);
+}
+
 document.addEventListener("keydown", ev => {
   if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") { ev.preventDefault(); save(false); }
+  if ((ev.metaKey || ev.ctrlKey) && ev.key === "f" && state) { ev.preventDefault(); openFind(); }
+  if ((ev.metaKey || ev.ctrlKey) && ev.key === "/" && document.activeElement === $("editor")) {
+    ev.preventDefault(); toggleComment();
+  }
+  if (ev.key === "Escape" && $("findbar").style.display === "flex") closeFind();
 });
 function caretTop(ed, pos) {
   // mirror the textarea's text up to pos in a hidden div with identical wrapping,
@@ -826,11 +988,30 @@ $("pdfwrap").addEventListener("click", async ev => {
     page: +pageDiv.dataset.page,
     x: (ev.clientX - rect.left) / pdfScale,
     y: (ev.clientY - rect.top) / pdfScale,
+    text: textNearPoint(ev.clientX, ev.clientY),
   });
   if (!r.ok) { toast((await r.json()).error); return; }
   const {file, line} = await r.json();
   gotoSource(file, line);
 });
+function textNearPoint(x, y) {
+  // the words under the cursor, used to locate the source when SyncTeX only
+  // knows the structural line (e.g. an abstract typeset inside \maketitle)
+  let node = null;
+  if (document.caretRangeFromPoint) {
+    const r = document.caretRangeFromPoint(x, y);
+    if (r) node = r.startContainer;
+  } else if (document.caretPositionFromPoint) {
+    const p = document.caretPositionFromPoint(x, y);
+    if (p) node = p.offsetNode;
+  }
+  let span = node && node.nodeType === 3 ? node.parentElement : null;
+  if (!span || !span.closest(".textLayer")) return "";
+  let out = span.textContent || "";
+  for (let s = span.nextElementSibling; s && out.length < 120; s = s.nextElementSibling)
+    out += " " + s.textContent;
+  return out.slice(0, 200);
+}
 $("popAdd").onclick = async () => {
   const text = $("popText").value.trim();
   const p = pending;
@@ -1140,8 +1321,28 @@ def route(root: Path, main_rel: str, method: str, path: str,
             return 200, "application/json", compile_status()
         if method == "POST" and path == "/api/sync/edit":
             pdf = pdf_info(root, main_rel)["pdf"]
-            return 200, "application/json", synctex_edit(
-                root, pdf, int(body["page"]), float(body["x"]), float(body["y"]))
+            try:
+                hit = {**synctex_edit(root, pdf, int(body["page"]),
+                                      float(body["x"]), float(body["y"])), "via": "synctex"}
+            except RequestError:
+                hit = None
+            # Fall back to the words actually clicked when SyncTeX's answer is not
+            # somewhere you can edit: a prose-free structural line (acmart typesets
+            # \begin{abstract} during \maketitle) or a generated file (the comment
+            # package rewrites skipped blocks through comment.cut).
+            editable = set(list_tex_files(root))
+            unusable = hit is None or hit["file"] not in editable or is_structural(
+                root, hit["file"], hit["line"])
+            text = body.get("text") or ""
+            if text and unusable:
+                found = find_text(root, text)
+                if found:
+                    return 200, "application/json", {**found, "via": "text"}
+            if hit is None:
+                raise RequestError(404, "SyncTeX has no source mapping for that spot")
+            if hit["file"] not in editable:
+                raise RequestError(404, f"maps into a generated file ({hit['file']})")
+            return 200, "application/json", hit
         if method == "POST" and path == "/api/sync/view":
             pdf = pdf_info(root, main_rel)["pdf"]
             safe_resolve(root, body["file"])

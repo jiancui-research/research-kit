@@ -183,6 +183,76 @@ def test_synctex_edit_rejects_paths_outside_root(paper, monkeypatch):
     assert e.value.status == 404
 
 
+def test_find_text_locates_prose(paper):
+    (paper / "sections" / "abstract.tex").write_text(
+        "\\begin{abstract}\n"
+        "Multi-agent collaboration systems (\\textit{MACS}), powered by large language\n"
+        "models, solve complex problems.\n\\end{abstract}\n")
+    hit = tr.find_text(paper, "Multi-agent collaboration systems (MACS), powered by large language models")
+    assert hit == {"file": "sections/abstract.tex", "line": 2}
+
+
+def test_find_text_prefers_full_match_over_prefix_elsewhere(paper):
+    # the title line shares a prefix; the section file holds the whole sentence
+    (paper / "main.tex").write_text(
+        "\\documentclass{article}\n"
+        "\\title{Multi-agent collaboration systems for privacy}\n"
+        "\\begin{document}\\input{sections/abstract}\\end{document}\n")
+    (paper / "sections" / "abstract.tex").write_text(
+        "Multi-agent collaboration systems, powered by large language models, are hard.\n")
+    hit = tr.find_text(paper, "Multi-agent collaboration systems, powered by large language models, are hard")
+    assert hit["file"] == "sections/abstract.tex"
+
+
+def test_find_text_ignores_comments_and_short_needles(paper):
+    (paper / "sections" / "intro.tex").write_text(
+        "% Ethics of the work and review was rewritten by an assistant here\n"
+        "\\noindent Ethics of the work and review. No IRB was required for this study.\n")
+    hit = tr.find_text(paper, "Ethics of the work and review. No IRB was required for this study")
+    assert hit == {"file": "sections/intro.tex", "line": 2}
+    assert tr.find_text(paper, "too short") is None
+
+
+def test_is_structural_flags_prose_free_lines(paper):
+    (paper / "main.tex").write_text(
+        "\\documentclass{article}\n\\maketitle\n"
+        "Real prose lives here and should not be structural.\n\n")
+    assert tr.is_structural(paper, "main.tex", 2)      # \maketitle
+    assert tr.is_structural(paper, "main.tex", 4)      # blank
+    assert not tr.is_structural(paper, "main.tex", 3)  # prose
+
+
+def test_route_sync_edit_falls_back_for_generated_file(paper, monkeypatch):
+    # the comment package rewrites skipped blocks through comment.cut
+    (paper / "comment.cut").write_text("Ethics of the work and review. No IRB was required.\n")
+    (paper / "sections" / "ethics.tex").write_text(
+        "\\noindent Ethics of the work and review. No IRB was required for this study here.\n")
+    monkeypatch.setattr(tr, "_run_synctex",
+                        lambda root, args: "Input:./comment.cut\nLine:1\n")
+    status, _, payload = tr.route(paper, "main.tex", "POST", "/api/sync/edit", {}, {
+        "page": 1, "x": 10, "y": 10,
+        "text": "Ethics of the work and review. No IRB was required for this study here"})
+    assert status == 200 and payload["file"] == "sections/ethics.tex" and payload["via"] == "text"
+
+
+def test_route_sync_edit_rejects_generated_file_without_text(paper, monkeypatch):
+    (paper / "comment.cut").write_text("x\n")
+    monkeypatch.setattr(tr, "_run_synctex",
+                        lambda root, args: "Input:./comment.cut\nLine:1\n")
+    status, _, payload = tr.route(paper, "main.tex", "POST", "/api/sync/edit", {}, {
+        "page": 1, "x": 10, "y": 10})
+    assert status == 404 and "generated file" in payload["error"]
+
+
+def test_route_sync_edit_keeps_synctex_when_line_has_prose(paper, monkeypatch):
+    (paper / "sections" / "intro.tex").write_text("Body text that SyncTeX resolved correctly.\n")
+    monkeypatch.setattr(tr, "_run_synctex",
+                        lambda root, args: "Input:./sections/intro.tex\nLine:1\n")
+    status, _, payload = tr.route(paper, "main.tex", "POST", "/api/sync/edit", {}, {
+        "page": 1, "x": 10, "y": 10, "text": "Body text that SyncTeX resolved correctly"})
+    assert payload == {"file": "sections/intro.tex", "line": 1, "via": "synctex"}
+
+
 def test_synctex_edit_relativizes_input(paper, monkeypatch):
     monkeypatch.setattr(tr, "_run_synctex",
                         lambda root, args: f"Input:{paper}/sections/intro.tex\nLine:7\n")
