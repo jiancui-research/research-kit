@@ -481,6 +481,9 @@ PAGE = r"""<!doctype html>
   #findCount { font-size:12px; color:#888; min-width:44px; text-align:right; }
   #pdfpane { display:flex; flex-direction:column; min-width:0; }
   #status { font-size:12px; color:#666; }
+  #autoWrap { display:inline-flex; align-items:center; gap:3px; font-size:12px; color:#666;
+              user-select:none; cursor:pointer; }
+  #autoWrap input { margin:0; cursor:pointer; }
   #warnbar { display:none; background:#fff7e0; border-bottom:1px solid #eedc9a; color:#8a6d1a;
              font-size:12px; padding:5px 12px; }
   #pdfwrap { flex:1; overflow:auto; background:#585c60; position:relative; }
@@ -570,6 +573,7 @@ PAGE = r"""<!doctype html>
       <button id="zIn" title="Zoom in">+</button>
       <button id="zFit" title="Fit width">Fit</button>
       <button id="compileBtn" title="Run latexmk -pdf -synctex=1">Recompile</button>
+      <label id="autoWrap" title="Recompile automatically after every save"><input type="checkbox" id="autoChk"> auto</label>
       <button id="panelToggle" title="Show / hide the comments panel">💬</button>
     </div>
     <div id="warnbar"></div>
@@ -701,7 +705,8 @@ async function save(overwrite) {
   if (!res.ok) { toast((await res.json()).error); return; }
   state.mtime = (await res.json()).mtime;
   setDirty(false);
-  toast("Saved - Recompile to update the PDF");
+  if (autoCompile) { toast("Saved - compiling…"); startCompile(); }
+  else toast("Saved - Recompile to update the PDF");
 }
 $("saveBtn").onclick = () => save(false);
 
@@ -895,12 +900,23 @@ function setCompiling(on) {
   $("compileBtn").disabled = on;
   $("status").textContent = on ? "compiling…" : "";
 }
-$("compileBtn").onclick = async () => {
+let autoCompile = localStorage.getItem("texreview.autocompile") !== "off";
+let compileQueued = false;
+$("autoChk").checked = autoCompile;
+$("autoChk").onchange = () => {
+  autoCompile = $("autoChk").checked;
+  localStorage.setItem("texreview.autocompile", autoCompile ? "on" : "off");
+};
+async function startCompile() {
+  // a save landing mid-compile queues exactly one more run, so rapid saves
+  // collapse into a single follow-up instead of stacking or erroring
+  if (compiling) { compileQueued = true; return; }
   const r = await api("/api/compile", {});
   if (!r.ok) { toast((await r.json()).error); return; }
   setCompiling(true);
   pollCompile();
-};
+}
+$("compileBtn").onclick = startCompile;
 async function pollCompile() {
   const s = await (await api("/api/compile")).json();
   if (s.running) { setTimeout(pollCompile, 700); return; }
@@ -911,6 +927,7 @@ async function pollCompile() {
     $("errlog").style.display = "block";
     toast("Compile failed");
   }
+  if (compileQueued) { compileQueued = false; startCompile(); }
 }
 $("errClose").onclick = () => $("errlog").style.display = "none";
 setInterval(async () => {
