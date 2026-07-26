@@ -200,94 +200,125 @@ PAGE = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>mdreview</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root { --line:#e2e2e2; --accent:#2563eb; --hl:#fff3b0; --hl-strong:#ffe066; }
+  /* Catppuccin: Latte by day, Mocha by night. Follows the OS unless you pick one. */
+  :root {
+    --bg:#eff1f5; --bg-alt:#e6e9ef; --surface:#fff; --raised:#dce0e8;
+    --line:#ccd0da; --text:#4c4f69; --muted:#6c6f85; --faint:#9ca0b0;
+    --accent:#1e66f5; --accent-soft:#dce4fb; --on-accent:#fff;
+    --code-bg:#e6e9ef; --shadow:rgba(76,79,105,.22); --sel:rgba(30,102,245,.3);
+    --hl:rgba(223,142,29,.3); --hl-strong:rgba(254,100,11,.55);
+    --ok:#40a02b; --ok-soft:rgba(64,160,43,.16); --ok-line:#a6d29a; --warn:#df8e1d;
+  }
+  :root[data-theme="dark"] {
+    --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
+    --line:#45475a; --text:#cdd6f4; --muted:#a6adc8; --faint:#7f849c;
+    --accent:#89b4fa; --accent-soft:#313d57; --on-accent:#11111b;
+    --code-bg:#181825; --shadow:rgba(0,0,0,.5); --sel:rgba(137,180,250,.32);
+    --hl:rgba(249,226,175,.28); --hl-strong:rgba(250,179,135,.6);
+    --ok:#a6e3a1; --ok-soft:rgba(166,227,161,.16); --ok-line:#57794f; --warn:#f9e2af;
+  }
   * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#1f2328; }
+  body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         color:var(--text); background:var(--bg); }
   #app { display:grid; grid-template-columns:230px 1fr 6px 1fr 300px; height:100vh; }
   /* grid/flex items default to min-height:auto, so a long document would stretch the
      grid past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
   #app > * { min-width:0; min-height:0; }
   #main, #editor { min-height:0; }
-  #gutter { cursor:col-resize; background:#fafafa; border-left:1px solid var(--line);
+  #gutter { cursor:col-resize; background:var(--bg-alt); border-left:1px solid var(--line);
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
   #side { border-right:1px solid var(--line); overflow-y:auto; padding:10px; font-size:13px; }
-  #scope { display:none; font-size:12px; color:#555; margin-bottom:8px; user-select:none; }
-  #side .dir { font-weight:600; margin-top:6px; color:#555; }
-  #side .dir .count { font-weight:400; color:#aaa; }
+  #sidewrap { background:var(--bg-alt); }
+  #scope { display:none; font-size:12px; color:var(--muted); margin-bottom:8px; user-select:none; }
+  #side .dir { font-weight:600; margin-top:6px; color:var(--muted); }
+  #side .dir .count { font-weight:400; color:var(--faint); }
   #side button { display:block; width:100%; text-align:left; border:0; background:none;
-                 padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:#333; }
-  #side button:hover { background:#f0f3f8; }
-  #side button.active { background:#e3ecfd; color:var(--accent); }
+                 padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:var(--text); }
+  #side button:hover { background:var(--raised); }
+  #side button.active { background:var(--accent-soft); color:var(--accent); }
   #srcpane { display:flex; flex-direction:column; min-width:0; }
-  #bar { display:flex; gap:8px; align-items:center; padding:9px 12px; border-bottom:1px solid var(--line); }
+  #bar { display:flex; gap:8px; align-items:center; padding:9px 12px;
+         border-bottom:1px solid var(--line); background:var(--bg-alt); }
   #bar .path { font-weight:600; font-size:13px; margin-right:auto; overflow:hidden;
                text-overflow:ellipsis; white-space:nowrap; }
-  #bar button { border:1px solid var(--line); background:#fff; border-radius:6px;
-                padding:4px 11px; cursor:pointer; font:13px inherit; }
+  #bar button { border:1px solid var(--line); background:var(--surface); color:var(--text);
+                border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
   #bar button:hover { border-color:var(--accent); color:var(--accent); }
   #editor { flex:1; width:100%; border:0; outline:none; resize:none; padding:14px 16px;
-            font:13px/1.55 ui-monospace,Menlo,monospace; color:#24292f; }
-  #main { overflow-y:auto; padding:22px 30px; min-width:0; }
+            font:13px/1.55 ui-monospace,Menlo,monospace;
+            color:var(--text); background:var(--bg); caret-color:var(--accent); }
+  #editor::selection { background:var(--sel); }
+  #main { overflow-y:auto; padding:22px 30px; min-width:0; background:var(--bg); }
   #doc { max-width:720px; }
   #doc h1,#doc h2,#doc h3 { line-height:1.3; }
-  #doc pre { background:#f6f8fa; padding:10px; border-radius:6px; overflow-x:auto; }
-  #doc code { background:#f6f8fa; padding:1px 4px; border-radius:4px; font-size:90%; }
+  #doc pre { background:var(--code-bg); padding:10px; border-radius:6px; overflow-x:auto; }
+  #doc code { background:var(--code-bg); padding:1px 4px; border-radius:4px; font-size:90%; }
   #doc table { border-collapse:collapse; } #doc td,#doc th { border:1px solid var(--line); padding:4px 9px; }
-  #doc blockquote { border-left:3px solid var(--line); margin-left:0; padding-left:14px; color:#555; }
+  #doc blockquote { border-left:3px solid var(--line); margin-left:0; padding-left:14px; color:var(--muted); }
   #doc img { max-width:100%; }
-  #doc mark { background:var(--hl); cursor:pointer; border-bottom:2px solid var(--hl-strong); }
+  #doc a { color:var(--accent); }
+  #doc mark { background:var(--hl); color:inherit; cursor:pointer;
+              border-bottom:2px solid var(--hl-strong); }
   @keyframes flashbg { 0%,100% { background:transparent; } 50% { background:var(--hl-strong); } }
   #doc span.flash, #doc mark.flash { animation: flashbg .55s ease-in-out 3; border-radius:3px; }
   #doc .mermaid { position:relative; }
   .zoombtn { position:absolute; top:6px; right:6px; opacity:0; transition:opacity .15s;
-             border:1px solid var(--line); background:#fff; border-radius:6px; padding:2px 8px;
-             cursor:pointer; font-size:14px; }
+             border:1px solid var(--line); background:var(--surface); color:var(--text);
+             border-radius:6px; padding:2px 8px; cursor:pointer; font-size:14px; }
   #doc .mermaid:hover .zoombtn { opacity:1; }
-  #overlay { position:fixed; inset:0; background:rgba(15,18,22,.6); display:none;
+  #overlay { position:fixed; inset:0; background:rgba(17,17,27,.72); display:none;
              align-items:center; justify-content:center; z-index:30; }
-  #stage { background:#fff; border-radius:10px; padding:24px; width:86vw; height:86vh;
+  #stage { background:var(--surface); border-radius:10px; padding:24px; width:86vw; height:86vh;
            overflow:hidden; cursor:grab; display:flex; align-items:center; justify-content:center; }
   #stage svg { width:100%; height:auto; max-width:none; }
   #zctrl { position:fixed; top:18px; right:22px; display:flex; gap:6px; z-index:31; }
-  #zctrl button { border:0; background:#fff; border-radius:7px; padding:6px 13px;
-                  cursor:pointer; font:15px inherit; }
-  #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px; }
+  #zctrl button { border:0; background:var(--surface); color:var(--text); border-radius:7px;
+                  padding:6px 13px; cursor:pointer; font:15px inherit; }
+  #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px;
+           background:var(--bg-alt); }
   #panelHead { display:flex; align-items:center; justify-content:space-between;
                font-weight:600; margin-bottom:10px; }
-  #panelHead button { border:1px solid var(--line); background:#fff; border-radius:6px;
-                      padding:4px 11px; cursor:pointer; font:13px inherit; }
+  #panelHead button { border:1px solid var(--line); background:var(--surface); color:var(--text);
+                      border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
   #panelHead button:hover { border-color:var(--accent); color:var(--accent); }
-  #doc mark.resolvedmark { background:#e8f5ec; border-bottom:2px solid #bfe3ca; }
+  #doc mark.resolvedmark { background:var(--ok-soft); border-bottom:2px solid var(--ok-line); }
   .card .q:hover { text-decoration:underline; }
-  .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px; }
-  .card.resolved { opacity:.55; }
-  .card .q { color:#666; font-style:italic; display:block; margin-bottom:5px; white-space:nowrap;
-             overflow:hidden; text-overflow:ellipsis; }
-  .card .orphan { color:#b45309; font-size:11px; font-weight:600; }
-  .card .reply { color:#0a7d33; font-style:italic; margin-top:5px; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px;
+          background:var(--surface); }
+  .card.resolved { opacity:.6; }
+  .card .q { color:var(--muted); font-style:italic; display:block; margin-bottom:5px;
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card .orphan { color:var(--warn); font-size:11px; font-weight:600; }
+  .card .reply { color:var(--ok); font-style:italic; margin-top:5px; }
   .card .editbox { width:100%; height:56px; font:inherit; border:1px solid var(--accent);
-                   border-radius:5px; padding:5px; margin-top:2px; }
+                   border-radius:5px; padding:5px; margin-top:2px;
+                   background:var(--bg); color:var(--text); }
   details.resolvedlist { margin-top:12px; }
-  details.resolvedlist summary { cursor:pointer; color:#666; font-weight:600;
+  details.resolvedlist summary { cursor:pointer; color:var(--muted); font-weight:600;
                                  font-size:12px; margin-bottom:8px; user-select:none; }
-  .card .meta { color:#999; font-size:11px; margin-top:5px; display:flex; gap:8px; }
+  .card .meta { color:var(--faint); font-size:11px; margin-top:5px; display:flex; gap:8px; }
   .card .meta button { border:0; background:none; color:var(--accent); cursor:pointer; padding:0; font-size:11px; }
-  #pop { position:fixed; display:none; background:#fff; border:1px solid var(--line); border-radius:8px;
-         box-shadow:0 4px 18px rgba(0,0,0,.13); padding:9px; width:280px; z-index:10; }
-  #pop textarea { width:100%; height:64px; font:inherit; border:1px solid var(--line); border-radius:5px; padding:6px; }
-  #pop button { margin-top:6px; border:0; background:var(--accent); color:#fff; border-radius:5px;
-                padding:5px 12px; cursor:pointer; font:inherit; }
-  #toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#1f2328; color:#fff;
-           border-radius:7px; padding:8px 16px; display:none; font-size:13px; z-index:20; }
+  #pop { position:fixed; display:none; background:var(--surface); border:1px solid var(--line);
+         border-radius:8px; box-shadow:0 8px 26px var(--shadow); padding:9px; width:280px; z-index:10; }
+  #pop textarea { width:100%; height:64px; font:inherit; border:1px solid var(--line);
+                  border-radius:5px; padding:6px; background:var(--bg); color:var(--text); }
+  #pop button { margin-top:6px; border:0; background:var(--accent); color:var(--on-accent);
+                border-radius:5px; padding:5px 12px; cursor:pointer; font:inherit; font-weight:600; }
+  #toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+           background:var(--text); color:var(--bg); border-radius:7px; padding:8px 16px;
+           display:none; font-size:13px; z-index:20; box-shadow:0 6px 20px var(--shadow); }
   .fontctl { display:inline-flex; gap:3px; }
-  .fontctl button { border:1px solid var(--line); background:#fff; border-radius:5px;
-                    padding:1px 7px; cursor:pointer; font-size:11px; color:#555; }
+  .fontctl button { border:1px solid var(--line); background:var(--surface); border-radius:5px;
+                    padding:1px 7px; cursor:pointer; font-size:11px; color:var(--muted); }
   .fontctl button:hover { border-color:var(--accent); color:var(--accent); }
+  #themeBtn { border:1px solid var(--line); background:var(--surface); color:var(--muted);
+              border-radius:5px; padding:1px 8px; cursor:pointer; font-size:12px; }
+  #themeBtn:hover { border-color:var(--accent); color:var(--accent); }
   #docctl { position:sticky; top:0; justify-content:flex-end; display:flex; z-index:5;
             margin-bottom:2px; }
   #panelToggle.off { opacity:.4; }
-  .empty { color:#999; }
+  .empty { color:var(--faint); }
 </style></head><body>
 <div id="app">
   <nav id="sidewrap" style="overflow-y:auto; border-right:1px solid var(--line);">
@@ -307,7 +338,7 @@ PAGE = r"""<!doctype html>
   </section>
   <div id="gutter" title="drag to resize; double-click to reset"></div>
   <section id="main">
-    <div id="docctl" class="fontctl"><button data-f="doc" data-d="-1" title="Smaller preview text">A−</button><button data-f="doc" data-d="1" title="Larger preview text">A+</button><button id="panelToggle" title="Show / hide the comments panel">💬</button></div>
+    <div id="docctl" class="fontctl"><button data-f="doc" data-d="-1" title="Smaller preview text">A−</button><button data-f="doc" data-d="1" title="Larger preview text">A+</button><button id="themeBtn" title="Light / dark theme">◐</button><button id="panelToggle" title="Show / hide the comments panel">💬</button></div>
     <article id="doc"><p class="empty">Raw markdown on the left, rendered preview here.
       Click rendered text to jump the cursor to its source. Select rendered text to comment.</p></article>
   </section>
@@ -335,6 +366,30 @@ PAGE = r"""<!doctype html>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
+
+/* ---------- theme: follow the OS until you pick one ---------- */
+// paints the theme immediately; mermaid/re-render happen in applyTheme(), which runs
+// after `state` exists (this file's declarations below are still in their dead zone)
+function setThemeAttr() {
+  const saved = localStorage.getItem("mdreview.theme");
+  const dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const b = document.getElementById("themeBtn");
+  if (b) b.textContent = dark ? "☾" : "☀";
+  return dark;
+}
+setThemeAttr();
+function applyTheme() {
+  const dark = setThemeAttr();
+  if (!window.mermaid) return;
+  mermaid.initialize({ startOnLoad: false, theme: dark ? "dark" : "neutral",
+                       suppressErrorRendering: true });
+  if (state) rerender();
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if (!localStorage.getItem("mdreview.theme")) applyTheme();
+});
+
 let state = null;      // {path, mtime, comments:[{...,anchored}]}
 let allFiles = [];
 let pending = null;    // {quote, prefix, suffix} awaiting comment text
@@ -952,10 +1007,15 @@ $("panelToggle").onclick = () => {
   localStorage.setItem("mdreview.panel", panelVisible ? "shown" : "hidden");
   applyLayout();
 };
+$("themeBtn").onclick = () => {
+  localStorage.setItem("mdreview.theme",
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  applyTheme();
+};
 applyLayout();
 
-if (window.mermaid)
-  mermaid.initialize({ startOnLoad: false, theme: "neutral", suppressErrorRendering: true });
+// mermaid loads after the head script ran applyTheme(), so set its theme now
+if (window.mermaid) applyTheme();
 loadFiles();
 </script></body></html>"""
 

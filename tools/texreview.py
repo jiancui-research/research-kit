@@ -442,108 +442,145 @@ PAGE = r"""<!doctype html>
 <html><head><meta charset="utf-8"><title>texreview</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root { --line:#e2e2e2; --accent:#2563eb; }
+  /* Catppuccin: Latte by day, Mocha by night. Follows the OS unless you pick one. */
+  :root {
+    --bg:#eff1f5; --bg-alt:#e6e9ef; --surface:#fff; --raised:#dce0e8;
+    --line:#ccd0da; --text:#4c4f69; --muted:#6c6f85; --faint:#9ca0b0;
+    --accent:#1e66f5; --accent-soft:#dce4fb; --on-accent:#fff;
+    --pdf-bg:#bcc0cc; --page-shadow:rgba(76,79,105,.3);
+    --hl:rgba(223,142,29,.28); --hl-line:#df8e1d; --hl-pulse:rgba(254,100,11,.6);
+    --ok:#40a02b; --ok-soft:rgba(64,160,43,.18); --ok-line:#a6d29a;
+    --warn:#df8e1d; --warn-bg:#faf3e0; --warn-line:#e6d4a8;
+    --err:#d20f39; --err-bg:#fdeef1; --sel:rgba(30,102,245,.3);
+  }
+  :root[data-theme="dark"] {
+    --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
+    --line:#45475a; --text:#cdd6f4; --muted:#a6adc8; --faint:#7f849c;
+    --accent:#89b4fa; --accent-soft:#313d57; --on-accent:#11111b;
+    --pdf-bg:#11111b; --page-shadow:rgba(0,0,0,.55);
+    --hl:rgba(249,226,175,.3); --hl-line:#f9e2af; --hl-pulse:rgba(250,179,135,.65);
+    --ok:#a6e3a1; --ok-soft:rgba(166,227,161,.18); --ok-line:#57794f;
+    --warn:#f9e2af; --warn-bg:#33302a; --warn-line:#5c5232;
+    --err:#f38ba8; --err-bg:#302430; --sel:rgba(137,180,250,.32);
+  }
   * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#1f2328; }
+  body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         color:var(--text); background:var(--bg); }
   #app { display:grid; grid-template-columns:210px 1fr 6px 1fr 300px; height:100vh; }
   /* grid/flex items default to min-height:auto, so a long PDF would stretch the grid
      past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
   #app > * { min-width:0; min-height:0; }
   #pdfwrap, #editor { min-height:0; }
-  #gutter { cursor:col-resize; background:#fafafa; border-left:1px solid var(--line);
+  #gutter { cursor:col-resize; background:var(--bg-alt); border-left:1px solid var(--line);
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
-  #side { overflow-y:auto; border-right:1px solid var(--line); padding:10px; font-size:13px; }
-  #side .dir { font-weight:600; margin-top:6px; color:#555; }
-  #side .dir .count { font-weight:400; color:#aaa; }
+  #side { overflow-y:auto; border-right:1px solid var(--line); padding:10px; font-size:13px;
+          background:var(--bg-alt); }
+  #side .dir { font-weight:600; margin-top:6px; color:var(--muted); }
+  #side .dir .count { font-weight:400; color:var(--faint); }
   #side button { display:block; width:100%; text-align:left; border:0; background:none;
-                 padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:#333; }
-  #side button:hover { background:#f0f3f8; }
-  #side button.active { background:#e3ecfd; color:var(--accent); }
-  #srcpane { display:flex; flex-direction:column; min-width:0; }
-  .bar { display:flex; gap:8px; align-items:center; padding:8px 12px; border-bottom:1px solid var(--line); }
+                 padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:var(--text); }
+  #side button:hover { background:var(--raised); }
+  #side button.active { background:var(--accent-soft); color:var(--accent); }
+  #srcpane { display:flex; flex-direction:column; min-width:0; background:var(--bg); }
+  .bar { display:flex; gap:8px; align-items:center; padding:8px 12px;
+         border-bottom:1px solid var(--line); background:var(--bg-alt); }
   .bar .path { font-weight:600; font-size:13px; margin-right:auto; overflow:hidden;
                text-overflow:ellipsis; white-space:nowrap; }
-  .bar button { border:1px solid var(--line); background:#fff; border-radius:6px;
-                padding:4px 11px; cursor:pointer; font:13px inherit; }
+  .bar button { border:1px solid var(--line); background:var(--surface); color:var(--text);
+                border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
   .bar button:hover { border-color:var(--accent); color:var(--accent); }
   .bar button:disabled { opacity:.5; cursor:default; }
   #editor { flex:1; width:100%; border:0; outline:none; resize:none; padding:14px 16px;
-            font:13px/1.55 ui-monospace,Menlo,monospace; color:#24292f; }
+            font:13px/1.55 ui-monospace,Menlo,monospace;
+            color:var(--text); background:var(--bg); caret-color:var(--accent); }
+  #editor::selection { background:var(--sel); }
   #findbar { display:none; align-items:center; gap:6px; padding:6px 12px;
-             border-bottom:1px solid var(--line); background:#fafbfc; }
+             border-bottom:1px solid var(--line); background:var(--bg-alt); }
   #findbar input { flex:1; min-width:0; border:1px solid var(--line); border-radius:6px;
-                   padding:4px 8px; font:13px inherit; outline:none; }
+                   padding:4px 8px; font:13px inherit; outline:none;
+                   background:var(--surface); color:var(--text); }
   #findbar input:focus { border-color:var(--accent); }
-  #findbar button { border:1px solid var(--line); background:#fff; border-radius:6px;
-                    padding:3px 9px; cursor:pointer; font:13px inherit; }
+  #findbar button { border:1px solid var(--line); background:var(--surface); color:var(--text);
+                    border-radius:6px; padding:3px 9px; cursor:pointer; font:13px inherit; }
   #findbar button:hover { border-color:var(--accent); color:var(--accent); }
-  #findCount { font-size:12px; color:#888; min-width:44px; text-align:right; }
+  #findCount { font-size:12px; color:var(--faint); min-width:44px; text-align:right; }
   #pdfpane { display:flex; flex-direction:column; min-width:0; }
-  #status { font-size:12px; color:#666; }
-  #autoWrap { display:inline-flex; align-items:center; gap:3px; font-size:12px; color:#666;
+  #status { font-size:12px; color:var(--muted); }
+  #autoWrap { display:inline-flex; align-items:center; gap:3px; font-size:12px; color:var(--muted);
               user-select:none; cursor:pointer; }
-  #autoWrap input { margin:0; cursor:pointer; }
-  #warnbar { display:none; background:#fff7e0; border-bottom:1px solid #eedc9a; color:#8a6d1a;
-             font-size:12px; padding:5px 12px; }
-  #pdfwrap { flex:1; overflow:auto; background:#585c60; position:relative; }
-  #pages { padding:6px 0; }
-  #pages .empty { color:#ddd; text-align:center; padding:40px 20px; }
-  .page { position:relative; margin:12px auto; background:#fff; box-shadow:0 1px 8px rgba(0,0,0,.4); }
-  .page canvas { display:block; }
+  #autoWrap input { margin:0; cursor:pointer; accent-color:var(--accent); }
+  #warnbar { display:none; background:var(--warn-bg); border-bottom:1px solid var(--warn-line);
+             color:var(--warn); font-size:12px; padding:5px 12px; }
+  #pdfwrap { flex:1; overflow:auto; background:var(--pdf-bg); position:relative; }
+  #pages { padding:6px 0; transform-origin:top center; }
+  #pages .empty { color:var(--faint); text-align:center; padding:40px 20px; }
+  .page { position:relative; margin:12px auto; background:#fff;
+          box-shadow:0 2px 12px var(--page-shadow); border-radius:2px; }
+  .page canvas { display:block; border-radius:2px; }
   .textLayer { position:absolute; inset:0; overflow:hidden; line-height:1; }
   .textLayer span, .textLayer br { color:transparent; position:absolute; white-space:pre;
                                    cursor:text; transform-origin:0% 0%; }
-  .textLayer ::selection { background:rgba(37,99,235,.35); }
-  .textLayer mark { color:transparent; background:rgba(255,224,102,.5);
-                    border-bottom:2px solid #eab308; cursor:pointer; }
-  .textLayer mark.resolvedmark { background:rgba(52,168,83,.22); border-bottom-color:#7fc79b; }
-  @keyframes markpulse { 50% { background:rgba(255,145,45,.75); } }
+  .textLayer ::selection { background:var(--sel); }
+  .textLayer mark { color:transparent; background:var(--hl);
+                    border-bottom:2px solid var(--hl-line); cursor:pointer; }
+  .textLayer mark.resolvedmark { background:var(--ok-soft); border-bottom-color:var(--ok-line); }
+  @keyframes markpulse { 50% { background:var(--hl-pulse); } }
   .textLayer mark.flash { animation:markpulse .55s ease-in-out 3; }
-  .syncflash { position:absolute; background:rgba(255,224,102,.45); border:1px solid #eab308;
+  .syncflash { position:absolute; background:var(--hl); border:1px solid var(--hl-line);
                border-radius:3px; pointer-events:none; z-index:3;
                animation:markpulse .55s ease-in-out 3; }
-  #errlog { display:none; max-height:38%; overflow:auto; border-top:2px solid #d33;
-            background:#fff5f5; position:relative; }
-  #errlog pre { margin:0; padding:10px 12px; font-size:12px; white-space:pre-wrap; }
+  #errlog { display:none; max-height:38%; overflow:auto; border-top:2px solid var(--err);
+            background:var(--err-bg); position:relative; }
+  #errlog pre { margin:0; padding:10px 12px; font-size:12px; white-space:pre-wrap; color:var(--text); }
   #errClose { position:absolute; top:4px; right:8px; border:0; background:none;
-              cursor:pointer; font-size:14px; color:#a33; }
-  #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px; }
+              cursor:pointer; font-size:14px; color:var(--err); }
+  #panel { border-left:1px solid var(--line); overflow-y:auto; padding:12px; font-size:13px;
+           background:var(--bg-alt); }
   #panelHead { display:flex; align-items:center; justify-content:space-between;
                font-weight:600; margin-bottom:10px; }
-  #panelHead button { border:1px solid var(--line); background:#fff; border-radius:6px;
-                      padding:4px 11px; cursor:pointer; font:13px inherit; }
+  #panelHead button { border:1px solid var(--line); background:var(--surface); color:var(--text);
+                      border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
   #panelHead button:hover { border-color:var(--accent); color:var(--accent); }
-  .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px; }
-  .card.resolved { opacity:.55; }
-  .card .q { color:#666; font-style:italic; display:block; margin-bottom:5px; white-space:nowrap;
-             overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:9px 11px; margin-bottom:9px;
+          background:var(--surface); }
+  .card.resolved { opacity:.6; }
+  .card .q { color:var(--muted); font-style:italic; display:block; margin-bottom:5px;
+             white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
   .card .q:hover { text-decoration:underline; }
-  .card .loc { color:#2563eb; font-size:11px; display:block; margin-bottom:3px; }
-  .card .orphan { color:#b45309; font-size:11px; font-weight:600; }
-  .card .reply { color:#0a7d33; font-style:italic; margin-top:5px; }
+  .card .loc { color:var(--accent); font-size:11px; display:block; margin-bottom:3px;
+               font-family:ui-monospace,Menlo,monospace; }
+  .card .orphan { color:var(--warn); font-size:11px; font-weight:600; }
+  .card .reply { color:var(--ok); font-style:italic; margin-top:5px; }
   .card .editbox { width:100%; height:56px; font:inherit; border:1px solid var(--accent);
-                   border-radius:5px; padding:5px; margin-top:2px; }
+                   border-radius:5px; padding:5px; margin-top:2px;
+                   background:var(--bg); color:var(--text); }
   details.resolvedlist { margin-top:12px; }
-  details.resolvedlist summary { cursor:pointer; color:#666; font-weight:600;
+  details.resolvedlist summary { cursor:pointer; color:var(--muted); font-weight:600;
                                  font-size:12px; margin-bottom:8px; user-select:none; }
-  .card .meta { color:#999; font-size:11px; margin-top:5px; display:flex; gap:8px; flex-wrap:wrap; }
+  .card .meta { color:var(--faint); font-size:11px; margin-top:5px; display:flex; gap:8px;
+                flex-wrap:wrap; }
   .card .meta button { border:0; background:none; color:var(--accent); cursor:pointer;
                        padding:0; font-size:11px; }
-  #pop { position:fixed; display:none; background:#fff; border:1px solid var(--line); border-radius:8px;
-         box-shadow:0 4px 18px rgba(0,0,0,.13); padding:9px; width:280px; z-index:10; }
+  #pop { position:fixed; display:none; background:var(--surface); border:1px solid var(--line);
+         border-radius:8px; box-shadow:0 8px 26px var(--page-shadow); padding:9px;
+         width:280px; z-index:10; }
   #pop textarea { width:100%; height:64px; font:inherit; border:1px solid var(--line);
-                  border-radius:5px; padding:6px; }
-  #pop button { margin-top:6px; border:0; background:var(--accent); color:#fff; border-radius:5px;
-                padding:5px 12px; cursor:pointer; font:inherit; }
-  #toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#1f2328;
-           color:#fff; border-radius:7px; padding:8px 16px; display:none; font-size:13px; z-index:20; }
+                  border-radius:5px; padding:6px; background:var(--bg); color:var(--text); }
+  #pop button { margin-top:6px; border:0; background:var(--accent); color:var(--on-accent);
+                border-radius:5px; padding:5px 12px; cursor:pointer; font:inherit; font-weight:600; }
+  #toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+           background:var(--text); color:var(--bg); border-radius:7px; padding:8px 16px;
+           display:none; font-size:13px; z-index:20; box-shadow:0 6px 20px var(--page-shadow); }
   .fontctl { display:inline-flex; gap:3px; }
-  .fontctl button { border:1px solid var(--line); background:#fff; border-radius:5px;
-                    padding:1px 7px; cursor:pointer; font-size:11px; color:#555; }
+  .fontctl button { border:1px solid var(--line); background:var(--surface); border-radius:5px;
+                    padding:1px 7px; cursor:pointer; font-size:11px; color:var(--muted); }
   .fontctl button:hover { border-color:var(--accent); color:var(--accent); }
+  #themeBtn { border:1px solid var(--line); background:var(--surface); color:var(--muted);
+              border-radius:6px; padding:3px 8px; cursor:pointer; font-size:13px; }
+  #themeBtn:hover { border-color:var(--accent); color:var(--accent); }
   #panelToggle.off { opacity:.4; }
-  .empty { color:#999; }
+  .empty { color:var(--faint); }
 </style></head><body>
 <div id="app">
   <nav id="side"></nav>
@@ -574,6 +611,7 @@ PAGE = r"""<!doctype html>
       <button id="zFit" title="Fit width">Fit</button>
       <button id="compileBtn" title="Run latexmk -pdf -synctex=1">Recompile</button>
       <label id="autoWrap" title="Recompile automatically after every save"><input type="checkbox" id="autoChk"> auto</label>
+      <button id="themeBtn" title="Light / dark theme">◐</button>
       <button id="panelToggle" title="Show / hide the comments panel">💬</button>
     </div>
     <div id="warnbar"></div>
@@ -596,6 +634,20 @@ PAGE = r"""<!doctype html>
 <script>
 const $ = id => document.getElementById(id);
 const WORKER_URL = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+/* ---------- theme: follow the OS until you pick one ---------- */
+const prefersDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
+function applyTheme() {
+  const saved = localStorage.getItem("texreview.theme");
+  const dark = saved ? saved === "dark" : prefersDark();
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  const b = document.getElementById("themeBtn");
+  if (b) b.textContent = dark ? "☾" : "☀";
+}
+applyTheme();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if (!localStorage.getItem("texreview.theme")) applyTheme();
+});
 let state = null;          // {path, mtime} - the open source file
 let mainRel = "";
 let pdfDoc = null, pdfScale = 1, zoomFactor = 1, loadedMtime = 0, renderToken = 0;
@@ -885,14 +937,34 @@ async function renderAllPages() {
   }
   wrap.scrollTop = frac * wrap.scrollHeight;
 }
-$("zIn").onclick = () => { zoomFactor = Math.min(4, zoomFactor * 1.15); rezoom(); };
-$("zOut").onclick = () => { zoomFactor = Math.max(0.4, zoomFactor / 1.15); rezoom(); };
-$("zFit").onclick = () => { zoomFactor = 1; rezoom(); };
+$("zIn").onclick = () => setZoom(zoomFactor * 1.15);
+$("zOut").onclick = () => setZoom(zoomFactor / 1.15);
+$("zFit").onclick = () => setZoom(1);
 async function rezoom() {
   if (!pdfDoc) return;
   await renderAllPages();
   applyPdfHighlights();
 }
+/* pinch on a trackpad arrives as wheel + ctrlKey; preview with a CSS scale for
+   instant feedback, then re-render once the gesture settles so text stays sharp */
+let renderedZoom = 1, zoomTimer = null;
+function setZoom(z) {
+  zoomFactor = Math.min(6, Math.max(0.25, z));
+  $("pages").style.transform = `scale(${zoomFactor / renderedZoom})`;
+  $("status").textContent = Math.round(zoomFactor * 100) + "%";
+  clearTimeout(zoomTimer);
+  zoomTimer = setTimeout(async () => {
+    $("pages").style.transform = "";
+    renderedZoom = zoomFactor;
+    await rezoom();
+    if (!compiling) $("status").textContent = "";
+  }, 180);
+}
+$("pdfwrap").addEventListener("wheel", ev => {
+  if (!ev.ctrlKey && !ev.metaKey) return;      // plain scrolling stays scrolling
+  ev.preventDefault();
+  setZoom(zoomFactor * (ev.deltaY < 0 ? 1.06 : 1 / 1.06));
+}, {passive: false});
 
 /* ---------- compile ---------- */
 function setCompiling(on) {
@@ -1253,6 +1325,11 @@ $("panelToggle").onclick = () => {
   panelVisible = !panelVisible;
   localStorage.setItem("texreview.panel", panelVisible ? "shown" : "hidden");
   applyLayout();
+};
+$("themeBtn").onclick = () => {
+  localStorage.setItem("texreview.theme",
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+  applyTheme();
 };
 $("gutter").addEventListener("mousedown", e => {
   e.preventDefault();
