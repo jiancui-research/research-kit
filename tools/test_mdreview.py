@@ -197,7 +197,14 @@ def test_route_render_live_preview(repo):
 
 def test_route_root_identity(repo):
     status, _, res = m.route(repo, "GET", "/api/root", {}, {})
-    assert status == 200 and res == {"root": str(repo)}
+    assert status == 200 and res == {"root": str(repo), "build": m.BUILD}
+
+
+def test_root_reports_a_build_fingerprint(repo):
+    # find_existing() refuses to reuse a server whose build differs, so that a
+    # process started before an update is not silently kept alive
+    _, _, res = m.route(repo, "GET", "/api/root", {}, {})
+    assert len(res["build"]) == 12 and all(c in "0123456789abcdef" for c in res["build"])
 
 
 def test_route_serves_repo_images(repo):

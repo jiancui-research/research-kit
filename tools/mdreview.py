@@ -12,6 +12,7 @@ Comments are sidecar JSON under the target repo's .mdreview/ - markdown files st
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import tempfile
@@ -29,6 +30,12 @@ SKIP_DIRS = {".git", "node_modules", ".venv", ".mdreview", ".pytest_cache", "__p
 MAX_BYTES = 2 * 1024 * 1024
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 SIDECAR_DIR = ".mdreview"
+# A server bakes its HTML in at startup, so one left running after the tool is updated
+# keeps serving the old UI. Fingerprint the source so a stale instance is not reused.
+try:
+    BUILD = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+except OSError:
+    BUILD = "unknown"
 IMAGE_TYPES = {
     "png": "image/png",
     "jpg": "image/jpeg",
@@ -1026,7 +1033,7 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
         if method == "GET" and path == "/":
             return 200, "text/html; charset=utf-8", PAGE
         if method == "GET" and path == "/api/root":
-            return 200, "application/json", {"root": str(root)}
+            return 200, "application/json", {"root": str(root), "build": BUILD}
         if method == "GET" and path == "/api/files":
             return 200, "application/json", list_md_files(root)
         if method == "GET" and path == "/api/doc":
@@ -1104,16 +1111,26 @@ class Handler(BaseHTTPRequestHandler):
         self._send(*route(self.root, "POST", u.path, parse_qs(u.query), body))
 
 
-def find_existing(root: Path, start: int) -> str | None:
-    """Probe nearby ports for an mdreview instance already serving this root."""
+def find_existing(root: Path, start: int) -> tuple[str | None, str | None]:
+    """Probe nearby ports for an mdreview instance already serving this root.
+
+    Returns (reusable_url, stale_url): an instance built from a different version of
+    this file is reported as stale rather than reused, since it would serve the old UI.
+    """
+    stale = None
     for port in range(start, start + 20):
         try:
             with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/root", timeout=0.3) as r:
-                if json.loads(r.read()).get("root") == str(root):
-                    return f"http://127.0.0.1:{port}/"
+                info = json.loads(r.read())
         except (OSError, ValueError):
             continue
-    return None
+        if info.get("root") != str(root):
+            continue
+        url = f"http://127.0.0.1:{port}/"
+        if info.get("build") == BUILD:
+            return url, None
+        stale = stale or url
+    return None, stale
 
 
 def main() -> None:
@@ -1125,13 +1142,16 @@ def main() -> None:
     root = Path(args.root).resolve()
     if not root.is_dir():
         raise SystemExit(f"error: not a directory: {root}")
-    existing = find_existing(root, args.port)
+    existing, stale = find_existing(root, args.port)
     if existing:
         print(f"mdreview already serving {root}")
         print(f"  {existing}   (reusing the running instance)")
         if args.open:
             webbrowser.open(existing)
         return
+    if stale:
+        print(f"note: {stale} runs an older build of mdreview and was not reused.")
+        print("      stop it (Ctrl-C in its terminal) and close that tab to avoid confusion.")
     Handler.root = root
     server = None
     for port in range(args.port, args.port + 20):

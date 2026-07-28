@@ -333,6 +333,14 @@ def test_route_root_reports_tool(paper):
     assert status == 200 and payload["tool"] == "texreview" and payload["main"] == "main.tex"
 
 
+def test_root_reports_a_build_fingerprint(paper):
+    # find_existing() refuses to reuse a server whose build differs, so that a
+    # process started before an update is not silently kept alive
+    _, _, payload = tr.route(paper, "main.tex", "GET", "/api/root", {}, {})
+    assert payload["build"] == tr.BUILD
+    assert len(tr.BUILD) == 12 and all(c in "0123456789abcdef" for c in tr.BUILD)
+
+
 def test_route_unknown_404_and_missing_param_400(paper):
     assert tr.route(paper, "main.tex", "GET", "/api/nope", {}, {})[0] == 404
     assert tr.route(paper, "main.tex", "GET", "/api/doc", {}, {})[0] == 400

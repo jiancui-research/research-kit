@@ -14,6 +14,7 @@ Recompile runs latexmk. Comments are sidecar JSON under the paper repo's .texrev
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -35,6 +36,12 @@ MAX_BYTES = 2 * 1024 * 1024
 MAX_PDF_BYTES = 100 * 1024 * 1024
 SIDECAR_DIR = ".texreview"
 COMPILE_TIMEOUT = 600
+# A server bakes its HTML in at startup, so one left running after the tool is updated
+# keeps serving the old UI. Fingerprint the source so a stale instance is not reused.
+try:
+    BUILD = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:12]
+except OSError:
+    BUILD = "unknown"
 
 
 class RequestError(Exception):
@@ -453,6 +460,8 @@ PAGE = r"""<!doctype html>
     --warn:#df8e1d; --warn-bg:#faf3e0; --warn-line:#e6d4a8;
     --err:#d20f39; --err-bg:#fdeef1; --sel:rgba(30,102,245,.3);
     --find:rgba(223,142,29,.35); --find-cur:rgba(254,100,11,.5);
+    --tex-comment:#8c8fa1; --tex-cmd:#8839ef; --tex-math:#179299;
+    --tex-brace:#7c7f93; --tex-env:#df8e1d;
   }
   :root[data-theme="dark"] {
     --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
@@ -464,6 +473,8 @@ PAGE = r"""<!doctype html>
     --warn:#f9e2af; --warn-bg:#33302a; --warn-line:#5c5232;
     --err:#f38ba8; --err-bg:#302430; --sel:rgba(137,180,250,.32);
     --find:rgba(249,226,175,.32); --find-cur:rgba(250,179,135,.62);
+    --tex-comment:#6c7086; --tex-cmd:#cba6f7; --tex-math:#94e2d5;
+    --tex-brace:#9399b2; --tex-env:#f9e2af;
   }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -501,15 +512,26 @@ PAGE = r"""<!doctype html>
               background:var(--bg-alt); border-right:1px solid var(--line); }
   #editor, #mirror { position:absolute; inset:0; margin:0; border:0; font:inherit;
             padding:14px 16px 14px 4.6em; white-space:pre-wrap; overflow-wrap:break-word; }
-  #mirror { overflow:hidden; pointer-events:none; color:transparent; }
+  #mirror { overflow:hidden; pointer-events:none; color:var(--text); }
   #mirror .row { position:relative; }
   #mirror .row::before { content:attr(data-n); position:absolute; left:-4.2em; width:3em;
             text-align:right; color:var(--faint); }
-  #mirror mark { background:var(--find); color:transparent; border-radius:2px; }
+  /* syntax colours only - bold or italic would change glyph widths and desync the
+     mirror from the textarea it sits under */
+  #mirror .tc { color:var(--tex-comment); }
+  #mirror .tk { color:var(--tex-cmd); }
+  #mirror .tm { color:var(--tex-math); }
+  #mirror .tb { color:var(--tex-brace); }
+  #mirror .te { color:var(--tex-env); }
+  #mirror mark { background:var(--find); border-radius:2px; }
   #mirror mark.cur { background:var(--find-cur); }
+  /* the mirror paints the text; the textarea keeps only the caret and the selection */
   #editor { outline:none; resize:none; overflow:auto; background:transparent;
-            color:var(--text); caret-color:var(--accent); }
+            color:transparent; caret-color:var(--accent); }
+  #editor::placeholder { color:var(--faint); }
   #editor::selection { background:var(--sel); }
+  #edarea.composing #editor { color:var(--text); }
+  #edarea.composing #mirror, #edarea.composing #mirror * { color:transparent; }
   #findbar { display:none; align-items:center; gap:6px; padding:6px 12px;
              border-bottom:1px solid var(--line); background:var(--bg-alt); }
   #findbar input { flex:1; min-width:0; border:1px solid var(--line); border-radius:6px;
@@ -837,17 +859,76 @@ $("findInput").addEventListener("keydown", ev => {
 
 /* ---------- mirror: line numbers + find highlights ---------- */
 function esc(s) { return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
-function markLine(line, base, q, cur) {
-  const hay = line.toLowerCase(), needle = q.toLowerCase();
-  let out = "", from = 0, i = hay.indexOf(needle);
-  while (i >= 0) {
-    out += esc(line.slice(from, i));
-    out += "<mark" + (base + i === cur ? ' class="cur"' : "") + ">"
-         + esc(line.slice(i, i + q.length)) + "</mark>";
-    from = i + q.length;
-    i = hay.indexOf(needle, from);
+// One class letter per character: c comment, k command, m math, b brace, e env/ref
+// name. Line-at-a-time, so a display-math block spanning lines is simply not tinted -
+// acceptable for a highlighter that must never disagree with the textarea's layout.
+const REF_CMD = /^(begin|end|cite[a-z]*|ref|autoref|eqref|cref|Cref|label|input|include|usepackage|documentclass|bibliography[a-z]*)$/;
+function texScan(line) {
+  const n = line.length, out = new Array(n).fill(" ");
+  let i = 0, math = false;
+  while (i < n) {
+    const ch = line[i];
+    if (ch === "%") { for (let j = i; j < n; j++) out[j] = "c"; return out; }
+    if (ch === "\\") {
+      const name = (/^[a-zA-Z@]+\*?/.exec(line.slice(i + 1)) || [""])[0];
+      if (!name) { out[i] = "k"; if (i + 1 < n) out[i + 1] = "k"; i += 2; continue; }
+      for (let j = 0; j <= name.length; j++) out[i + j] = "k";
+      i += 1 + name.length;
+      if (REF_CMD.test(name.replace("*", ""))) {   // tint the {argument} that names a thing
+        let j = i;
+        while (j < n && line[j] === " ") j++;
+        if (line[j] === "[") { const c = line.indexOf("]", j); j = c < 0 ? n : c + 1; }
+        while (j < n && line[j] === " ") j++;
+        if (line[j] === "{") {
+          const close = line.indexOf("}", j), end = close < 0 ? n : close;
+          out[j] = "b";
+          for (let k = j + 1; k < end; k++) out[k] = "e";
+          if (close >= 0) out[close] = "b";
+          i = close < 0 ? n : close + 1;
+        }
+      }
+      continue;
+    }
+    if (ch === "$") { math = !math; out[i] = "m"; i++; continue; }
+    if (math) { out[i] = "m"; i++; continue; }
+    if (ch === "{" || ch === "}" || ch === "[" || ch === "]") out[i] = "b";
+    i++;
   }
-  return out + esc(line.slice(from));
+  return out;
+}
+function renderLine(line, base, q, cur) {
+  const n = line.length;
+  if (!n) return "";
+  const cls = texScan(line);
+  // 0 = no hit, otherwise the hit's 1-based index so two adjacent hits stay distinct
+  let mk = null, curIdx = -1;
+  if (q) {
+    mk = new Array(n).fill(0);
+    const hay = line.toLowerCase(), needle = q.toLowerCase();
+    let i = hay.indexOf(needle), h = 0;
+    while (i >= 0) {
+      h++;
+      for (let j = i; j < i + q.length && j < n; j++) mk[j] = h;
+      if (base + i === cur) curIdx = h;
+      i = hay.indexOf(needle, i + q.length);
+    }
+  }
+  let out = "", j = 0;
+  while (j < n) {
+    const m = mk ? mk[j] : 0;
+    let k = j + 1;
+    if (m) {   // a hit wins over syntax colour, so each hit stays one <mark>
+      while (k < n && mk[k] === m) k++;
+      out += "<mark" + (m === curIdx ? ' class="cur"' : "") + ">" + esc(line.slice(j, k)) + "</mark>";
+    } else {
+      const c = cls[j];
+      while (k < n && !(mk && mk[k]) && cls[k] === c) k++;
+      const txt = esc(line.slice(j, k));
+      out += c === " " ? txt : '<span class="t' + c + '">' + txt + "</span>";
+    }
+    j = k;
+  }
+  return out;
 }
 let mirrorQueued = false;
 function paintMirror() {
@@ -858,7 +939,7 @@ function paintMirror() {
   const lines = ed.value.split("\n");
   let pos = 0, out = "";
   for (let i = 0; i < lines.length; i++) {
-    const inner = q ? markLine(lines[i], pos, q, cur) : esc(lines[i]);
+    const inner = renderLine(lines[i], pos, q, cur);
     // an empty row would collapse to zero height; the textarea keeps one line
     out += '<div class="row" data-n="' + (i + 1) + '">' + (inner || "&#8203;") + "</div>";
     pos += lines[i].length + 1;
@@ -876,6 +957,12 @@ function queueMirror() {
   requestAnimationFrame(paintMirror);
 }
 $("editor").addEventListener("scroll", () => { $("mirror").scrollTop = $("editor").scrollTop; });
+// while an IME is composing, the pending text lives in the textarea and not yet in the
+// mirror, so hand the colour back to the textarea until the composition commits
+$("editor").addEventListener("compositionstart", () => $("edarea").classList.add("composing"));
+$("editor").addEventListener("compositionend", () => {
+  $("edarea").classList.remove("composing"); queueMirror();
+});
 // wrapping changes with the pane width and the font size, which moves every number
 new ResizeObserver(queueMirror).observe($("editor"));
 
@@ -1460,7 +1547,7 @@ def route(root: Path, main_rel: str, method: str, path: str,
             return 200, "text/html; charset=utf-8", PAGE
         if method == "GET" and path == "/api/root":
             return 200, "application/json", {"root": str(root), "main": main_rel,
-                                             "tool": "texreview"}
+                                             "tool": "texreview", "build": BUILD}
         if method == "GET" and path == "/api/files":
             return 200, "application/json", list_tex_files(root)
         if method == "GET" and path == "/api/doc":
@@ -1567,17 +1654,26 @@ class Handler(BaseHTTPRequestHandler):
         self._send(*route(self.root, self.main_rel, "POST", u.path, parse_qs(u.query), body))
 
 
-def find_existing(root: Path, start: int) -> str | None:
-    """Probe nearby ports for a texreview instance already serving this root."""
+def find_existing(root: Path, start: int) -> tuple[str | None, str | None]:
+    """Probe nearby ports for a texreview instance already serving this root.
+
+    Returns (reusable_url, stale_url): an instance built from a different version of
+    this file is reported as stale rather than reused, since it would serve the old UI.
+    """
+    stale = None
     for port in range(start, start + 20):
         try:
             with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/root", timeout=0.3) as r:
                 info = json.loads(r.read())
-                if info.get("root") == str(root) and info.get("tool") == "texreview":
-                    return f"http://127.0.0.1:{port}/"
         except (OSError, ValueError):
             continue
-    return None
+        if info.get("root") != str(root) or info.get("tool") != "texreview":
+            continue
+        url = f"http://127.0.0.1:{port}/"
+        if info.get("build") == BUILD:
+            return url, None
+        stale = stale or url
+    return None, stale
 
 
 def main() -> None:
@@ -1592,13 +1688,16 @@ def main() -> None:
     for tool, needed_for in (("latexmk", "Recompile"), ("synctex", "click-to-source sync")):
         if shutil.which(tool) is None:
             print(f"warning: {tool} not found on PATH - {needed_for} will not work")
-    existing = find_existing(root, args.port)
+    existing, stale = find_existing(root, args.port)
     if existing:
         print(f"texreview already serving {root}")
         print(f"  {existing}   (reusing the running instance)")
         if args.open:
             webbrowser.open(existing)
         return
+    if stale:
+        print(f"note: {stale} runs an older build of texreview and was not reused.")
+        print("      stop it (Ctrl-C in its terminal) and close that tab to avoid confusion.")
     Handler.root = root
     Handler.main_rel = main_rel
     server = None
