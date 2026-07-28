@@ -452,6 +452,7 @@ PAGE = r"""<!doctype html>
     --ok:#40a02b; --ok-soft:rgba(64,160,43,.18); --ok-line:#a6d29a;
     --warn:#df8e1d; --warn-bg:#faf3e0; --warn-line:#e6d4a8;
     --err:#d20f39; --err-bg:#fdeef1; --sel:rgba(30,102,245,.3);
+    --find:rgba(223,142,29,.35); --find-cur:rgba(254,100,11,.5);
   }
   :root[data-theme="dark"] {
     --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
@@ -462,6 +463,7 @@ PAGE = r"""<!doctype html>
     --ok:#a6e3a1; --ok-soft:rgba(166,227,161,.18); --ok-line:#57794f;
     --warn:#f9e2af; --warn-bg:#33302a; --warn-line:#5c5232;
     --err:#f38ba8; --err-bg:#302430; --sel:rgba(137,180,250,.32);
+    --find:rgba(249,226,175,.32); --find-cur:rgba(250,179,135,.62);
   }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -470,7 +472,7 @@ PAGE = r"""<!doctype html>
   /* grid/flex items default to min-height:auto, so a long PDF would stretch the grid
      past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
   #app > * { min-width:0; min-height:0; }
-  #pdfwrap, #editor { min-height:0; }
+  #pdfwrap, #edarea { min-height:0; }
   #gutter { cursor:col-resize; background:var(--bg-alt); border-left:1px solid var(--line);
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
@@ -491,9 +493,22 @@ PAGE = r"""<!doctype html>
                 border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
   .bar button:hover { border-color:var(--accent); color:var(--accent); }
   .bar button:disabled { opacity:.5; cursor:default; }
-  #editor { flex:1; width:100%; border:0; outline:none; resize:none; padding:14px 16px;
-            font:13px/1.55 ui-monospace,Menlo,monospace;
-            color:var(--text); background:var(--bg); caret-color:var(--accent); }
+  /* A textarea cannot paint line numbers or highlight matches, so an identically
+     wrapped mirror div sits under a transparent textarea and paints both. Sizes are
+     in em so the A+/A- control scales the gutter with the text. */
+  #edarea { position:relative; flex:1; font:13px/1.55 ui-monospace,Menlo,monospace; }
+  #gutterbg { position:absolute; left:0; top:0; bottom:0; width:3.6em;
+              background:var(--bg-alt); border-right:1px solid var(--line); }
+  #editor, #mirror { position:absolute; inset:0; margin:0; border:0; font:inherit;
+            padding:14px 16px 14px 4.6em; white-space:pre-wrap; overflow-wrap:break-word; }
+  #mirror { overflow:hidden; pointer-events:none; color:transparent; }
+  #mirror .row { position:relative; }
+  #mirror .row::before { content:attr(data-n); position:absolute; left:-4.2em; width:3em;
+            text-align:right; color:var(--faint); }
+  #mirror mark { background:var(--find); color:transparent; border-radius:2px; }
+  #mirror mark.cur { background:var(--find-cur); }
+  #editor { outline:none; resize:none; overflow:auto; background:transparent;
+            color:var(--text); caret-color:var(--accent); }
   #editor::selection { background:var(--sel); }
   #findbar { display:none; align-items:center; gap:6px; padding:6px 12px;
              border-bottom:1px solid var(--line); background:var(--bg-alt); }
@@ -599,7 +614,11 @@ PAGE = r"""<!doctype html>
       <button id="findNext" title="Next (⏎)">↓</button>
       <button id="findClose" title="Close (Esc)">✕</button>
     </div>
-    <textarea id="editor" spellcheck="false" placeholder="Loading LaTeX sources..."></textarea>
+    <div id="edarea">
+      <div id="gutterbg"></div>
+      <div id="mirror" aria-hidden="true"></div>
+      <textarea id="editor" spellcheck="false" placeholder="Loading LaTeX sources..."></textarea>
+    </div>
   </section>
   <div id="gutter" title="drag to resize; double-click to reset"></div>
   <section id="pdfpane">
@@ -734,6 +753,7 @@ async function openDoc(path) {
   const d = await res.json();
   state = { path, mtime: d.mtime };
   $("editor").value = d.content;
+  queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
   $("path").textContent = path;
@@ -743,7 +763,7 @@ async function openDoc(path) {
   for (let i = 1; i < parts.length; i++) collapsed.delete(parts.slice(0, i).join("/") + "/");
   renderSidebar();
 }
-$("editor").addEventListener("input", () => { if (state) setDirty(true); });
+$("editor").addEventListener("input", () => { queueMirror(); if (state) setDirty(true); });
 async function save(overwrite) {
   if (!state) return;
   const body = { path: state.path, content: $("editor").value };
@@ -775,6 +795,7 @@ function openFind() {
 function closeFind() {
   $("findbar").style.display = "none";
   findHits = []; findAt = -1;
+  queueMirror();
   $("editor").focus();
 }
 function runFind() {
@@ -794,6 +815,7 @@ function runFind() {
 function showFind() {
   const q = $("findInput").value;
   $("findCount").textContent = !q ? "" : findHits.length ? `${findAt + 1}/${findHits.length}` : "0/0";
+  queueMirror();
   if (findAt < 0) return;
   placeCursor(findHits[findAt], findHits[findAt] + q.length);
   $("findInput").focus();   // keep typing; the textarea keeps its selection
@@ -813,6 +835,50 @@ $("findInput").addEventListener("keydown", ev => {
   else if (ev.key === "Escape") { ev.preventDefault(); closeFind(); }
 });
 
+/* ---------- mirror: line numbers + find highlights ---------- */
+function esc(s) { return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function markLine(line, base, q, cur) {
+  const hay = line.toLowerCase(), needle = q.toLowerCase();
+  let out = "", from = 0, i = hay.indexOf(needle);
+  while (i >= 0) {
+    out += esc(line.slice(from, i));
+    out += "<mark" + (base + i === cur ? ' class="cur"' : "") + ">"
+         + esc(line.slice(i, i + q.length)) + "</mark>";
+    from = i + q.length;
+    i = hay.indexOf(needle, from);
+  }
+  return out + esc(line.slice(from));
+}
+let mirrorQueued = false;
+function paintMirror() {
+  mirrorQueued = false;
+  const ed = $("editor");
+  const q = $("findbar").style.display === "flex" ? $("findInput").value : "";
+  const cur = findAt >= 0 ? findHits[findAt] : -1;
+  const lines = ed.value.split("\n");
+  let pos = 0, out = "";
+  for (let i = 0; i < lines.length; i++) {
+    const inner = q ? markLine(lines[i], pos, q, cur) : esc(lines[i]);
+    // an empty row would collapse to zero height; the textarea keeps one line
+    out += '<div class="row" data-n="' + (i + 1) + '">' + (inner || "&#8203;") + "</div>";
+    pos += lines[i].length + 1;
+  }
+  // the textarea scrolls and the mirror does not, so a classic (non-overlay)
+  // scrollbar would leave the mirror wider and wrap it differently
+  const bar = ed.offsetWidth - ed.clientWidth;
+  $("mirror").style.paddingRight = (parseFloat(getComputedStyle(ed).paddingRight) + bar) + "px";
+  $("mirror").innerHTML = out;
+  $("mirror").scrollTop = ed.scrollTop;
+}
+function queueMirror() {
+  if (mirrorQueued) return;
+  mirrorQueued = true;
+  requestAnimationFrame(paintMirror);
+}
+$("editor").addEventListener("scroll", () => { $("mirror").scrollTop = $("editor").scrollTop; });
+// wrapping changes with the pane width and the font size, which moves every number
+new ResizeObserver(queueMirror).observe($("editor"));
+
 /* ---------- comment toggle (⌘/) ---------- */
 function toggleComment() {
   const ed = $("editor"), v = ed.value;
@@ -830,6 +896,7 @@ function toggleComment() {
   }).join("\n");
   ed.setRangeText(out, from, to, "preserve");   // keeps the undo stack
   ed.setSelectionRange(from, from + out.length);
+  queueMirror();   // setRangeText does not fire "input"
   setDirty(true);
 }
 
@@ -868,6 +935,7 @@ function placeCursor(pos, end) {
   ed.focus();
   ed.setSelectionRange(pos, end ?? pos);
   ed.scrollTop = Math.max(0, caretTop(ed, pos) - ed.clientHeight / 2);
+  $("mirror").scrollTop = ed.scrollTop;
 }
 async function gotoSource(file, line) {
   if (!state || state.path !== file) await openDoc(file);
@@ -1356,8 +1424,9 @@ const fonts = {};
 for (const k in FONT_DEFAULTS)
   fonts[k] = +(localStorage.getItem("texreview.font." + k) || FONT_DEFAULTS[k]);
 function applyFonts() {
-  $("editor").style.fontSize = fonts.editor + "px";
+  $("edarea").style.fontSize = fonts.editor + "px";
   $("panel").style.fontSize = fonts.panel + "px";
+  queueMirror();   // a font change re-wraps every line, so the numbers move
 }
 document.addEventListener("click", ev => {
   const b = ev.target.closest(".fontctl button");
