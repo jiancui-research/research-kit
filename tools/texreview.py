@@ -1104,21 +1104,32 @@ async function rezoom() {
    instant feedback, then re-render once the gesture settles so text stays sharp */
 let renderedZoom = 1, zoomTimer = null;
 function setZoom(z) {
+  const wrap = $("pdfwrap");
   zoomFactor = Math.min(6, Math.max(0.25, z));
+  // anchor the scale at the top of what you are looking at, so zooming in does not
+  // shove the current page out of view; scrollTop is fixed for the whole gesture
+  // because the wheel handler preventDefaults, so the origin never jumps mid-pinch
+  $("pages").style.transformOrigin = `50% ${wrap.scrollTop}px`;
   $("pages").style.transform = `scale(${zoomFactor / renderedZoom})`;
   $("status").textContent = Math.round(zoomFactor * 100) + "%";
   clearTimeout(zoomTimer);
   zoomTimer = setTimeout(async () => {
+    const ratio = zoomFactor / renderedZoom, top = wrap.scrollTop;
     $("pages").style.transform = "";
     renderedZoom = zoomFactor;
     await rezoom();
+    wrap.scrollTop = top * ratio;   // same document position at the new scale
     if (!compiling) $("status").textContent = "";
   }, 180);
 }
 $("pdfwrap").addEventListener("wheel", ev => {
   if (!ev.ctrlKey && !ev.metaKey) return;      // plain scrolling stays scrolling
   ev.preventDefault();
-  setZoom(zoomFactor * (ev.deltaY < 0 ? 1.06 : 1 / 1.06));
+  // a pinch's deltaY is proportional to how far you pinched. A fixed step per event
+  // ignored that, so a quick pinch fired dozens of events and slammed into the clamp.
+  // The clamp keeps one notch of a discrete mouse wheel from jumping too far.
+  const d = Math.max(-50, Math.min(50, ev.deltaY));
+  setZoom(zoomFactor * Math.exp(-d * 0.01));
 }, {passive: false});
 
 /* ---------- compile ---------- */

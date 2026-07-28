@@ -215,6 +215,8 @@ PAGE = r"""<!doctype html>
     --code-bg:#e6e9ef; --shadow:rgba(76,79,105,.22); --sel:rgba(30,102,245,.3);
     --hl:rgba(223,142,29,.3); --hl-strong:rgba(254,100,11,.55);
     --ok:#40a02b; --ok-soft:rgba(64,160,43,.16); --ok-line:#a6d29a; --warn:#df8e1d;
+    --md-head:#1e66f5; --md-mark:#7c7f93; --md-code:#40a02b;
+    --md-link:#179299; --md-comment:#8c8fa1;
   }
   :root[data-theme="dark"] {
     --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
@@ -223,6 +225,8 @@ PAGE = r"""<!doctype html>
     --code-bg:#181825; --shadow:rgba(0,0,0,.5); --sel:rgba(137,180,250,.32);
     --hl:rgba(249,226,175,.28); --hl-strong:rgba(250,179,135,.6);
     --ok:#a6e3a1; --ok-soft:rgba(166,227,161,.16); --ok-line:#57794f; --warn:#f9e2af;
+    --md-head:#89b4fa; --md-mark:#9399b2; --md-code:#a6e3a1;
+    --md-link:#94e2d5; --md-comment:#6c7086;
   }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -231,7 +235,7 @@ PAGE = r"""<!doctype html>
   /* grid/flex items default to min-height:auto, so a long document would stretch the
      grid past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
   #app > * { min-width:0; min-height:0; }
-  #main, #editor { min-height:0; }
+  #main, #edarea { min-height:0; }
   #gutter { cursor:col-resize; background:var(--bg-alt); border-left:1px solid var(--line);
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
@@ -252,10 +256,32 @@ PAGE = r"""<!doctype html>
   #bar button { border:1px solid var(--line); background:var(--surface); color:var(--text);
                 border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
   #bar button:hover { border-color:var(--accent); color:var(--accent); }
-  #editor { flex:1; width:100%; border:0; outline:none; resize:none; padding:14px 16px;
-            font:13px/1.55 ui-monospace,Menlo,monospace;
-            color:var(--text); background:var(--bg); caret-color:var(--accent); }
+  /* A textarea cannot paint line numbers or syntax colour, so an identically wrapped
+     mirror div sits under a transparent textarea and paints both. Sizes are in em so
+     the A+/A- control scales the gutter with the text. */
+  #edarea { position:relative; flex:1; font:13px/1.55 ui-monospace,Menlo,monospace; }
+  #gutterbg { position:absolute; left:0; top:0; bottom:0; width:3.6em;
+              background:var(--bg-alt); border-right:1px solid var(--line); }
+  #editor, #mirror { position:absolute; inset:0; margin:0; border:0; font:inherit;
+            padding:14px 16px 14px 4.6em; white-space:pre-wrap; overflow-wrap:break-word; }
+  #mirror { overflow:hidden; pointer-events:none; color:var(--text); }
+  #mirror .row { position:relative; }
+  #mirror .row::before { content:attr(data-n); position:absolute; left:-4.2em; width:3em;
+            text-align:right; color:var(--faint); }
+  /* syntax colours only - bold or italic would change glyph widths and desync the
+     mirror from the textarea it sits under */
+  #mirror .th { color:var(--md-head); }
+  #mirror .tb { color:var(--md-mark); }
+  #mirror .tc { color:var(--md-code); }
+  #mirror .tu { color:var(--md-link); }
+  #mirror .tq { color:var(--md-comment); }
+  /* the mirror paints the text; the textarea keeps only the caret and the selection */
+  #editor { outline:none; resize:none; overflow:auto; background:transparent;
+            color:transparent; caret-color:var(--accent); }
+  #editor::placeholder { color:var(--faint); }
   #editor::selection { background:var(--sel); }
+  #edarea.composing #editor { color:var(--text); }
+  #edarea.composing #mirror, #edarea.composing #mirror * { color:transparent; }
   #main { overflow-y:auto; padding:22px 30px; min-width:0; background:var(--bg); }
   #doc { max-width:720px; }
   #doc h1,#doc h2,#doc h3 { line-height:1.3; }
@@ -341,7 +367,11 @@ PAGE = r"""<!doctype html>
       <button id="saveBtn">Save</button>
       <button id="revealBtn" title="Blink the preview text matching the cursor position">Reveal →</button>
     </div>
-    <textarea id="editor" spellcheck="false" placeholder="Pick a file on the left."></textarea>
+    <div id="edarea">
+      <div id="gutterbg"></div>
+      <div id="mirror" aria-hidden="true"></div>
+      <textarea id="editor" spellcheck="false" placeholder="Pick a file on the left."></textarea>
+    </div>
   </section>
   <div id="gutter" title="drag to resize; double-click to reset"></div>
   <section id="main">
@@ -476,6 +506,7 @@ async function openDoc(path) {
   const d = await res.json();
   state = { path: d.path, mtime: d.mtime, comments: d.comments };
   $("editor").value = d.content;
+  queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
   $("path").textContent = state.path;
@@ -527,6 +558,7 @@ async function rerender() {
   if (res.ok) paint((await res.json()).html);
 }
 $("editor").addEventListener("input", () => {
+  queueMirror();
   if (!state) return;
   setDirty(true);
   clearTimeout(renderTimer);
@@ -819,6 +851,105 @@ function jumpToSource(renderedCtx, selectWord) {
     }
   }
 }
+/* ---------- mirror: line numbers + markdown syntax colour ---------- */
+function esc(s) { return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+// One class letter per character: h heading, b marker/punctuation, c code, u link
+// target, q HTML comment. Fenced blocks are the one construct that spans lines, so
+// the fence flag is threaded through the loop in paintMirror.
+const MD_LEAD = /^(\s*)([-*+]\s|\d+[.)]\s|>\s?)/;
+function mdScan(line, fence) {
+  const n = line.length, out = new Array(n).fill(" ");
+  const fill = c => { for (let i = 0; i < n; i++) out[i] = c; };
+  if (/^\s*(```|~~~)/.test(line)) { fill("c"); return {cls: out, fence: !fence}; }
+  if (fence) { fill("c"); return {cls: out, fence}; }
+  if (/^\s{0,3}#{1,6}\s/.test(line)) { fill("h"); return {cls: out, fence}; }
+  let i = 0;
+  const lead = MD_LEAD.exec(line);
+  if (lead) {
+    for (let j = lead[1].length; j < lead[0].length; j++) out[j] = "b";
+    i = lead[0].length;
+    if (line.slice(i, i + 3).match(/^\[[ xX]\]/)) {   // task list checkbox
+      for (let j = i; j < i + 3; j++) out[j] = "b";
+      i += 3;
+    }
+  }
+  while (i < n) {
+    const ch = line[i];
+    if (ch === "`") {
+      const close = line.indexOf("`", i + 1), end = close < 0 ? n : close + 1;
+      for (let j = i; j < end; j++) out[j] = "c";
+      i = end; continue;
+    }
+    if (line.startsWith("<!--", i)) {
+      const close = line.indexOf("-->", i), end = close < 0 ? n : close + 3;
+      for (let j = i; j < end; j++) out[j] = "q";
+      i = end; continue;
+    }
+    if (ch === "[") {
+      const rb = line.indexOf("]", i);
+      if (rb > 0 && line[rb + 1] === "(") {
+        const rp = line.indexOf(")", rb);
+        out[i] = "b"; out[rb] = "b"; out[rb + 1] = "b";
+        const end = rp < 0 ? n : rp;
+        for (let j = rb + 2; j < end; j++) out[j] = "u";
+        if (rp > 0) out[rp] = "b";
+        i = rp < 0 ? n : rp + 1; continue;
+      }
+    }
+    if (ch === "*" || ch === "_" || ch === "~") { out[i] = "b"; i++; continue; }
+    i++;
+  }
+  return {cls: out, fence};
+}
+function renderLine(line, fence) {
+  const n = line.length;
+  if (!n) return {html: "", fence};
+  const r = mdScan(line, fence);
+  let out = "", j = 0;
+  while (j < n) {
+    const c = r.cls[j];
+    let k = j + 1;
+    while (k < n && r.cls[k] === c) k++;
+    const txt = esc(line.slice(j, k));
+    out += c === " " ? txt : '<span class="t' + c + '">' + txt + "</span>";
+    j = k;
+  }
+  return {html: out, fence: r.fence};
+}
+let mirrorQueued = false;
+function paintMirror() {
+  mirrorQueued = false;
+  const ed = $("editor");
+  const lines = ed.value.split("\n");
+  let out = "", fence = false;
+  for (let i = 0; i < lines.length; i++) {
+    const r = renderLine(lines[i], fence);
+    fence = r.fence;
+    // an empty row would collapse to zero height; the textarea keeps one line
+    out += '<div class="row" data-n="' + (i + 1) + '">' + (r.html || "&#8203;") + "</div>";
+  }
+  // the textarea scrolls and the mirror does not, so a classic (non-overlay)
+  // scrollbar would leave the mirror wider and wrap it differently
+  const bar = ed.offsetWidth - ed.clientWidth;
+  $("mirror").style.paddingRight = (parseFloat(getComputedStyle(ed).paddingRight) + bar) + "px";
+  $("mirror").innerHTML = out;
+  $("mirror").scrollTop = ed.scrollTop;
+}
+function queueMirror() {
+  if (mirrorQueued) return;
+  mirrorQueued = true;
+  requestAnimationFrame(paintMirror);
+}
+$("editor").addEventListener("scroll", () => { $("mirror").scrollTop = $("editor").scrollTop; });
+// while an IME is composing, the pending text lives in the textarea and not yet in the
+// mirror, so hand the colour back to the textarea until the composition commits
+$("editor").addEventListener("compositionstart", () => $("edarea").classList.add("composing"));
+$("editor").addEventListener("compositionend", () => {
+  $("edarea").classList.remove("composing"); queueMirror();
+});
+// wrapping changes with the pane width and the font size, which moves every number
+new ResizeObserver(queueMirror).observe($("editor"));
+
 function caretTop(ed, pos) {
   // mirror the textarea's text up to pos in a hidden div with identical wrapping,
   // so soft-wrapped long lines measure at their true visual height
@@ -846,6 +977,7 @@ function placeCursor(pos, end) {
   ed.focus();
   ed.setSelectionRange(pos, end ?? pos);
   ed.scrollTop = Math.max(0, caretTop(ed, pos) - ed.clientHeight / 2);
+  $("mirror").scrollTop = ed.scrollTop;
 }
 
 /* ---------- save + export ---------- */
@@ -986,7 +1118,8 @@ const fonts = {};
 for (const k in FONT_DEFAULTS)
   fonts[k] = +(localStorage.getItem("mdreview.font." + k) || FONT_DEFAULTS[k]);
 function applyFonts() {
-  $("editor").style.fontSize = fonts.editor + "px";
+  $("edarea").style.fontSize = fonts.editor + "px";
+  queueMirror();   // a font change re-wraps every line, so the numbers move
   $("doc").style.fontSize = fonts.doc + "px";
   $("panel").style.fontSize = fonts.panel + "px";
 }
