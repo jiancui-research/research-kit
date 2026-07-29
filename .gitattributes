@@ -1,0 +1,4 @@
+# Shell scripts must keep LF endings, or a Windows checkout with
+# core.autocrlf=true rewrites the shebang to `#!/usr/bin/env sh\r`
+# and every invocation fails with "No such file or directory".
+*.sh text eol=lf

@@ -111,7 +111,7 @@ Plugin stages are namespaced, e.g. `/research-kit:research.proposal …`; update
 /marketplace install research-kit@research-kit
 ```
 
-OMP reads the same `.claude-plugin` bundle directly, exposing the namespaced `/research-kit:research.*` stages. Update later with `/marketplace update research-kit`, then `/marketplace upgrade research-kit@research-kit`.
+OMP reads the same `.claude-plugin` bundle directly, exposing the namespaced `/research-kit:research.*` stages. Update later with `/marketplace update research-kit`, then `/marketplace upgrade research-kit@research-kit` — or from a shell, `omp plugin marketplace update research-kit && omp plugin upgrade research-kit@research-kit` (note: `omp marketplace …` is not a top-level command; marketplace management lives under `omp plugin marketplace`). Refreshing the marketplace alone does **not** bump an installed plugin — `omp plugin list` keeps reporting the old version until you run the `upgrade`.
 
 **Codex CLI and GitHub Copilot CLI — script:**
 
@@ -131,6 +131,31 @@ Use the script for these two, not their plugin marketplaces. Codex installs a pl
 ```
 
 Then, in your paper repo, start with `/research.init` (`/research-kit:research.init` for plugin installs) and follow the pipeline — each command writes its result into `./.research/` and suggests the next one.
+
+### ✅ Check what you have
+
+Verify the install rather than assuming it took — an out-of-date copy fails silently by running old stage instructions.
+
+```sh
+omp plugin list                 # OMP: expect research-kit@research-kit (<version>)
+copilot plugin list             # Copilot CLI: expect research-kit@research-kit (v<version>)
+ls ~/.claude/commands/research.* # script installs (or ~/.codex/prompts/, ~/.copilot/agents/)
+```
+
+Compare against the `version` field in [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) on `main`. To update:
+
+```sh
+omp plugin marketplace update research-kit && omp plugin upgrade research-kit@research-kit
+copilot plugin update research-kit
+git pull && ./install.sh --all   # script installs; re-running also prunes deleted stages
+```
+
+Gotchas seen in practice:
+
+- **`copilot plugin update` can fail with `Access is denied. (os error 5)`** when a file in the plugin directory is locked by a running CLI. Close other Copilot CLI sessions and retry; the second attempt usually succeeds.
+- **A Copilot plugin entry that lists a version still exposes no stages.** `copilot plugin list` will happily report `research-kit@research-kit (v0.13.0)` while `~/.copilot/agents/` is empty and the CLI reports no custom agents — re-verified on Copilot CLI 1.0.74. The registry entry is not the same thing as a usable install; use `./install.sh --copilot` and confirm `ls ~/.copilot/agents/research.*.agent.md` lists every stage.
+- **Script installs are per-agent.** Updating the OMP or Claude Code plugin does nothing for `~/.codex/prompts/` or `~/.copilot/agents/`; re-run `install.sh` for those.
+- **Windows: `./install.sh` reports `No such file or directory` even though the file is right there.** Git checked the script out with CRLF endings (`core.autocrlf=true`), so the kernel reads the shebang as `#!/usr/bin/env sh\r`. The repo now ships a `.gitattributes` pinning `*.sh` to LF; on a checkout made before that, run `git rm --cached install.sh && git checkout -- install.sh` (or `dos2unix install.sh`) to restore it.
 
 <details>
 <summary><b>The full run, stage by stage</b></summary>
@@ -187,7 +212,7 @@ The same pipeline installs for four agents; pick one or more (`--all` covers the
 
 - **OMP** installs the same `.claude-plugin` bundle through `/marketplace`, reading `commands/` directly (it falls back to `.claude-plugin/marketplace.json` when `.omp-plugin/` is absent). Plugin commands resolve bundled templates and tools through OMP's installed-plugin registry at `~/.omp/plugins/installed_plugins.json`.
 - **Codex** does have a marketplace and will happily install this bundle — but it converts commands into skills, and skills have no `$ARGUMENTS` substitution, so every stage that takes input is silently skipped. Only `research.init` survives. The script installs all stages into `~/.codex/prompts/` as native `/research.*` commands instead. (Custom prompts are marked deprecated in favour of skills, still support `$ARGUMENTS`, and have no announced removal date.)
-- **Copilot** expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory; it no longer surfaces a plugin's `commands/`, and an installed bundle reports zero available agents. This worked at Copilot CLI 1.0.40 and stopped by 1.0.63, so `./install.sh --copilot` (which generates `*.agent.md` custom agents in `~/.copilot/agents/`) is the supported path.
+- **Copilot** expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory; it no longer surfaces a plugin's `commands/`, and an installed bundle reports zero available agents. This worked at Copilot CLI 1.0.40 and stopped by 1.0.63, so `./install.sh --copilot` (which generates `*.agent.md` custom agents in `~/.copilot/agents/`) is the supported path. The failure is quiet: `copilot plugin install`/`update` succeeds, `copilot plugin list` prints a version, and the bundle really is unpacked under `~/.copilot/installed-plugins/` — but the stages never appear. Trust `ls ~/.copilot/agents/research.*.agent.md`, not the plugin list. Re-verified on Copilot CLI 1.0.74.
 - **One install for all four** would require shipping stages as `skills/<name>/SKILL.md`, the one format every agent here reads. The trade-off is that skills are model-invocable, so stages could fire without you asking; `docs/design.md` records the analysis.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
 
