@@ -328,6 +328,20 @@ def test_export_text_no_open_comments(paper):
 
 # ---------- route ----------
 
+def test_compile_forces_a_rebuild_when_synctex_is_missing(paper):
+    # a paper last built without -synctex=1 leaves an up-to-date fdb, so latexmk would
+    # report "Nothing to do" and never emit the synctex file Reveal depends on
+    assert not tr.has_synctex(paper, "main.tex")
+    assert "-g" in tr.compile_cmd(paper, "main.tex")
+
+
+def test_compile_does_not_force_once_synctex_exists(paper):
+    (paper / "main.synctex.gz").write_bytes(b"\x1f\x8b")
+    assert tr.has_synctex(paper, "main.tex")
+    cmd = tr.compile_cmd(paper, "main.tex")
+    assert "-g" not in cmd and "-synctex=1" in cmd
+
+
 def test_route_root_reports_tool(paper):
     status, ctype, payload = tr.route(paper, "main.tex", "GET", "/api/root", {}, {})
     assert status == 200 and payload["tool"] == "texreview" and payload["main"] == "main.tex"

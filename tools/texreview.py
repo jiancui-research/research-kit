@@ -237,11 +237,25 @@ def latexmk_error_tail(log: str, limit: int = 4000) -> str:
     return text[-limit:]
 
 
+def has_synctex(root: Path, main_rel: str) -> bool:
+    return any((root / Path(main_rel).with_suffix(sfx).as_posix()).is_file()
+               for sfx in (".synctex.gz", ".synctex"))
+
+
+def compile_cmd(root: Path, main_rel: str) -> list[str]:
+    """latexmk's up-to-date check does not know the requested output set changed, so a
+    paper last built without -synctex=1 leaves an fdb that makes every later run a
+    no-op ("Nothing to do") and the synctex file is never produced. Force that first
+    build so click-to-source and Reveal start working instead of failing forever."""
+    force = [] if has_synctex(root, main_rel) else ["-g"]
+    return ["latexmk", *force, "-pdf", "-synctex=1", "-interaction=nonstopmode", main_rel]
+
+
 def _run_compile(root: Path, main_rel: str) -> None:
     ok, log = False, ""
     try:
         p = subprocess.run(
-            ["latexmk", "-pdf", "-synctex=1", "-interaction=nonstopmode", main_rel],
+            compile_cmd(root, main_rel),
             cwd=root, capture_output=True, text=True, timeout=COMPILE_TIMEOUT)
         ok = p.returncode == 0
         log = "" if ok else latexmk_error_tail(p.stdout + "\n" + p.stderr)
@@ -293,7 +307,8 @@ def parse_synctex_view(out: str) -> dict:
         if len(rec) == len(prefixes):
             break
     if "page" not in rec:
-        raise RequestError(404, "SyncTeX has no PDF mapping for that line")
+        raise RequestError(404, "No PDF position for that line - it produces no output "
+                                "(preamble, a macro definition, or a comment)")
     return {"page": int(rec["page"]), "h": rec.get("h", 0.0), "v": rec.get("v", 0.0),
             "W": rec.get("W", 0.0), "H": rec.get("H", 0.0)}
 
@@ -409,10 +424,9 @@ def synctex_view(root: Path, pdf_rel: str, tex_rel: str, line: int) -> dict:
 def pdf_info(root: Path, main_rel: str) -> dict:
     pdf = Path(main_rel).with_suffix(".pdf").as_posix()
     p = root / pdf
-    has_synctex = any((root / Path(main_rel).with_suffix(sfx).as_posix()).is_file()
-                      for sfx in (".synctex.gz", ".synctex"))
     return {"pdf": pdf, "main": main_rel, "exists": p.is_file(),
-            "mtime": p.stat().st_mtime if p.is_file() else 0, "synctex": has_synctex}
+            "mtime": p.stat().st_mtime if p.is_file() else 0,
+            "synctex": has_synctex(root, main_rel)}
 
 
 def export_text(root: Path, main_rel: str) -> str:
@@ -1060,20 +1074,55 @@ async function loadPdf() {
   await renderAllPages();
   applyPdfHighlights();
 }
+/* Where the reader is, as a page plus how far into it. A recompile usually shifts
+   content, so this survives far better than a fraction of total scroll height. */
+function viewAnchor() {
+  const w = $("pdfwrap"), top = w.scrollTop;
+  // vertically you read top-down, so hold the top of the view; horizontally you want
+  // the middle to stay put, which is what zooming past the pane width disturbs
+  const xmid = w.scrollWidth > w.clientWidth
+    ? (w.scrollLeft + w.clientWidth / 2) / w.scrollWidth : 0.5;
+  for (let i = 0; i < pageEls.length; i++) {
+    const pd = pageEls[i];
+    if (pd.offsetTop + pd.offsetHeight > top)
+      return {page: i + 1, into: (top - pd.offsetTop) / (pd.offsetHeight || 1), xmid};
+  }
+  return null;
+}
+function gotoAnchor(a) {
+  if (!a || !pageEls.length) return;
+  const w = $("pdfwrap");
+  const pd = pageEls[Math.min(a.page, pageEls.length) - 1];
+  w.scrollTop = Math.max(0, pd.offsetTop + a.into * pd.offsetHeight);
+  w.scrollLeft = Math.max(0, a.xmid * w.scrollWidth - w.clientWidth / 2);
+}
+// draw the page being read first, then outward, so a recompile shows your place
+// immediately instead of after every earlier page has rasterized
+function drawOrder(from) {
+  const order = [];
+  for (let d = 0; d < pageEls.length; d++) {
+    if (from + d < pageEls.length) order.push(from + d);
+    if (d && from - d >= 0) order.push(from - d);
+  }
+  return order;
+}
 async function renderAllPages() {
   const my = ++renderToken;
-  const wrap = $("pdfwrap");
-  const frac = wrap.scrollHeight ? wrap.scrollTop / wrap.scrollHeight : 0;
-  const pages = $("pages");
+  const wrap = $("pdfwrap"), pages = $("pages");
+  const anchor = viewAnchor();
   pages.innerHTML = ""; pageEls = [];
   const first = await pdfDoc.getPage(1);
   const base = (wrap.clientWidth - 36) / first.getViewport({scale: 1}).width;
   pdfScale = Math.max(0.35, Math.min(5, base * zoomFactor));
   const dpr = window.devicePixelRatio || 1;
+  // 1. lay every page out at its true size before drawing anything, so the scrollbar
+  //    is correct and the view is restored up front rather than after the last page
+  const vps = [];
   for (let n = 1; n <= pdfDoc.numPages; n++) {
     if (my !== renderToken) return;
     const page = await pdfDoc.getPage(n);
     const vp = page.getViewport({scale: pdfScale});
+    vps.push({page, vp});
     const pd = document.createElement("div");
     pd.className = "page"; pd.dataset.page = n;
     pd.style.width = vp.width + "px"; pd.style.height = vp.height + "px";
@@ -1084,13 +1133,21 @@ async function renderAllPages() {
     const tl = document.createElement("div"); tl.className = "textLayer";
     pd.append(canvas, tl);
     pages.appendChild(pd); pageEls.push(pd);
-    await page.render({canvasContext: canvas.getContext("2d"), viewport: vp,
+  }
+  gotoAnchor(anchor);
+  // 2. rasterize, nearest to the viewport first
+  for (const i of drawOrder(anchor ? Math.min(anchor.page, pageEls.length) - 1 : 0)) {
+    if (my !== renderToken) return;
+    const {page, vp} = vps[i];
+    const pd = pageEls[i];
+    await page.render({canvasContext: pd.querySelector("canvas").getContext("2d"),
+                       viewport: vp,
                        transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null}).promise;
     const tc = await page.getTextContent();
     await pdfjsLib.renderTextLayer({textContentSource: tc, textContent: tc,
-                                    container: tl, viewport: vp, textDivs: []}).promise;
+                                    container: pd.querySelector(".textLayer"),
+                                    viewport: vp, textDivs: []}).promise;
   }
-  wrap.scrollTop = frac * wrap.scrollHeight;
 }
 $("zIn").onclick = () => setZoom(zoomFactor * 1.15);
 $("zOut").onclick = () => setZoom(zoomFactor / 1.15);
@@ -1109,16 +1166,15 @@ function setZoom(z) {
   // anchor the scale at the top of what you are looking at, so zooming in does not
   // shove the current page out of view; scrollTop is fixed for the whole gesture
   // because the wheel handler preventDefaults, so the origin never jumps mid-pinch
-  $("pages").style.transformOrigin = `50% ${wrap.scrollTop}px`;
+  $("pages").style.transformOrigin =
+    `${wrap.scrollLeft + wrap.clientWidth / 2}px ${wrap.scrollTop}px`;
   $("pages").style.transform = `scale(${zoomFactor / renderedZoom})`;
   $("status").textContent = Math.round(zoomFactor * 100) + "%";
   clearTimeout(zoomTimer);
   zoomTimer = setTimeout(async () => {
-    const ratio = zoomFactor / renderedZoom, top = wrap.scrollTop;
     $("pages").style.transform = "";
     renderedZoom = zoomFactor;
-    await rezoom();
-    wrap.scrollTop = top * ratio;   // same document position at the new scale
+    await rezoom();   // renderAllPages re-anchors the view by page, at the new scale
     if (!compiling) $("status").textContent = "";
   }, 180);
 }
