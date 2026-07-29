@@ -1,5 +1,6 @@
 """Tests for texreview's server core: run  uv run --with pytest pytest tools/test_texreview.py"""
 import json
+import os
 import subprocess
 import time
 
@@ -327,6 +328,18 @@ def test_export_text_no_open_comments(paper):
 
 
 # ---------- route ----------
+
+def test_tex_env_is_untouched_when_path_already_has_latexmk(monkeypatch):
+    monkeypatch.setattr(tr.shutil, "which", lambda n: "/usr/bin/" + n)
+    assert tr.tex_bin_dir() is None
+    assert tr.tex_env()["PATH"] == os.environ["PATH"]
+
+
+def test_tex_env_prepends_the_toolchain_dir_when_path_lacks_it(monkeypatch, tmp_path):
+    # MacTeX lives at /Library/TeX/texbin, which only a login shell puts on PATH
+    monkeypatch.setattr(tr, "tex_bin_dir", lambda: str(tmp_path))
+    assert tr.tex_env()["PATH"].split(os.pathsep)[0] == str(tmp_path)
+
 
 def test_compile_forces_a_rebuild_when_synctex_is_missing(paper):
     # a paper last built without -synctex=1 leaves an up-to-date fdb, so latexmk would

@@ -237,6 +237,37 @@ def latexmk_error_tail(log: str, limit: int = 4000) -> str:
     return text[-limit:]
 
 
+def tex_bin_dir() -> str | None:
+    """Directory holding the TeX toolchain, when PATH does not already have it.
+
+    MacTeX installs to /Library/TeX/texbin and puts it on PATH through
+    /etc/paths.d/TeX, which only `path_helper` in a *login* shell reads. A server
+    launched from anywhere else therefore sees no TeX at all and Recompile fails with
+    "latexmk not found" on a machine where it is plainly installed.
+    """
+    if shutil.which("latexmk"):
+        return None
+    cands = [Path("/Library/TeX/texbin")]
+    for base in (Path("/usr/local/texlive"), Path("/opt/texlive")):
+        if base.is_dir():
+            cands += sorted(base.glob("*/bin/*"), reverse=True)
+    cands += [Path("/opt/homebrew/bin"), Path("/usr/local/bin")]
+    for d in cands:
+        if (d / "latexmk").is_file():
+            return str(d)
+    return None
+
+
+def tex_env() -> dict:
+    """Environment for TeX subprocesses. The directory must go on PATH rather than
+    just resolving latexmk, because latexmk shells out to pdflatex and bibtex."""
+    env = os.environ.copy()
+    d = tex_bin_dir()
+    if d:
+        env["PATH"] = d + os.pathsep + env.get("PATH", "")
+    return env
+
+
 def has_synctex(root: Path, main_rel: str) -> bool:
     return any((root / Path(main_rel).with_suffix(sfx).as_posix()).is_file()
                for sfx in (".synctex.gz", ".synctex"))
@@ -255,7 +286,7 @@ def _run_compile(root: Path, main_rel: str) -> None:
     ok, log = False, ""
     try:
         p = subprocess.run(
-            compile_cmd(root, main_rel),
+            compile_cmd(root, main_rel), env=tex_env(),
             cwd=root, capture_output=True, text=True, timeout=COMPILE_TIMEOUT)
         ok = p.returncode == 0
         log = "" if ok else latexmk_error_tail(p.stdout + "\n" + p.stderr)
@@ -315,7 +346,7 @@ def parse_synctex_view(out: str) -> dict:
 
 def _run_synctex(root: Path, args: list[str]) -> str:
     try:
-        p = subprocess.run(["synctex", *args], cwd=root,
+        p = subprocess.run(["synctex", *args], cwd=root, env=tex_env(),
                            capture_output=True, text=True, timeout=10)
     except FileNotFoundError:
         raise RequestError(500, "synctex CLI not found - install TeX Live / MacTeX")
@@ -1752,9 +1783,12 @@ def main() -> None:
     args = ap.parse_args()
     root = find_root(Path(args.root).resolve())
     main_rel = find_main_tex(root, args.main)
+    texdir = tex_bin_dir()
     for tool, needed_for in (("latexmk", "Recompile"), ("synctex", "click-to-source sync")):
-        if shutil.which(tool) is None:
+        if shutil.which(tool) is None and not (texdir and (Path(texdir) / tool).is_file()):
             print(f"warning: {tool} not found on PATH - {needed_for} will not work")
+    if texdir:
+        print(f"note: using the TeX toolchain in {texdir} (not on this shell's PATH)")
     existing, stale = find_existing(root, args.port)
     if existing:
         print(f"texreview already serving {root}")
