@@ -1,3 +1,4 @@
+import re
 import sys
 from pathlib import Path
 
@@ -102,13 +103,13 @@ def test_comment_unknown_id(repo):
 
 def test_render_md_tables_and_code():
     html = m.render_md("**hi**\n\n| a |\n| - |\n| b |\n\n```py\nx=1\n```\n")
-    assert "<strong>hi</strong>" in html and "<table>" in html and "<code" in html
+    assert "<strong>hi</strong>" in html and "<table" in html and "<code" in html
 
 
 def test_render_md_nested_lists_two_space_indent():
     # GitHub-style 2-space nesting must produce nested lists (python-markdown wanted 4)
     html = m.render_md("- **Probe, two parts.**\n  - **Part 1** check\n  - **Part 2** estimate\n")
-    assert html.count("<ul>") == 2 and "<strong>Part 1</strong>" in html
+    assert html.count("<ul") == 2 and "<strong>Part 1</strong>" in html
 
 
 def test_render_md_mermaid_fence_keeps_language_class():
@@ -155,7 +156,7 @@ def test_route_files_and_doc(repo):
     status, ctype, payload = m.route(repo, "GET", "/api/files", {}, {})
     assert status == 200 and payload == ["README.md", ".research/proposal.md"]
     status, _, doc = m.route(repo, "GET", "/api/doc", {"path": [".research/proposal.md"]}, {})
-    assert status == 200 and "<h1>" in doc["html"] and doc["comments"] == []
+    assert status == 200 and "<h1" in doc["html"] and doc["comments"] == []
 
 
 def test_route_error_mapping(repo):
@@ -192,12 +193,12 @@ def test_missing_body_keys_are_400(repo):
 
 def test_route_render_live_preview(repo):
     status, _, res = m.route(repo, "POST", "/api/render", {}, {"content": "# Hi\n\n*there*"})
-    assert status == 200 and "<h1>" in res["html"] and "<em>there</em>" in res["html"]
+    assert status == 200 and "<h1" in res["html"] and "<em>there</em>" in res["html"]
 
 
 def test_route_root_identity(repo):
     status, _, res = m.route(repo, "GET", "/api/root", {}, {})
-    assert status == 200 and res == {"root": str(repo), "build": m.BUILD}
+    assert status == 200 and res == {"root": str(repo), "build": m.BUILD, "mode": m.UI_MODE}
 
 
 def test_root_reports_a_build_fingerprint(repo):
@@ -230,3 +231,37 @@ def test_route_non_image_files_stay_404(repo):
     (repo / "x.exe").write_bytes(b"MZ")
     status, _, _ = m.route(repo, "GET", "/x.exe", {}, {})
     assert status == 404
+
+
+def test_render_tags_every_block_with_its_source_lines():
+    # the review UI turns a rendered block back into markdown using these ranges, so
+    # editing in the rendered view never converts HTML back into markdown
+    src = "# Title\n\npara one\n\n- a\n- b\n\n```py\nx=1\n```\n"
+    html = m.render_md(src)
+    ranges = re.findall(r'data-l0="(\d+)" data-l1="(\d+)"', html)
+    assert [(int(a), int(b)) for a, b in ranges] == [(0, 1), (2, 3), (4, 7), (7, 10)]
+    lines = src.split("\n")
+    # every range must slice back to exactly the block's own source
+    assert lines[0:1] == ["# Title"]
+    assert lines[2:3] == ["para one"]
+    assert lines[4:7] == ["- a", "- b", ""]
+
+
+def test_render_line_ranges_never_overlap():
+    src = "# A\n\nfirst\n\n> quote\n\n| a |\n| - |\n| 1 |\n\nlast\n"
+    ranges = [(int(a), int(b)) for a, b in
+              re.findall(r'data-l0="(\d+)" data-l1="(\d+)"', m.render_md(src))]
+    assert ranges == sorted(ranges)
+    for (_, end), (start, _) in zip(ranges, ranges[1:]):
+        assert end <= start, f"block ranges overlap: {ranges}"
+
+
+def test_split_mode_server_is_not_reused_for_review_mode(repo, monkeypatch):
+    # the two commands share this server; reusing a split instance for /research.mdreview
+    # would silently hand back the wrong UI
+    monkeypatch.setattr(m, "UI_MODE", "split")
+    _, _, split_root = m.route(repo, "GET", "/api/root", {}, {})
+    monkeypatch.setattr(m, "UI_MODE", "review")
+    _, _, review_root = m.route(repo, "GET", "/api/root", {}, {})
+    assert split_root["mode"] == "split" and review_root["mode"] == "review"
+    assert split_root["build"] == review_root["build"]   # same file, so only mode differs

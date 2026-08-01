@@ -76,12 +76,12 @@ Launch from the manuscript repo, or from the research repo (it follows `.researc
 
 ### 📝 The documents: `/research.mdreview`
 
-Checking and editing that pipeline of docs *is* the workflow — so **mdreview** gives the Markdown side the same treatment: a local web UI over your repo's docs.
+Checking and editing that pipeline of docs *is* the workflow — so **mdreview** gives the Markdown side the same treatment: a local web UI over your repo's docs, where you revise the rendered document directly.
 
 ![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
 
-- ✂️ **Overleaf-style split view** — raw markdown left, rendered preview right, draggable divider; the preview re-renders live as you type.
-- 🎯 **Click-to-source sync** — click or double-click anything in the rendered pane and the cursor jumps to (and selects) the matching spot in the raw editor; the **Reveal →** button blinks the preview text matching your cursor.
+- ✍️ **Revise in the rendered view** — click any paragraph, heading, list, table or code block and it turns into just that block's markdown; click away and it renders again. Only the lines you touched are rewritten, because the source range comes from the markdown parser rather than from converting HTML back to markdown — so tables, spacing and raw HTML elsewhere are never reflowed.
+- 🔀 **`Preview / Markdown` toggle** — one wide pane, swapped for the full source editor (line numbers, syntax colour) when you need the raw file. Prefer source and preview side by side? `/research.mdsplit` is the same tool in the two-pane layout, with click-to-source sync and a draggable divider.
 - 💬 **Google-Docs-style comments** — select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: *"read `.mdreview/` and address the comments on proposal.md"*.
 - 📋 **One-click export** — copies the document plus open comments to the clipboard, ready to paste into any AI for review.
 - 🧜 **Mermaid diagrams** — ` ```mermaid ` fences render as diagrams with a zoom + pan lightbox (via CDN; they fall back to code blocks offline).
@@ -91,7 +91,7 @@ Checking and editing that pipeline of docs *is* the workflow — so **mdreview**
 | --- | --- |
 | ![commenting](docs/assets/mdreview-comment.png) | ![sync and mermaid](docs/assets/mdreview-sync.png) |
 
-Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open`.
+Launch from any repo: `/research.mdreview` in your agent, or directly `uv run tools/mdreview.py --open` (add `--split` for the two-pane layout).
 
 ## ⚡ Quickstart
 
@@ -192,7 +192,8 @@ Gotchas seen in practice:
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
-| `/research.mdreview` | Open a local web UI to read, edit, comment on, and export the repo's markdown (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
+| `/research.mdreview` | Open a local web UI for the repo's markdown: one wide pane you revise directly in the rendered view, plus comments and export (optional; requires `uv`). Comments are sidecar JSON in `./.mdreview/` any agent can read. |
+| `/research.mdsplit` | The same UI in the source-beside-preview layout: raw markdown left, rendered right, click-to-source sync. Same comments. |
 | `/research.texreview` | Review the compiled paper: LaTeX source left, PDF right, SyncTeX click-to-source, comments on PDF selections carrying `file:line` targets, recompile on save, export (optional; requires `uv` + TeX). |
 
 ## 🤖 Supported agents

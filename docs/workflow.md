@@ -25,7 +25,7 @@ flowchart TD
 - `implement` owns every queue section. Empty/default runs work automated Setup/Build/Eval/Polish tasks and skip `[USER-LED]` Paper tasks. Manuscript work runs only after explicit task-id or `paper`/`outline`/`critique`/`draft` input.
 - `analyze` detects drift among plan, tasks, code, evidence, and manuscript and routes the exact re-run.
 - `review` reads only the manuscript and routes findings back to explicit implement modes.
-- Build remains paper-type aware; auxiliaries are `rebuttal`, `ae`, and the optional review UIs `mdreview` (markdown) / `texreview` (LaTeX + PDF).
+- Build remains paper-type aware; auxiliaries are `rebuttal`, `ae`, and the optional review UIs `mdreview` / `mdsplit` (markdown) and `texreview` (LaTeX + PDF).
 
 ## Input → output, per command
 

@@ -30,6 +30,10 @@ SKIP_DIRS = {".git", "node_modules", ".venv", ".mdreview", ".pytest_cache", "__p
 MAX_BYTES = 2 * 1024 * 1024
 MAX_IMAGE_BYTES = 10 * 1024 * 1024
 SIDECAR_DIR = ".mdreview"
+# Which UI the browser gets. "review" (/research.mdreview) is one pane you edit in the
+# rendered view; "split" (/research.mdsplit) is the source-beside-preview layout. Both
+# share this server and the same .mdreview/ comment sidecars.
+UI_MODE = "review"
 # A server bakes its HTML in at startup, so one left running after the tool is updated
 # keeps serving the old UI. Fingerprint the source so a stale instance is not reused.
 try:
@@ -170,7 +174,20 @@ _md = MarkdownIt("commonmark", {"html": True}).enable("table").enable("strikethr
 
 
 def render_md(text: str) -> str:
-    return _md.render(text)
+    """Render, tagging every top-level block with the source lines it came from.
+
+    These `data-l0`/`data-l1` attributes are what lets the review UI turn a rendered
+    paragraph back into exactly its markdown source, so editing in the rendered view
+    never needs an HTML-to-markdown conversion. They are inert everywhere else.
+    Raw `html_block` content renders verbatim and cannot carry attributes, so those
+    blocks are the one kind that stays uneditable in the rendered view.
+    """
+    tokens = _md.parse(text)
+    for t in tokens:
+        if t.level == 0 and t.map:
+            t.attrSet("data-l0", str(t.map[0]))
+            t.attrSet("data-l1", str(t.map[1]))
+    return _md.renderer.render(tokens, _md.options, {})
 
 
 def export_text(root: Path, rel: str) -> str:
@@ -236,6 +253,33 @@ PAGE = r"""<!doctype html>
      grid past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
   #app > * { min-width:0; min-height:0; }
   #main, #edarea { min-height:0; }
+  /* review mode: one wide centre column, [Preview | Markdown] switching which pane
+     occupies it. split mode carries no data-mode, so none of this applies to it. */
+  [data-mode="review"] #app { grid-template-columns:230px 1fr 300px;
+                              grid-template-rows:auto 1fr; }
+  [data-mode="review"] #sidewrap { grid-column:1; grid-row:1 / span 2; }
+  [data-mode="review"] #rbar { grid-column:2; grid-row:1; display:flex; }
+  [data-mode="review"] #srcpane, [data-mode="review"] #main { grid-column:2; grid-row:2; }
+  [data-mode="review"] #panel { grid-column:3; grid-row:1 / span 2; }
+  [data-mode="review"] #gutter, [data-mode="review"] #bar,
+  [data-mode="review"] #docctl { display:none; }
+  [data-mode="review"] #srcpane { display:none; }
+  [data-mode="review"] #app.showsrc #srcpane { display:flex; }
+  [data-mode="review"] #app.showsrc #main { display:none; }
+  [data-mode="review"] #doc { max-width:820px; margin:0 auto; }
+  #seg { display:inline-flex; border:1px solid var(--line); border-radius:7px;
+         overflow:hidden; background:var(--surface); }
+  #seg button { border:0; border-radius:0; background:none; color:var(--muted);
+                padding:4px 14px; cursor:pointer; font:13px inherit; }
+  #seg button.on { background:var(--accent-soft); color:var(--accent); font-weight:600; }
+  /* a rendered block invites a click only when it can actually be edited */
+  [data-mode="review"] #doc [data-l0] { border-radius:5px; }
+  [data-mode="review"] #doc > [data-l0]:hover,
+  [data-mode="review"] #doc > pre:has(> [data-l0]):hover {
+        background:var(--raised); box-shadow:0 0 0 4px var(--raised); }
+  #doc textarea.blockedit { display:block; width:100%; font:13px/1.6 ui-monospace,Menlo,monospace;
+        color:var(--text); background:var(--bg-alt); border:1px solid var(--accent);
+        border-radius:6px; padding:9px 11px; resize:none; outline:none; }
   #gutter { cursor:col-resize; background:var(--bg-alt); border-left:1px solid var(--line);
             border-right:1px solid var(--line); }
   #gutter:hover, #gutter.dragging { background:var(--accent); }
@@ -249,13 +293,14 @@ PAGE = r"""<!doctype html>
   #side button:hover { background:var(--raised); }
   #side button.active { background:var(--accent-soft); color:var(--accent); }
   #srcpane { display:flex; flex-direction:column; min-width:0; }
-  #bar { display:flex; gap:8px; align-items:center; padding:9px 12px;
+  #bar, #rbar { display:flex; gap:8px; align-items:center; padding:9px 12px;
          border-bottom:1px solid var(--line); background:var(--bg-alt); }
-  #bar .path { font-weight:600; font-size:13px; margin-right:auto; overflow:hidden;
+  #rbar { display:none; }
+  #bar .path, #rbar .path { font-weight:600; font-size:13px; margin-right:auto; overflow:hidden;
                text-overflow:ellipsis; white-space:nowrap; }
-  #bar button { border:1px solid var(--line); background:var(--surface); color:var(--text);
+  #bar button, #rbar button { border:1px solid var(--line); background:var(--surface); color:var(--text);
                 border-radius:6px; padding:4px 11px; cursor:pointer; font:13px inherit; }
-  #bar button:hover { border-color:var(--accent); color:var(--accent); }
+  #bar button:hover, #rbar button:hover { border-color:var(--accent); color:var(--accent); }
   /* A textarea cannot paint line numbers or syntax colour, so an identically wrapped
      mirror div sits under a transparent textarea and paints both. Sizes are in em so
      the A+/A- control scales the gutter with the text. */
@@ -360,6 +405,14 @@ PAGE = r"""<!doctype html>
     </div>
     <div id="side" style="border:0;"></div>
   </nav>
+  <div id="rbar" class="bar" style="visibility:hidden">
+    <span class="path" id="rpath"></span>
+    <span id="seg"><button id="segPrev" class="on">Preview</button><button id="segSrc">Markdown</button></span>
+    <span class="fontctl"><button id="rFontDown" data-f="doc" data-d="-1" title="Smaller text">A−</button><button id="rFontUp" data-f="doc" data-d="1" title="Larger text">A+</button></span>
+    <button id="rsaveBtn">Save</button>
+    <button id="rthemeBtn" title="Light / dark theme">◐</button>
+    <button id="rpanelToggle" title="Show / hide the comments panel">💬</button>
+  </div>
   <section id="srcpane">
     <div id="bar" style="visibility:hidden">
       <span class="path" id="path"></span>
@@ -437,7 +490,10 @@ const api = async (url, body) => fetch(url, body ? {method:"POST",
   headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : undefined);
 const toast = msg => { const t=$("toast"); t.textContent=msg; t.style.display="block";
   setTimeout(()=>t.style.display="none", 2200); };
-const setDirty = d => { dirty = d; $("saveBtn").textContent = d ? "Save •" : "Save"; };
+const setDirty = d => {
+  dirty = d;
+  for (const id of ["saveBtn", "rsaveBtn"]) $(id).textContent = d ? "Save •" : "Save";
+};
 
 /* ---------- sidebar: collapsible folders ---------- */
 let collapsed = new Set(JSON.parse(localStorage.getItem("mdreview.collapsed") || "[]"));
@@ -509,6 +565,8 @@ async function openDoc(path) {
   queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
+  $("rbar").style.visibility = "visible";
+  $("rpath").textContent = state.path;
   $("path").textContent = state.path;
   paint(d.html);
   renderSidebar();
@@ -851,6 +909,86 @@ function jumpToSource(renderedCtx, selectWord) {
     }
   }
 }
+/* ---------- review mode: one pane, and editing in the rendered view ---------- */
+let uiMode = "split";
+function showSrc(on) {
+  $("app").classList.toggle("showsrc", on);
+  $("segSrc").classList.toggle("on", on);
+  $("segPrev").classList.toggle("on", !on);
+  // one font control, pointed at whichever pane is showing
+  for (const b of [$("rFontDown"), $("rFontUp")]) b.dataset.f = on ? "editor" : "doc";
+  if (on) { queueMirror(); $("editor").focus(); }
+}
+async function initMode() {
+  const info = await (await api("/api/root")).json();
+  uiMode = info.mode || "split";
+  if (uiMode !== "review") return;
+  document.documentElement.dataset.mode = "review";
+  applyLayout();
+  $("segPrev").onclick = () => showSrc(false);
+  $("segSrc").onclick = () => showSrc(true);
+  $("rsaveBtn").onclick = () => save(false);
+  $("rthemeBtn").onclick = () => $("themeBtn").click();
+  $("rpanelToggle").onclick = () => $("panelToggle").click();
+  showSrc(false);
+}
+
+/* Turn one rendered block back into its markdown source. The source lines come from
+   markdown-it via data-l0/data-l1, so nothing is ever converted from HTML back to
+   markdown and the rest of the file is untouched. */
+let editingBlock = null;
+function blockSource(l0, l1) {
+  const lines = $("editor").value.split("\n");
+  let end = Math.min(l1, lines.length);
+  while (end > l0 && !lines[end - 1].trim()) end--;   // hide the block's trailing blanks
+  return {text: lines.slice(l0, end).join("\n"), blanks: Math.min(l1, lines.length) - end};
+}
+function openBlock(el) {
+  if (editingBlock) return;
+  const l0 = +el.dataset.l0, l1 = +el.dataset.l1;
+  const host = el.tagName === "CODE" && el.parentElement.tagName === "PRE" ? el.parentElement : el;
+  const {text, blanks} = blockSource(l0, l1);
+  const ta = document.createElement("textarea");
+  ta.className = "blockedit";
+  ta.value = text;
+  ta.spellcheck = false;
+  host.replaceWith(ta);
+  editingBlock = {l0, l1, blanks, ta};
+  const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
+  fit();
+  ta.addEventListener("input", fit);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+  ta.addEventListener("blur", () => commitBlock(true));
+  ta.addEventListener("keydown", ev => {
+    if (ev.key === "Escape") { ev.preventDefault(); commitBlock(false); }
+    // Enter inserts a newline as usual; the block closes on blur or Escape
+  });
+}
+function commitBlock(keep) {
+  if (!editingBlock) return;
+  const {l0, l1, blanks, ta} = editingBlock;
+  const next = ta.value;
+  editingBlock = null;                       // before rerender, so blur cannot re-enter
+  const {text} = blockSource(l0, l1);
+  if (!keep || next === text) { rerender(); return; }
+  const lines = $("editor").value.split("\n");
+  lines.splice(l0, Math.min(l1, lines.length) - l0,
+               ...next.split("\n"), ...Array(blanks).fill(""));
+  $("editor").value = lines.join("\n");
+  queueMirror();
+  setDirty(true);
+  rerender();
+}
+$("doc").addEventListener("click", ev => {
+  if (uiMode !== "review" || !state || editingBlock) return;
+  if (ev.detail > 1) return;                      // double-click keeps its own behaviour
+  if (!window.getSelection().isCollapsed) return; // a selection is a comment, not an edit
+  if (ev.target.closest("mark")) return;          // clicking a highlight opens its comment
+  const el = ev.target.closest("[data-l0]");
+  if (el) openBlock(el);
+});
+
 /* ---------- mirror: line numbers + markdown syntax colour ---------- */
 function esc(s) { return s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 // One class letter per character: h heading, b marker/punctuation, c code, u link
@@ -1138,8 +1276,11 @@ let panelVisible = localStorage.getItem("mdreview.panel") !== "hidden";
 let splitFrac = 0.5;
 function applyLayout() {
   $("panel").style.display = panelVisible ? "" : "none";
-  $("app").style.gridTemplateColumns =
-    `230px ${splitFrac}fr 6px ${1 - splitFrac}fr ${panelVisible ? "300px" : "0"}`;
+  // review mode has one centre column and no draggable split; this inline style would
+  // otherwise beat the stylesheet and put the four-column layout back
+  $("app").style.gridTemplateColumns = uiMode === "review"
+    ? `230px 1fr ${panelVisible ? "300px" : "0"}`
+    : `230px ${splitFrac}fr 6px ${1 - splitFrac}fr ${panelVisible ? "300px" : "0"}`;
   $("panelToggle").classList.toggle("off", !panelVisible);
 }
 $("panelToggle").onclick = () => {
@@ -1156,6 +1297,7 @@ applyLayout();
 
 // mermaid loads after the head script ran applyTheme(), so set its theme now
 if (window.mermaid) applyTheme();
+initMode();
 loadFiles();
 </script></body></html>"""
 
@@ -1166,7 +1308,8 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
         if method == "GET" and path == "/":
             return 200, "text/html; charset=utf-8", PAGE
         if method == "GET" and path == "/api/root":
-            return 200, "application/json", {"root": str(root), "build": BUILD}
+            return 200, "application/json", {"root": str(root), "build": BUILD,
+                                             "mode": UI_MODE}
         if method == "GET" and path == "/api/files":
             return 200, "application/json", list_md_files(root)
         if method == "GET" and path == "/api/doc":
@@ -1257,7 +1400,8 @@ def find_existing(root: Path, start: int) -> tuple[str | None, str | None]:
                 info = json.loads(r.read())
         except (OSError, ValueError):
             continue
-        if info.get("root") != str(root):
+        # a server in the other UI mode serves a different tool, not a reusable one
+        if info.get("root") != str(root) or info.get("mode", "review") != UI_MODE:
             continue
         url = f"http://127.0.0.1:{port}/"
         if info.get("build") == BUILD:
@@ -1271,7 +1415,12 @@ def main() -> None:
     ap.add_argument("--port", type=int, default=8377)
     ap.add_argument("--open", action="store_true", help="open the browser")
     ap.add_argument("--root", default=".", help="repo root to serve (default: cwd)")
+    ap.add_argument("--split", action="store_true",
+                    help="source-beside-preview layout (/research.mdsplit) instead of "
+                         "the one-pane view you edit in (/research.mdreview)")
     args = ap.parse_args()
+    global UI_MODE
+    UI_MODE = "split" if args.split else "review"
     root = Path(args.root).resolve()
     if not root.is_dir():
         raise SystemExit(f"error: not a directory: {root}")
