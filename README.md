@@ -80,7 +80,7 @@ Checking and editing that pipeline of docs *is* the workflow — so **mdreview**
 
 ![mdreview overview: split view with comments](docs/assets/mdreview-hero.png)
 
-- ✍️ **Revise in the rendered view** — click any paragraph, heading, list, table or code block and it turns into just that block's markdown; click away and it renders again. Only the lines you touched are rewritten, because the source range comes from the markdown parser rather than from converting HTML back to markdown — so tables, spacing and raw HTML elsewhere are never reflowed.
+- ✍️ **Revise in the rendered view** — click any paragraph, heading, list item, table row or code block and it turns into just that markdown (one task out of a 30-item queue, one row of `claims.md`); click away and it renders again. Only the lines you touched are rewritten, because the source range comes from the markdown parser rather than from converting HTML back to markdown — so tables, spacing and raw HTML elsewhere are never reflowed.
 - 🔀 **`Preview / Markdown` toggle** — one wide pane, swapped for the full source editor (line numbers, syntax colour) when you need the raw file. Prefer source and preview side by side? `/research.mdsplit` is the same tool in the two-pane layout, with click-to-source sync and a draggable divider.
 - 💬 **Google-Docs-style comments** — select rendered text and attach a note. Comments live as sidecar JSON under `./.mdreview/`, so your markdown stays clean and any coding agent can read them in-repo: *"read `.mdreview/` and address the comments on proposal.md"*.
 - 📋 **One-click export** — copies the document plus open comments to the clipboard, ready to paste into any AI for review.

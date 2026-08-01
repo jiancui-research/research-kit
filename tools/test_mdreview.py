@@ -233,27 +233,49 @@ def test_route_non_image_files_stay_404(repo):
     assert status == 404
 
 
+def _ranges(html, tag=r"\w+"):
+    return [(t, int(a), int(b)) for t, a, b in
+            re.findall(r'<(' + tag + r')[^>]*data-l0="(\d+)" data-l1="(\d+)"', html)]
+
+
 def test_render_tags_every_block_with_its_source_lines():
     # the review UI turns a rendered block back into markdown using these ranges, so
     # editing in the rendered view never converts HTML back into markdown
     src = "# Title\n\npara one\n\n- a\n- b\n\n```py\nx=1\n```\n"
-    html = m.render_md(src)
-    ranges = re.findall(r'data-l0="(\d+)" data-l1="(\d+)"', html)
-    assert [(int(a), int(b)) for a, b in ranges] == [(0, 1), (2, 3), (4, 7), (7, 10)]
+    top = [(t, a, b) for t, a, b in _ranges(m.render_md(src)) if t != "li"]
+    assert top == [("h1", 0, 1), ("p", 2, 3), ("ul", 4, 7), ("code", 7, 10)]
     lines = src.split("\n")
-    # every range must slice back to exactly the block's own source
     assert lines[0:1] == ["# Title"]
     assert lines[2:3] == ["para one"]
     assert lines[4:7] == ["- a", "- b", ""]
 
 
-def test_render_line_ranges_never_overlap():
-    src = "# A\n\nfirst\n\n> quote\n\n| a |\n| - |\n| 1 |\n\nlast\n"
-    ranges = [(int(a), int(b)) for a, b in
-              re.findall(r'data-l0="(\d+)" data-l1="(\d+)"', m.render_md(src))]
-    assert ranges == sorted(ranges)
-    for (_, end), (start, _) in zip(ranges, ranges[1:]):
-        assert end <= start, f"block ranges overlap: {ranges}"
+def test_list_items_and_table_rows_get_their_own_range():
+    # clicking one task in a queue must edit that task, not the whole list
+    src = ("- [ ] T001 first\n- [ ] T002 second\n  continued here\n- [x] T003 done\n"
+           "\n| a | b |\n| - | - |\n| 1 | 2 |\n| 3 | 4 |\n")
+    html = m.render_md(src)
+    items = [(a, b) for t, a, b in _ranges(html, "li")]
+    # the multi-line item keeps both lines; the last item absorbs the trailing blank,
+    # which blockSource() strips for display and restores on commit
+    assert items == [(0, 1), (1, 3), (3, 5)]
+    rows = [(a, b) for t, a, b in _ranges(html, "tr")]
+    assert rows == [(5, 6), (7, 8), (8, 9)]          # header row + one range per body row
+    lines = src.split("\n")
+    assert lines[1:3] == ["- [ ] T002 second", "  continued here"]
+    assert lines[7:8] == ["| 1 | 2 |"]
+    assert lines[3:5] == ["- [x] T003 done", ""]
+
+
+def test_nested_ranges_are_contained_not_overlapping():
+    # a fine-grained range must sit inside its parent block, never straddle two blocks
+    src = "# A\n\nfirst\n\n- outer\n  - nested\n\n| a |\n| - |\n| 1 |\n\nlast\n"
+    rs = [(a, b) for _, a, b in _ranges(m.render_md(src))]
+    for i, (a, b) in enumerate(rs):
+        for c, d in rs[i + 1:]:
+            disjoint = d <= a or b <= c
+            contained = (a <= c and d <= b) or (c <= a and b <= d)
+            assert disjoint or contained, f"({a},{b}) straddles ({c},{d}) in {rs}"
 
 
 def test_split_mode_server_is_not_reused_for_review_mode(repo, monkeypatch):

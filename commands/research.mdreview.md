@@ -6,7 +6,7 @@ argument-hint: optional flags passed through, e.g. --port 9000
 ## What this is
 mdreview is research-kit's optional review UI. One wide pane holds the rendered document:
 
-- **Click any paragraph, heading, list, table or code block and it becomes just that block's markdown**, ready to edit. Click away or press Esc and it renders again. Only the lines you touched are rewritten, because the source range comes from the markdown parser rather than from converting HTML back to markdown - so tables, spacing and raw HTML elsewhere in the file are never reflowed.
+- **Click any paragraph, heading, list item, table row or code block and it becomes just that markdown**, ready to edit. One task in a 30-item queue opens as that one task, and one row of `claims.md` as that one row - not the whole list or table. Click away or press Esc and it renders again. Only the lines you touched are rewritten, because the source range comes from the markdown parser rather than from converting HTML back to markdown - so tables, spacing and raw HTML elsewhere in the file are never reflowed.
 - A `Preview / Markdown` toggle swaps the pane for the full source editor (line numbers, syntax colour) when you need the raw file. Raw HTML blocks are the one thing you cannot click to edit; use the Markdown tab for those.
 - Google-Docs-style comments on selected rendered text, conflict-safe saves, and one-click export (document + open comments) to the clipboard for any AI.
 

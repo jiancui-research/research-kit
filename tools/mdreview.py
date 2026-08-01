@@ -34,6 +34,10 @@ SIDECAR_DIR = ".mdreview"
 # rendered view; "split" (/research.mdsplit) is the source-beside-preview layout. Both
 # share this server and the same .mdreview/ comment sidecars.
 UI_MODE = "review"
+# Nested blocks that are still a self-contained slice of source, so clicking one task in
+# a 30-item queue edits that task rather than the whole list. The UI targets the
+# innermost tagged element, and these ranges nest inside their parent block's range.
+FINE_BLOCKS = {"list_item_open", "tr_open"}
 # A server bakes its HTML in at startup, so one left running after the tool is updated
 # keeps serving the old UI. Fingerprint the source so a stale instance is not reused.
 try:
@@ -184,7 +188,7 @@ def render_md(text: str) -> str:
     """
     tokens = _md.parse(text)
     for t in tokens:
-        if t.level == 0 and t.map:
+        if t.map and (t.level == 0 or t.type in FINE_BLOCKS):
             t.attrSet("data-l0", str(t.map[0]))
             t.attrSet("data-l1", str(t.map[1]))
     return _md.renderer.render(tokens, _md.options, {})
@@ -274,9 +278,14 @@ PAGE = r"""<!doctype html>
   #seg button.on { background:var(--accent-soft); color:var(--accent); font-weight:600; }
   /* a rendered block invites a click only when it can actually be edited */
   [data-mode="review"] #doc [data-l0] { border-radius:5px; }
-  [data-mode="review"] #doc > [data-l0]:hover,
-  [data-mode="review"] #doc > pre:has(> [data-l0]):hover {
-        background:var(--raised); box-shadow:0 0 0 4px var(--raised); }
+  /* highlight the innermost editable thing under the pointer, so hovering one task in
+     a list offers that task rather than the whole list */
+  [data-mode="review"] #doc [data-l0]:hover:not(:has([data-l0]:hover)) {
+        background:var(--raised); box-shadow:0 0 0 3px var(--raised); }
+  [data-mode="review"] #doc pre:has(> [data-l0]:hover) {
+        background:var(--raised); box-shadow:0 0 0 3px var(--raised); }
+  [data-mode="review"] #doc tr[data-l0]:hover:not(:has([data-l0]:hover)) { box-shadow:none; }
+  #doc li > textarea.blockedit { margin:2px 0; }
   #doc textarea.blockedit { display:block; width:100%; font:13px/1.6 ui-monospace,Menlo,monospace;
         color:var(--text); background:var(--bg-alt); border:1px solid var(--accent);
         border-radius:6px; padding:9px 11px; resize:none; outline:none; }
@@ -943,16 +952,31 @@ function blockSource(l0, l1) {
   while (end > l0 && !lines[end - 1].trim()) end--;   // hide the block's trailing blanks
   return {text: lines.slice(l0, end).join("\n"), blanks: Math.min(l1, lines.length) - end};
 }
+// A list item or table row cannot simply be swapped for a textarea without breaking the
+// list or table around it, so those keep their element and host the editor inside.
+function mountEditor(el, ta) {
+  if (el.tagName === "LI") { el.textContent = ""; el.appendChild(ta); return; }
+  if (el.tagName === "TR") {
+    const span = el.children.length || 1;
+    el.textContent = "";
+    const cell = document.createElement("td");
+    cell.colSpan = span;
+    cell.appendChild(ta);
+    el.appendChild(cell);
+    return;
+  }
+  const host = el.tagName === "CODE" && el.parentElement.tagName === "PRE" ? el.parentElement : el;
+  host.replaceWith(ta);
+}
 function openBlock(el) {
   if (editingBlock) return;
   const l0 = +el.dataset.l0, l1 = +el.dataset.l1;
-  const host = el.tagName === "CODE" && el.parentElement.tagName === "PRE" ? el.parentElement : el;
   const {text, blanks} = blockSource(l0, l1);
   const ta = document.createElement("textarea");
   ta.className = "blockedit";
   ta.value = text;
   ta.spellcheck = false;
-  host.replaceWith(ta);
+  mountEditor(el, ta);
   editingBlock = {l0, l1, blanks, ta};
   const fit = () => { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + "px"; };
   fit();
