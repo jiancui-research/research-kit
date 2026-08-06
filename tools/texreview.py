@@ -175,9 +175,14 @@ def _save_comments(root: Path, comments: list[dict]) -> None:
 
 
 def add_comment(root: Path, page: int, quote: str, prefix: str, suffix: str,
-                file: str | None, line: int | None, comment: str) -> dict:
+                file: str | None, line: int | None, comment: str,
+                origin: str = "pdf") -> dict:
     entry = {
         "id": uuid.uuid4().hex[:12],
+        # where it was written: "pdf" quotes rendered text, "source" quotes LaTeX. Which
+        # pane a click on the comment should open follows from this rather than from
+        # whether the quoted words happen to appear in both.
+        "origin": "source" if origin == "source" else "pdf",
         "page": int(page),
         "quote": quote,
         "prefix": prefix,
@@ -480,8 +485,12 @@ def export_text(root: Path, main_rel: str) -> str:
     if open_comments:
         parts += ["## Reviewer comments", ""]
         for i, c in enumerate(open_comments, 1):
-            where = (f"`{c['file']}:{c['line']}`, page {c['page']}"
-                     if c.get("file") else f"page {c['page']}")
+            bits = []
+            if c.get("file"):
+                bits.append(f"`{c['file']}:{c['line']}`")
+            if c.get("page"):
+                bits.append(f"page {c['page']}")
+            where = ", ".join(bits) or "location unknown"
             parts.append(f'{i}. [id: {c["id"]}] {where} > "{c["quote"]}"')
             parts.append(f"   {c['comment']}")
             parts.append("")
@@ -713,7 +722,7 @@ PAGE = r"""<!doctype html>
     <div id="cards"><p class="empty">Select PDF text to comment.</p></div>
   </aside>
 </div>
-<div id="pop"><textarea id="popText" placeholder="Comment..."></textarea><br>
+<div id="pop"><textarea id="popText" placeholder="Comment on the selection..."></textarea><br>
   <button id="popAdd">Add comment</button></div>
 <div id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
@@ -739,8 +748,9 @@ let mainRel = "";
 let pdfDoc = null, pdfScale = 1, zoomFactor = 1, loadedMtime = 0, renderToken = 0;
 let pageEls = [];          // .page divs, index = page-1
 let comments = [];
-let pending = null;        // captured PDF selection awaiting comment text
-let lastSel = null;        // survives focus steals (right-click after select)
+let pending = null;        // captured selection awaiting comment text
+let lastSel = null;        // last PDF selection; survives the focus steal on right-click
+let lastSrcSel = null;     // same, for a selection in the LaTeX editor
 let dirty = false, compiling = false;
 
 const api = async (url, body) => fetch(url, body ? {method:"POST",
@@ -1295,10 +1305,27 @@ function capturePdfSelection() {
   };
   return lastSel;
 }
-function openCommentPopover(x, y) {
-  const cap = capturePdfSelection() || lastSel;
+/* A selection in the LaTeX editor. file and line are known outright here, so this skips
+   the SyncTeX lookup the PDF path needs and resolves the page on the way out instead. */
+function captureSourceSelection() {
+  const ed = $("editor");
+  if (!state) return null;
+  const a = ed.selectionStart, b = ed.selectionEnd;
+  if (a === b) return null;
+  const v = ed.value, quote = v.slice(a, b);
+  if (!quote.trim()) return null;
+  lastSrcSel = {
+    origin: "source", file: state.path, line: v.slice(0, a).split("\n").length, quote,
+    prefix: v.slice(Math.max(0, a - 30), a),
+    suffix: v.slice(b, b + 30),
+  };
+  return lastSrcSel;
+}
+$("editor").addEventListener("select", captureSourceSelection);
+function openCommentPopover(x, y, cap) {
+  cap = cap || capturePdfSelection() || lastSel;
   if (!cap) return false;
-  pending = cap;
+  pending = cap.origin ? cap : {...cap, origin: "pdf"};
   const pop = $("pop");
   pop.style.display = "block";
   pop.style.left = Math.min(x, innerWidth - 300) + "px";
@@ -1306,18 +1333,21 @@ function openCommentPopover(x, y) {
   $("popText").value = ""; $("popText").focus();
   return true;
 }
+// Selecting text no longer pops the comment box open by itself - it got in the way of
+// simply reading and re-selecting. Right-click on the selection to comment, in either pane.
 $("pdfwrap").addEventListener("mouseup", ev => {
   if (ev.button !== 0) return;
   setTimeout(() => {
     const sel = window.getSelection();
-    if (!sel.rangeCount || sel.isCollapsed) { $("pop").style.display = "none"; return; }
-    if (!el(sel.getRangeAt(0).startContainer)?.closest?.(".page")) return;
-    const rect = sel.getRangeAt(0).getBoundingClientRect();
-    openCommentPopover(rect.left, rect.bottom);
+    if (!sel.rangeCount || sel.isCollapsed) $("pop").style.display = "none";
   }, 0);
 });
 $("pdfwrap").addEventListener("contextmenu", ev => {
   if (openCommentPopover(ev.clientX, ev.clientY)) ev.preventDefault();
+});
+$("editor").addEventListener("contextmenu", ev => {
+  const cap = captureSourceSelection() || lastSrcSel;
+  if (cap && openCommentPopover(ev.clientX, ev.clientY, cap)) ev.preventDefault();
 });
 $("pdfwrap").addEventListener("click", async ev => {
   const sel = window.getSelection();
@@ -1359,13 +1389,19 @@ $("popAdd").onclick = async () => {
   const p = pending;
   if (!text || !p) return;
   $("pop").style.display = "none"; pending = null;
-  let loc = {file: null, line: null};
+  let page = p.page || 0, file = p.file ?? null, line = p.line ?? null;
   try {
-    const r = await api("/api/sync/edit", {page: p.page, x: p.x, y: p.y});
-    if (r.ok) loc = await r.json();
+    if (p.origin === "source") {
+      // known file:line -> which PDF page, so the card can still jump into the paper
+      const r = await api("/api/sync/view", {file: p.file, line: p.line});
+      if (r.ok) page = (await r.json()).page;
+    } else {
+      const r = await api("/api/sync/edit", {page: p.page, x: p.x, y: p.y});
+      if (r.ok) ({file, line} = await r.json());
+    }
   } catch (e) {}
-  await api("/api/comment/add", {page: p.page, quote: p.quote, prefix: p.prefix,
-    suffix: p.suffix, file: loc.file, line: loc.line, comment: text});
+  await api("/api/comment/add", {page, quote: p.quote, prefix: p.prefix,
+    suffix: p.suffix, file, line, comment: text, origin: p.origin});
   refreshComments();
 };
 document.addEventListener("mousedown", ev => {
@@ -1463,9 +1499,10 @@ function commentCard(c) {
   card.className = "card" + (c.resolved ? " resolved" : "");
   card.id = "card-" + c.id;
   const loc = document.createElement("span"); loc.className = "loc";
-  loc.textContent = (c.file ? c.file + ":" + c.line + " · " : "") + "p." + c.page;
+  loc.textContent = [c.file ? c.file + ":" + c.line : "", c.page ? "p." + c.page : ""]
+    .filter(Boolean).join(" · ");
   const q = document.createElement("span"); q.className = "q"; q.textContent = '"' + c.quote + '"';
-  q.title = "Show this passage in the PDF";
+  q.title = "Show this passage";
   q.onclick = () => locateComment(c);
   const body = document.createElement("div"); body.textContent = c.comment;
   card.append(loc, q, body);
@@ -1508,6 +1545,8 @@ function commentCard(c) {
   return card;
 }
 function locateComment(c) {
+  // written against the LaTeX? show it there, even when the same words also render
+  if (c.origin === "source" && c.file) { gotoSource(c.file, c.line); return; }
   const mk = document.querySelector('.textLayer mark[data-id="' + c.id + '"]');
   if (mk) {
     mk.scrollIntoView({behavior: "smooth", block: "center"});
@@ -1515,6 +1554,9 @@ function locateComment(c) {
     setTimeout(() => mk.classList.remove("flash"), 2000);
     return;
   }
+  // a comment made on the LaTeX source quotes markup that never appears in the PDF,
+  // so fall back to the place it was actually written
+  if (c.file) { gotoSource(c.file, c.line); return; }
   const pd = pageEls[(c.page || 1) - 1];
   if (pd) {
     $("pdfwrap").scrollTo({top: pd.offsetTop - 20, behavior: "smooth"});
@@ -1524,7 +1566,8 @@ function locateComment(c) {
 function renderPanel() {
   const panel = $("cards"); panel.innerHTML = "";
   if (!comments.length) {
-    panel.innerHTML = '<p class="empty">No comments. Select PDF text to add one.</p>';
+    panel.innerHTML = '<p class="empty">No comments. Select text in the PDF or in the '
+      + 'LaTeX source, then right-click it to comment.</p>';
     return;
   }
   const open = comments.filter(c => !c.resolved);
@@ -1703,7 +1746,8 @@ def route(root: Path, main_rel: str, method: str, path: str,
         if method == "POST" and path == "/api/comment/add":
             return 200, "application/json", add_comment(
                 root, body["page"], body["quote"], body.get("prefix", ""),
-                body.get("suffix", ""), body.get("file"), body.get("line"), body["comment"])
+                body.get("suffix", ""), body.get("file"), body.get("line"), body["comment"],
+                body.get("origin", "pdf"))
         if method == "POST" and path == "/api/comment/update":
             fields = {k: body[k] for k in ("resolved", "comment", "reply", "fixed") if k in body}
             return 200, "application/json", update_comment(root, body["id"], fields)

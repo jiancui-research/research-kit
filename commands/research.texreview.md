@@ -4,7 +4,7 @@ argument-hint: optional flags passed through, e.g. --main paper.tex --port 9000
 ---
 
 ## What this is
-texreview is research-kit's optional manuscript review UI - a single-user local Overleaf with the review loop built in: editable LaTeX source on the left, the compiled PDF on the right, SyncTeX sync in both directions (click PDF text to jump to its source line; Reveal flashes the PDF box for the cursor line), Google-Docs-style comments on PDF selections that record their `file:line` target, a Recompile button (`latexmk -pdf -synctex=1`), and one-click export of open comments for any AI. It is a leaf utility - no other command depends on it. (Like /research.init, this command does not read the constitution; it only launches a tool.)
+texreview is research-kit's optional manuscript review UI - a single-user local Overleaf with the review loop built in: editable LaTeX source on the left, the compiled PDF on the right, SyncTeX sync in both directions (click PDF text to jump to its source line; Reveal flashes the PDF box for the cursor line), Google-Docs-style comments on a selection in **either** pane - right-click the selection to comment - each recording its `file:line` target, a Recompile button (`latexmk -pdf -synctex=1`), and one-click export of open comments for any AI. It is a leaf utility - no other command depends on it. (Like /research.init, this command does not read the constitution; it only launches a tool.)
 
 ## Steps
 1. Resolve the tool from the same three locations as the bundled templates:
@@ -15,7 +15,7 @@ texreview is research-kit's optional manuscript review UI - a single-user local 
 2. Check `uv` is available (`command -v uv`). If missing, point to https://docs.astral.sh/uv/ and stop. If `latexmk` is missing, warn that Recompile and SyncTeX need a TeX install (MacTeX / TeX Live) but continue.
 3. Run it in the background: `uv run <resolved-path> --open $ARGUMENTS`. The tool finds the manuscript itself: the current repo if it holds a `\documentclass` `.tex`, else the sibling repo on line 1 of `./.research/paper-repo`. Report the URL it prints.
 4. Tell the user both feedback paths:
-   - In-repo: comments live in the **paper repo's** `.texreview/comments.json`, each carrying the PDF quote plus its SyncTeX-resolved `file:line` - asking an agent in that repo to "read .texreview/comments.json and address the comments" works with no export. When YOU address a comment as the agent, update its entry (match by id): set `"resolved": true`, add a one-sentence `"reply"` describing the fix, and a `"fixed"` field quoting a short exact snippet of the new LaTeX - after the next compile the UI highlights where the fix landed.
+   - In-repo: comments live in the **paper repo's** `.texreview/comments.json`, each carrying the quote plus its `file:line` (SyncTeX-resolved for PDF selections, known outright for source ones) - asking an agent in that repo to "read .texreview/comments.json and address the comments" works with no export. When YOU address a comment as the agent, update its entry (match by id): set `"resolved": true`, add a one-sentence `"reply"` describing the fix, and a `"fixed"` field quoting a short exact snippet of the new LaTeX - after the next compile the UI highlights where the fix landed.
    - External: the Export button copies open comments (with ids, `file:line` targets, and the same reply instructions) for pasting into any AI.
 
 ## Completion

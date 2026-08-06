@@ -323,6 +323,30 @@ def test_export_text_targets_and_instructions(paper):
     assert "Hello reviewers" not in text          # no full-source embed by design
 
 
+def test_comment_records_where_it_was_written(paper):
+    pdf = tr.add_comment(paper, 1, "rendered words", "", "", "main.tex", 3, "note")
+    src = tr.add_comment(paper, 0, "\\emph{x}", "", "", "main.tex", 3, "note",
+                         origin="source")
+    assert pdf["origin"] == "pdf" and src["origin"] == "source"
+    # anything unexpected falls back to the PDF reading rather than being stored raw
+    odd = tr.add_comment(paper, 1, "q", "", "", None, None, "n", origin="../evil")
+    assert odd["origin"] == "pdf"
+
+
+def test_export_text_for_a_comment_made_on_the_source(paper):
+    # commenting on the LaTeX source knows file:line outright; the page is only filled
+    # in when SyncTeX can resolve one, so the export must not print a bogus "page 0"
+    tr.add_comment(paper, 0, "\\emph{Maris}", "", "", "sections/intro.tex", 42, "define this")
+    text = tr.export_text(paper, "main.tex")
+    assert "`sections/intro.tex:42`" in text
+    assert "page 0" not in text
+
+
+def test_export_text_location_unknown_when_nothing_resolved(paper):
+    tr.add_comment(paper, 0, "floating quote", "", "", None, None, "where is this?")
+    assert "location unknown" in tr.export_text(paper, "main.tex")
+
+
 def test_export_text_no_open_comments(paper):
     assert "(no open comments)" in tr.export_text(paper, "main.tex")
 
