@@ -100,6 +100,8 @@ def _atomic_write(path: Path, data: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".mdreview-tmp")
     try:
+        if path.exists():          # mkstemp makes 0600; keep the file's own mode
+            os.chmod(tmp, path.stat().st_mode & 0o7777)
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(data)
         os.replace(tmp, path)
@@ -126,7 +128,10 @@ def load_comments(root: Path, rel: str) -> list[dict]:
     cp = _comments_path(root, rel)
     if not cp.is_file():
         return []
-    return json.loads(cp.read_text(encoding="utf-8"))
+    try:
+        return json.loads(cp.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        raise RequestError(500, f"corrupted comment sidecar: {cp.name} - fix or delete it")
 
 
 def _save_comments(root: Path, rel: str, comments: list[dict]) -> None:
@@ -473,8 +478,11 @@ function setThemeAttr() {
   const saved = localStorage.getItem("mdreview.theme");
   const dark = saved ? saved === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
   document.documentElement.dataset.theme = dark ? "dark" : "light";
-  const b = document.getElementById("themeBtn");
-  if (b) b.textContent = dark ? "☾" : "☀";
+  // review mode hides #docctl and shows #rthemeBtn instead, so both must track the state
+  for (const id of ["themeBtn", "rthemeBtn"]) {
+    const b = document.getElementById(id);
+    if (b) b.textContent = dark ? "☾" : "☀";
+  }
   return dark;
 }
 setThemeAttr();
@@ -588,6 +596,7 @@ async function openDoc(path) {
   renderSidebar();
 }
 function paint(html) {
+  editingBlock = null;   // this replaces the DOM; any open block editor is gone with it
   lastSel = null;   // content changed; stale snapshots must not anchor comments
   $("doc").innerHTML = html;
   fixImagePaths();
@@ -613,6 +622,9 @@ async function renderMermaid() {
     const div = document.createElement("div");
     div.className = "mermaid";
     div.textContent = code.textContent;
+    // carry the fence's source range over, or the diagram becomes the one block in the
+    // document that cannot be clicked to edit
+    if (code.dataset.l0) { div.dataset.l0 = code.dataset.l0; div.dataset.l1 = code.dataset.l1; }
     code.parentElement.replaceWith(div);
   }
   try { await mermaid.run({ nodes: $("doc").querySelectorAll(".mermaid") }); }
@@ -1175,7 +1187,11 @@ async function save(overwrite) {
 }
 $("saveBtn").onclick = () => save(false);
 document.addEventListener("keydown", ev => {
-  if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") { ev.preventDefault(); save(false); }
+  if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") {
+    ev.preventDefault();
+    commitBlock(true);   // fold an open block back in first, or its text is saved away
+    save(false);
+  }
 });
 $("exportBtn").onclick = async () => {
   const res = await api("/api/export?path=" + encodeURIComponent(state.path));
@@ -1387,8 +1403,31 @@ def route(root: Path, method: str, path: str, query: dict, body: dict) -> tuple[
         return 404, "application/json", {"error": f"no such route: {method} {path}"}
     except RequestError as e:
         return e.status, "application/json", {"error": e.message}
-    except (KeyError, IndexError):
-        return 400, "application/json", {"error": "missing parameter"}
+    except (KeyError, IndexError, TypeError, ValueError):
+        return 400, "application/json", {"error": "missing or invalid parameter"}
+    except OSError as e:
+        return 500, "application/json", {"error": f"filesystem error: {e.strerror or e}"}
+
+
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def request_is_local(host: str | None, origin: str | None) -> bool:
+    """Reject requests steered here by another site.
+
+    The server binds to loopback, but any page the user browses can still POST to
+    127.0.0.1 - and these tools write files (and serve repo files). Same-origin requests from our own
+    page carry Host: 127.0.0.1:<port> and either no Origin or our own; a cross-site
+    request carries that site's Origin, so requiring both settles it without a token.
+    """
+    hostname = (host or "").rsplit(":", 1)[0].strip("[]").lower()
+    if hostname and hostname not in LOCAL_HOSTS:
+        return False
+    if origin:
+        o = urlparse(origin).hostname
+        if (o or "").lower() not in LOCAL_HOSTS:
+            return False
+    return True
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1410,11 +1449,21 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _local_only(self) -> bool:
+        if request_is_local(self.headers.get("Host"), self.headers.get("Origin")):
+            return True
+        self._send(403, "application/json", {"error": "cross-site request refused"})
+        return False
+
     def do_GET(self):
+        if not self._local_only():
+            return
         u = urlparse(self.path)
         self._send(*route(self.root, "GET", u.path, parse_qs(u.query), {}))
 
     def do_POST(self):
+        if not self._local_only():
+            return
         u = urlparse(self.path)
         n = int(self.headers.get("Content-Length") or 0)
         try:

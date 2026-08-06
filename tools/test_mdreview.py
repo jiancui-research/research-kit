@@ -287,3 +287,22 @@ def test_split_mode_server_is_not_reused_for_review_mode(repo, monkeypatch):
     _, _, review_root = m.route(repo, "GET", "/api/root", {}, {})
     assert split_root["mode"] == "split" and review_root["mode"] == "review"
     assert split_root["build"] == review_root["build"]   # same file, so only mode differs
+
+
+# ---------- request origin ----------
+
+def test_request_is_local_accepts_our_own_page():
+    assert m.request_is_local("127.0.0.1:8377", None)
+    assert m.request_is_local("localhost:8377", "http://127.0.0.1:8377")
+    assert m.request_is_local("[::1]:8377", "http://localhost:8377")
+
+
+def test_request_is_local_refuses_a_page_that_steered_us():
+    # any site the user browses can POST to loopback; these tools write files and compile
+    assert not m.request_is_local("127.0.0.1:8377", "https://evil.example")
+    assert not m.request_is_local("127.0.0.1:8377", "null")
+
+
+def test_request_is_local_refuses_a_rebound_hostname():
+    # DNS rebinding: attacker.example resolving to 127.0.0.1 still reaches us
+    assert not m.request_is_local("attacker.example:8377", None)

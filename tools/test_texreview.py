@@ -414,3 +414,22 @@ def test_route_comment_flow(paper):
     assert status == 200 and entry["prefix"] == "" and entry["file"] is None
     status, _, got = tr.route(paper, "main.tex", "GET", "/api/comments", {}, {})
     assert status == 200 and len(got) == 1
+
+
+# ---------- request origin ----------
+
+def test_request_is_local_accepts_our_own_page():
+    assert tr.request_is_local("127.0.0.1:8378", None)
+    assert tr.request_is_local("localhost:8378", "http://127.0.0.1:8378")
+    assert tr.request_is_local("[::1]:8378", "http://localhost:8378")
+
+
+def test_request_is_local_refuses_a_page_that_steered_us():
+    # any site the user browses can POST to loopback; these tools write files and compile
+    assert not tr.request_is_local("127.0.0.1:8378", "https://evil.example")
+    assert not tr.request_is_local("127.0.0.1:8378", "null")
+
+
+def test_request_is_local_refuses_a_rebound_hostname():
+    # DNS rebinding: attacker.example resolving to 127.0.0.1 still reaches us
+    assert not tr.request_is_local("attacker.example:8378", None)

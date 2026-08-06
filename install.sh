@@ -39,6 +39,22 @@ COPILOT_DIR="${COPILOT_AGENTS_DIR:-$HOME/.copilot/agents}"
 # Agent-neutral staging home for the bundled templates that /research.init copies in.
 BUNDLE_HOME="${RESEARCH_KIT_HOME:-$HOME/.research-kit}"
 
+# staging rm -rf's its subdirectories and --uninstall removes the whole thing, so refuse
+# an override pointing anywhere that is not a directory dedicated to this bundle
+case "$BUNDLE_HOME" in
+    "" | / | "$HOME" | "$HOME/" | "$SCRIPT_DIR" | "$SCRIPT_DIR"/)
+        echo "error: RESEARCH_KIT_HOME must be a dedicated directory, not $BUNDLE_HOME" >&2
+        exit 1 ;;
+esac
+# Ours if empty, marked, or already holding the content we stage (upgrades predate the mark).
+if [ -e "$BUNDLE_HOME" ] && [ ! -e "$BUNDLE_HOME/.research-kit-home" ] \
+   && [ ! -d "$BUNDLE_HOME/templates" ] && [ ! -d "$BUNDLE_HOME/tools" ] \
+   && [ -n "$(ls -A "$BUNDLE_HOME" 2>/dev/null)" ]; then
+    echo "error: $BUNDLE_HOME already exists and was not created by this script." >&2
+    echo "       Point RESEARCH_KIT_HOME somewhere else, or remove that directory first." >&2
+    exit 1
+fi
+
 usage() {
     sed -n '2,18p' "$SCRIPT_PATH" | sed 's/^# \{0,1\}//'
 }
@@ -116,16 +132,38 @@ read_body() {
 
 # Remove already-installed research.* files that are no longer in the bundle,
 # so deleting a command from the repo self-cleans on the next install.
+# Record what this script installed, so pruning can tell a command the bundle dropped
+# from one the user wrote themselves in the same namespace.
+manifest_path() {
+    echo "$BUNDLE_HOME/installed-$1.list"
+}
+
+write_manifest() {
+    mkdir -p "$BUNDLE_HOME"
+    : > "$BUNDLE_HOME/.research-kit-home"
+    for f in "$SRC_DIR"/research.*.md; do
+        [ -e "$f" ] && basename "$f" .md
+    done > "$(manifest_path "$1")"
+}
+
 prune_stale() {
-    pdest="$1"
-    ppat="$2"
-    psuf="$3"
+    pagent="$1"
+    pdest="$2"
+    ppat="$3"
+    psuf="$4"
+    pman=$(manifest_path "$pagent")
+    if [ ! -f "$pman" ]; then
+        return 0    # nothing recorded yet: never guess that a file here was ours
+    fi
     for old in "$pdest"/$ppat; do
         [ -e "$old" ] || [ -L "$old" ] || continue
         pbase=$(basename "$old" "$psuf")
-        if [ ! -e "$SRC_DIR/$pbase.md" ]; then
+        [ -e "$SRC_DIR/$pbase.md" ] && continue
+        if grep -qxF "$pbase" "$pman" 2>/dev/null; then
             rm -f "$old"
             echo "  pruned   $old (removed from bundle)"
+        else
+            echo "  kept     $old (not installed by this script)"
         fi
     done
 }
@@ -136,7 +174,8 @@ install_raw() {
     agent="$1"
     dest="$2"
     mkdir -p "$dest"
-    prune_stale "$dest" "research.*.md" ".md"
+    prune_stale "$agent" "$dest" "research.*.md" ".md"
+    write_manifest "$agent"
     echo "Installing research-kit commands for $agent into $dest ($MODE)"
     for src in "$SRC_DIR"/research.*.md; do
         [ -e "$src" ] || continue
@@ -160,7 +199,8 @@ install_raw() {
 install_copilot() {
     dest="$COPILOT_DIR"
     mkdir -p "$dest"
-    prune_stale "$dest" "research.*.agent.md" ".agent.md"
+    prune_stale copilot "$dest" "research.*.agent.md" ".agent.md"
+    write_manifest copilot
     echo "Installing research-kit commands for copilot into $dest (generated agents)"
     for src in "$SRC_DIR"/research.*.md; do
         [ -e "$src" ] || continue
@@ -204,6 +244,7 @@ install_agent() {
 stage_templates() {
     if [ -d "$SCRIPT_DIR/templates" ]; then
         mkdir -p "$BUNDLE_HOME"
+        : > "$BUNDLE_HOME/.research-kit-home"
         rm -rf "$BUNDLE_HOME/templates"
         cp -R "$SCRIPT_DIR/templates" "$BUNDLE_HOME/templates"
         echo "  staged   $BUNDLE_HOME/templates (bundled templates for /research.init)"
@@ -215,6 +256,7 @@ stage_tools() {
         mkdir -p "$BUNDLE_HOME"
         rm -rf "$BUNDLE_HOME/tools"
         cp -R "$SCRIPT_DIR/tools" "$BUNDLE_HOME/tools"
+        rm -rf "$BUNDLE_HOME/tools/__pycache__" "$BUNDLE_HOME/tools/.pytest_cache"
         echo "  staged   $BUNDLE_HOME/tools (optional tools: mdreview, texreview)"
     fi
 }

@@ -129,17 +129,20 @@ def read_doc(root: Path, rel: str) -> dict:
         raise RequestError(404, f"no such file: {rel}")
     if p.stat().st_size > MAX_BYTES:
         raise RequestError(413, f"file over {MAX_BYTES // (1024 * 1024)} MB: {rel}")
-    try:
-        content = p.read_text(encoding="utf-8")
+    mtime = p.stat().st_mtime      # before the read: a later stat could describe content
+    try:                           # newer than what we are about to send, and the client
+        content = p.read_text(encoding="utf-8")   # would then save over it unwarned
     except UnicodeDecodeError:
         raise RequestError(415, f"not UTF-8 text: {rel}")
-    return {"content": content, "mtime": p.stat().st_mtime}
+    return {"content": content, "mtime": mtime}
 
 
 def _atomic_write(path: Path, data: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".texreview-tmp")
     try:
+        if path.exists():          # mkstemp makes 0600; keep the file's own mode
+            os.chmod(tmp, path.stat().st_mode & 0o7777)
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(data)
         os.replace(tmp, path)
@@ -290,17 +293,23 @@ def compile_cmd(root: Path, main_rel: str) -> list[str]:
 def _run_compile(root: Path, main_rel: str) -> None:
     ok, log = False, ""
     try:
+        # errors="replace": a single latin-1 byte in a .bib or a pasted author name makes
+        # latexmk's log undecodable, and the exception would otherwise kill this thread
+        # before the status update, wedging "a compile is already running" until restart
         p = subprocess.run(
-            compile_cmd(root, main_rel), env=tex_env(),
-            cwd=root, capture_output=True, text=True, timeout=COMPILE_TIMEOUT)
+            compile_cmd(root, main_rel), env=tex_env(), cwd=root, capture_output=True,
+            encoding="utf-8", errors="replace", timeout=COMPILE_TIMEOUT)
         ok = p.returncode == 0
         log = "" if ok else latexmk_error_tail(p.stdout + "\n" + p.stderr)
     except FileNotFoundError:
         log = "latexmk not found on PATH - install TeX Live / MacTeX"
     except subprocess.TimeoutExpired:
         log = f"compile timed out after {COMPILE_TIMEOUT}s"
-    with _compile_lock:
-        _compile.update(running=False, ok=ok, log=log, finished=time.time())
+    except Exception as e:                      # never leave the lock latched
+        log = f"compile failed: {type(e).__name__}: {e}"
+    finally:
+        with _compile_lock:
+            _compile.update(running=False, ok=ok, log=log, finished=time.time())
 
 
 def start_compile(root: Path, main_rel: str) -> dict:
@@ -352,7 +361,8 @@ def parse_synctex_view(out: str) -> dict:
 def _run_synctex(root: Path, args: list[str]) -> str:
     try:
         p = subprocess.run(["synctex", *args], cwd=root, env=tex_env(),
-                           capture_output=True, text=True, timeout=10)
+                           capture_output=True, encoding="utf-8", errors="replace",
+                           timeout=10)
     except FileNotFoundError:
         raise RequestError(500, "synctex CLI not found - install TeX Live / MacTeX")
     except subprocess.TimeoutExpired:
@@ -831,6 +841,7 @@ async function openDoc(path) {
   state = { path, mtime: d.mtime };
   lastSrcSel = null;              // a selection belongs to the file it was made in
   $("editor").value = d.content;
+  findHits = []; findAt = -1; $("findCount").textContent = "";   // offsets were the old file's
   queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
@@ -1043,6 +1054,9 @@ function toggleComment() {
   setDirty(true);
 }
 
+addEventListener("beforeunload", ev => {
+  if (dirty) { ev.preventDefault(); ev.returnValue = ""; }   // same guard as switching files
+});
 document.addEventListener("keydown", ev => {
   if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") { ev.preventDefault(); save(false); }
   if ((ev.metaKey || ev.ctrlKey) && ev.key === "f" && state) { ev.preventDefault(); openFind(); }
@@ -1113,6 +1127,9 @@ async function loadPdf() {
   } else warn.style.display = "none";
   loadedMtime = info.mtime;
   lastSel = null;                 // page coordinates do not survive a re-layout
+  renderToken++;                  // strand any in-flight render before the doc goes away
+  const prevDoc = pdfDoc; pdfDoc = null;
+  try { await prevDoc?.destroy(); } catch (e) {}   // else every reload leaks a pdf.js worker
   pdfDoc = await pdfjsLib.getDocument("/api/pdf?ts=" + info.mtime).promise;
   await renderAllPages();
   applyPdfHighlights();
@@ -1766,6 +1783,29 @@ def route(root: Path, main_rel: str, method: str, path: str,
         return e.status, "application/json", {"error": e.message}
     except (KeyError, IndexError, TypeError, ValueError):
         return 400, "application/json", {"error": "missing or invalid parameter"}
+    except OSError as e:
+        return 500, "application/json", {"error": f"filesystem error: {e.strerror or e}"}
+
+
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def request_is_local(host: str | None, origin: str | None) -> bool:
+    """Reject requests steered here by another site.
+
+    The server binds to loopback, but any page the user browses can still POST to
+    127.0.0.1 - and these tools write files (and run latexmk). Same-origin requests from our own
+    page carry Host: 127.0.0.1:<port> and either no Origin or our own; a cross-site
+    request carries that site's Origin, so requiring both settles it without a token.
+    """
+    hostname = (host or "").rsplit(":", 1)[0].strip("[]").lower()
+    if hostname and hostname not in LOCAL_HOSTS:
+        return False
+    if origin:
+        o = urlparse(origin).hostname
+        if (o or "").lower() not in LOCAL_HOSTS:
+            return False
+    return True
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1788,11 +1828,21 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _local_only(self) -> bool:
+        if request_is_local(self.headers.get("Host"), self.headers.get("Origin")):
+            return True
+        self._send(403, "application/json", {"error": "cross-site request refused"})
+        return False
+
     def do_GET(self):
+        if not self._local_only():
+            return
         u = urlparse(self.path)
         self._send(*route(self.root, self.main_rel, "GET", u.path, parse_qs(u.query), {}))
 
     def do_POST(self):
+        if not self._local_only():
+            return
         u = urlparse(self.path)
         n = int(self.headers.get("Content-Length") or 0)
         try:
