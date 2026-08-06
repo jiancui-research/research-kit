@@ -829,6 +829,7 @@ async function openDoc(path) {
   if (!res.ok) { toast((await res.json()).error); return; }
   const d = await res.json();
   state = { path, mtime: d.mtime };
+  lastSrcSel = null;              // a selection belongs to the file it was made in
   $("editor").value = d.content;
   queueMirror();
   setDirty(false);
@@ -1111,6 +1112,7 @@ async function loadPdf() {
     warn.style.display = "block";
   } else warn.style.display = "none";
   loadedMtime = info.mtime;
+  lastSel = null;                 // page coordinates do not survive a re-layout
   pdfDoc = await pdfjsLib.getDocument("/api/pdf?ts=" + info.mtime).promise;
   await renderAllPages();
   applyPdfHighlights();
@@ -1346,7 +1348,11 @@ $("pdfwrap").addEventListener("contextmenu", ev => {
   if (openCommentPopover(ev.clientX, ev.clientY)) ev.preventDefault();
 });
 $("editor").addEventListener("contextmenu", ev => {
-  const cap = captureSourceSelection() || lastSrcSel;
+  // the fallback exists only to survive the focus steal of the right-click itself, so it
+  // must still belong to the file on screen - otherwise a right-click with nothing selected
+  // would file the comment against whatever was last selected in some other file
+  const stale = !lastSrcSel || !state || lastSrcSel.file !== state.path;
+  const cap = captureSourceSelection() || (stale ? null : lastSrcSel);
   if (cap && openCommentPopover(ev.clientX, ev.clientY, cap)) ev.preventDefault();
 });
 $("pdfwrap").addEventListener("click", async ev => {
@@ -1389,6 +1395,7 @@ $("popAdd").onclick = async () => {
   const p = pending;
   if (!text || !p) return;
   $("pop").style.display = "none"; pending = null;
+  lastSel = lastSrcSel = null;    // spent; must not seed the next comment
   let page = p.page || 0, file = p.file ?? null, line = p.line ?? null;
   try {
     if (p.origin === "source") {

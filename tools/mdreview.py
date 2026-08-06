@@ -494,6 +494,11 @@ let allFiles = [];
 let pending = null;    // {quote, prefix, suffix} awaiting comment text
 let dirty = false;
 let renderTimer = null;
+// The rendered blocks carry data-l0/data-l1 source ranges, which go stale the instant the
+// document changes and only refresh when the (async) re-render lands. Editing a block whose
+// range is stale would splice over the wrong lines, so every mutation bumps docVersion and a
+// block can only be opened while the painted DOM matches it.
+let docVersion = 0, paintedVersion = -1;
 
 const api = async (url, body) => fetch(url, body ? {method:"POST",
   headers:{"Content-Type":"application/json"}, body:JSON.stringify(body)} : undefined);
@@ -571,6 +576,7 @@ async function openDoc(path) {
   const d = await res.json();
   state = { path: d.path, mtime: d.mtime, comments: d.comments };
   $("editor").value = d.content;
+  docVersion++;
   queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
@@ -578,6 +584,7 @@ async function openDoc(path) {
   $("rpath").textContent = state.path;
   $("path").textContent = state.path;
   paint(d.html);
+  paintedVersion = docVersion;
   renderSidebar();
 }
 function paint(html) {
@@ -621,11 +628,15 @@ async function renderMermaid() {
 }
 async function rerender() {
   if (!state) return;
+  const v = docVersion;
   const res = await api("/api/render", {content: $("editor").value});
-  if (res.ok) paint((await res.json()).html);
+  if (!res.ok || v !== docVersion) return;   // superseded; the newer render will paint
+  paint((await res.json()).html);
+  paintedVersion = v;
 }
 $("editor").addEventListener("input", () => {
   queueMirror();
+  docVersion++;
   if (!state) return;
   setDirty(true);
   clearTimeout(renderTimer);
@@ -927,6 +938,7 @@ function showSrc(on) {
   // one font control, pointed at whichever pane is showing
   for (const b of [$("rFontDown"), $("rFontUp")]) b.dataset.f = on ? "editor" : "doc";
   if (on) { queueMirror(); $("editor").focus(); }
+  else if (paintedVersion !== docVersion) { clearTimeout(renderTimer); rerender(); }
 }
 async function initMode() {
   const info = await (await api("/api/root")).json();
@@ -1000,12 +1012,14 @@ function commitBlock(keep) {
   lines.splice(l0, Math.min(l1, lines.length) - l0,
                ...next.split("\n"), ...Array(blanks).fill(""));
   $("editor").value = lines.join("\n");
+  docVersion++;
   queueMirror();
   setDirty(true);
   rerender();
 }
 $("doc").addEventListener("click", ev => {
   if (uiMode !== "review" || !state || editingBlock) return;
+  if (paintedVersion !== docVersion) return;      // ranges are stale; wait for the re-render
   if (ev.detail > 1) return;                      // double-click keeps its own behaviour
   if (!window.getSelection().isCollapsed) return; // a selection is a comment, not an edit
   if (ev.target.closest("mark")) return;          // clicking a highlight opens its comment
