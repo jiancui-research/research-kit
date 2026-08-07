@@ -1191,12 +1191,61 @@ $("saveBtn").onclick = () => save(false);
 // swallows the browser's own shortcut. Require the plain chord for letter keys.
 const chord = (ev, k) => (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKey
                          && (ev.key || "").toLowerCase() === k;
+/* ---------- wrap the selection in markdown emphasis ---------- */
+// setRangeText does NOT push an undo entry in Chrome, so ⌘Z would not reverse these.
+// execCommand("insertText") is deprecated but is the only mutation the textarea's own
+// undo stack records - it also fires `input`, which repaints the mirror and marks dirty.
+function replaceRange(el, from, to, text) {
+  el.focus();
+  el.setSelectionRange(from, to);
+  if (!document.execCommand("insertText", false, text)) {
+    el.setRangeText(text, from, to, "end");            // fallback: correct, but not undoable
+    el.dispatchEvent(new Event("input", {bubbles: true}));
+  }
+}
+// Works in the Markdown tab and inside an open block editor in Preview alike.
+function emphasisTarget() {
+  const el = document.activeElement;
+  if (el === $("editor")) return el;
+  if (el && el.classList && el.classList.contains("blockedit")) return el;
+  return null;
+}
+function runOfStars(s, fromEnd) {
+  let n = 0;
+  while (n < s.length && s[fromEnd ? s.length - 1 - n : n] === "*") n++;
+  return n;
+}
+function wrapMark(mark) {
+  const ta = emphasisTarget();
+  if (!ta) return;
+  const v = ta.value;
+  let a = ta.selectionStart, b = ta.selectionEnd;
+  while (a < b && /\s/.test(v[a])) a++;      // keep spaces outside the markers
+  while (b > a && /\s/.test(v[b - 1])) b--;
+  const sel = v.slice(a, b), n = mark.length;
+  const outsideIsExactly = v.slice(a - n, a) === mark && v.slice(b, b + n) === mark
+                           && v[a - n - 1] !== "*" && v[b + n] !== "*";
+  let from, to, text, caret;
+  if (sel.length > 2 * n && runOfStars(sel, false) === n && runOfStars(sel, true) === n) {
+    from = a; to = b; text = sel.slice(n, -n); caret = [from, from + text.length];
+  } else if (outsideIsExactly) {
+    from = a - n; to = b + n; text = sel; caret = [from, from + text.length];
+  } else {
+    from = a; to = b; text = mark + sel + mark;
+    caret = [a + n, a + n + sel.length];
+  }
+  replaceRange(ta, from, to, text);
+  ta.setSelectionRange(caret[0], caret[1]);
+}
+
 document.addEventListener("keydown", ev => {
   if (chord(ev, "s")) {
     ev.preventDefault();
     commitBlock(true);   // fold an open block back in first, or its text is saved away
     save(false);
   }
+  if (chord(ev, "b") && emphasisTarget()) { ev.preventDefault(); wrapMark("**"); }
+  if (chord(ev, "i") && emphasisTarget()) { ev.preventDefault(); wrapMark("*"); }
 });
 $("exportBtn").onclick = async () => {
   const res = await api("/api/export?path=" + encodeURIComponent(state.path));

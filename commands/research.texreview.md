@@ -4,7 +4,7 @@ argument-hint: optional flags passed through, e.g. --main paper.tex --port 9000
 ---
 
 ## What this is
-texreview is research-kit's optional manuscript review UI - a single-user local Overleaf with the review loop built in: editable LaTeX source on the left, the compiled PDF on the right, SyncTeX sync in both directions (click PDF text to jump to its source line; Reveal flashes the PDF box for the cursor line), Google-Docs-style comments on a selection in **either** pane - right-click the selection to comment - each recording its `file:line` target, a Recompile button (`latexmk -pdf -synctex=1`), and one-click export of open comments for any AI. It is a leaf utility - no other command depends on it. (Like /research.init, this command does not read the constitution; it only launches a tool.)
+texreview is research-kit's optional manuscript review UI - a single-user local Overleaf with the review loop built in: editable LaTeX source on the left, the compiled PDF on the right, SyncTeX sync in both directions (click PDF text to jump to its source line; Reveal flashes the PDF box for the cursor line), Google-Docs-style comments on a selection in **either** pane - right-click the selection to comment - each recording its `file:line` target, Overleaf-style `⌘B`/`⌘I` wrapping the selection in `\textbf{}`/`\textit{}`, a Recompile button (`latexmk -pdf -synctex=1`), and one-click export of open comments for any AI. It is a leaf utility - no other command depends on it. (Like /research.init, this command does not read the constitution; it only launches a tool.)
 
 ## Steps
 1. Resolve the tool from the same three locations as the bundled templates:

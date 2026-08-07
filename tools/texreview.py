@@ -1034,6 +1034,38 @@ $("editor").addEventListener("compositionend", () => {
 new ResizeObserver(queueMirror).observe($("editor"));
 
 /* ---------- comment toggle (⌘/) ---------- */
+/* ---------- wrap the selection in a LaTeX command (Overleaf-style) ---------- */
+// setRangeText does NOT push an undo entry in Chrome, so ⌘Z would not reverse these.
+// execCommand("insertText") is deprecated but is the only mutation the textarea's own
+// undo stack records - it also fires `input`, which repaints the mirror and marks dirty.
+function replaceRange(el, from, to, text) {
+  el.focus();
+  el.setSelectionRange(from, to);
+  if (!document.execCommand("insertText", false, text)) {
+    el.setRangeText(text, from, to, "end");            // fallback: correct, but not undoable
+    el.dispatchEvent(new Event("input", {bubbles: true}));
+  }
+}
+function wrapCmd(cmd) {
+  const ed = $("editor"), v = ed.value, open = "\\" + cmd + "{";
+  let a = ed.selectionStart, b = ed.selectionEnd;
+  // a double-click usually grabs the trailing space; \textbf{word } puts it inside the group
+  while (a < b && /\s/.test(v[a])) a++;
+  while (b > a && /\s/.test(v[b - 1])) b--;
+  const sel = v.slice(a, b);
+  let from, to, text, caret;
+  if (sel.startsWith(open) && sel.endsWith("}")) {          // the selection is the whole call
+    from = a; to = b; text = sel.slice(open.length, -1); caret = [from, from + text.length];
+  } else if (v.slice(a - open.length, a) === open && v[b] === "}") {   // wrapped just outside
+    from = a - open.length; to = b + 1; text = sel; caret = [from, from + text.length];
+  } else {                                                  // wrap, or insert an empty call
+    from = a; to = b; text = open + sel + "}";
+    caret = [a + open.length, a + open.length + sel.length];
+  }
+  replaceRange(ed, from, to, text);
+  ed.setSelectionRange(caret[0], caret[1]);
+}
+
 function toggleComment() {
   const ed = $("editor"), v = ed.value;
   const selStart = ed.selectionStart, selEnd = ed.selectionEnd;
@@ -1048,10 +1080,8 @@ function toggleComment() {
     const indent = l.match(/^\s*/)[0];
     return indent + "% " + l.slice(indent.length);
   }).join("\n");
-  ed.setRangeText(out, from, to, "preserve");   // keeps the undo stack
+  replaceRange(ed, from, to, out);
   ed.setSelectionRange(from, from + out.length);
-  queueMirror();   // setRangeText does not fire "input"
-  setDirty(true);
 }
 
 addEventListener("beforeunload", ev => {
@@ -1065,6 +1095,12 @@ const chord = (ev, k) => (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKe
 document.addEventListener("keydown", ev => {
   if (chord(ev, "s")) { ev.preventDefault(); save(false); }
   if (chord(ev, "f") && state) { ev.preventDefault(); openFind(); }
+  if (chord(ev, "b") && document.activeElement === $("editor")) {
+    ev.preventDefault(); wrapCmd("textbf");
+  }
+  if (chord(ev, "i") && document.activeElement === $("editor")) {
+    ev.preventDefault(); wrapCmd("textit");
+  }
   // "/" is a shifted key on several layouts, so only Alt is disqualifying here
   if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && ev.key === "/"
       && document.activeElement === $("editor")) {
