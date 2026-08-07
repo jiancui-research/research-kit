@@ -1186,8 +1186,13 @@ async function save(overwrite) {
   rerender();
 }
 $("saveBtn").onclick = () => save(false);
+// macOS reports ev.key as the UNSHIFTED character while Cmd is held, so a bare
+// `ev.key === "s"` also matches Cmd+Shift+S and Cmd+Alt+S - and preventDefault() then
+// swallows the browser's own shortcut. Require the plain chord for letter keys.
+const chord = (ev, k) => (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKey
+                         && (ev.key || "").toLowerCase() === k;
 document.addEventListener("keydown", ev => {
-  if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") {
+  if (chord(ev, "s")) {
     ev.preventDefault();
     commitBlock(true);   // fold an open block back in first, or its text is saved away
     save(false);

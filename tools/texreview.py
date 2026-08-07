@@ -1057,10 +1057,17 @@ function toggleComment() {
 addEventListener("beforeunload", ev => {
   if (dirty) { ev.preventDefault(); ev.returnValue = ""; }   // same guard as switching files
 });
+// macOS reports ev.key as the UNSHIFTED character while Cmd is held, so a bare
+// `ev.key === "s"` also matches Cmd+Shift+S and Cmd+Alt+S - and preventDefault() then
+// swallows the browser's own shortcut. Require the plain chord for letter keys.
+const chord = (ev, k) => (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKey
+                         && (ev.key || "").toLowerCase() === k;
 document.addEventListener("keydown", ev => {
-  if ((ev.metaKey || ev.ctrlKey) && ev.key === "s") { ev.preventDefault(); save(false); }
-  if ((ev.metaKey || ev.ctrlKey) && ev.key === "f" && state) { ev.preventDefault(); openFind(); }
-  if ((ev.metaKey || ev.ctrlKey) && ev.key === "/" && document.activeElement === $("editor")) {
+  if (chord(ev, "s")) { ev.preventDefault(); save(false); }
+  if (chord(ev, "f") && state) { ev.preventDefault(); openFind(); }
+  // "/" is a shifted key on several layouts, so only Alt is disqualifying here
+  if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && ev.key === "/"
+      && document.activeElement === $("editor")) {
     ev.preventDefault(); toggleComment();
   }
   if (ev.key === "Escape" && $("findbar").style.display === "flex") closeFind();
