@@ -1,5 +1,7 @@
-> Loaded by explicit `/research.implement paper <section>` mode. Cross-cutting rhetorical
-> craft for empirical security and systems papers, independent of paper type.
+> Always loaded when working a manuscript section - by `/research.write <section>` and by
+> explicit `/research.implement paper <section>` mode. Cross-cutting rhetorical craft for
+> empirical security and systems papers, independent of paper type. For the moves that belong
+> to one type only, read your type's block in `sections/moves-by-type.md`.
 
 # Rhetorical moves
 

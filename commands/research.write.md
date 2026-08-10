@@ -26,9 +26,10 @@ working the queue and a Paper task comes up - that path also updates the task's 
    an existing local path; else fall back to `./paper/`. If none resolves, say so and stop -
    creating a manuscript repo belongs to `/research.implement`, not here.
 3. Follow `.research/templates/sections/manuscript-procedure.md` end to end. That file holds the
-   procedure: read the whole paper and show the argument brief, load the paper-type and section
-   craft guides, pin the section's job in four lines, choose the mode, run the blast radius on a
-   revision, and write.
+   procedure: read the whole paper, show the argument brief **and a voice sample of the paper's
+   own terms, person, tense, and number formatting**, load the paper-type skeleton plus the
+   cross-cutting, per-type, and per-section craft guides, pin the section's job in four lines,
+   choose the mode, run the blast radius on a revision, and write.
 4. Write to the section's file in the manuscript, or to a labeled `.outline.md` / `.critique.md`
    beside it. Never silently overwrite existing prose.
 5. If `./.research/tasks.md` has a Paper task for this section, note that its status was **not**
@@ -37,7 +38,11 @@ working the queue and a Paper task comes up - that path also updates the task's 
 
 ## Validate
 
-- The whole manuscript was read and the argument brief was shown before any prose.
+- The whole manuscript was read, and the argument brief plus voice sample were shown before any
+  prose.
+- New prose reuses the paper's established terms, person, tense, and number formatting; no term
+  the paper already fixed was swapped for a synonym.
+- The cross-cutting moves, the paper type's own moves, and the section guide were all applied.
 - The section's claim, evidence, objection, and boundary were settled first.
 - Default was outline; full prose only after the explicit word `draft`.
 - A revision restated why the change was asked for, reported the blast radius, and proposed

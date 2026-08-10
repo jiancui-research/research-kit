@@ -1,4 +1,4 @@
-> Loaded by explicit `/research.implement paper <section>` mode for figures, tables, and results presentation. Cross-cutting craft.
+> Loaded by `/research.write` or explicit `/research.implement paper <section>` mode for figures, tables, and results presentation. Cross-cutting craft.
 
 # Figures and tables
 

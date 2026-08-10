@@ -1,4 +1,4 @@
-> Loaded by explicit `/research.implement paper limitations` or `paper future-work` mode.
+> Loaded by `/research.write` or explicit `/research.implement paper limitations` or `paper future-work` mode.
 > Craft for limitations and future work, which in most empirical security and systems venues
 > are one passage rather than two sections.
 

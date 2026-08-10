@@ -1,4 +1,4 @@
-> Loaded by explicit `/research.implement paper ethics` mode. Craft for the ethics and
+> Loaded by `/research.write` or explicit `/research.implement paper ethics` mode. Craft for the ethics and
 > responsible-disclosure section. Check the target venue's current CFP - several major security
 > venues now require this section and evaluate it during review.
 

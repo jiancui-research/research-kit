@@ -30,12 +30,36 @@ Then show an **argument brief**, and stop for confirmation if any line is guessw
 A number the section needs but the paper does not contain is a gap to **report now**, never one
 to invent. Missing claims make result beats `[UNVERIFIED]`.
 
+## 1b. Take a voice sample from the prose that already exists
+
+The paper already has a voice. Match it. A section that switches register is more obvious to a
+reviewer than a weak one, and this matters most on a revision, where the new prose sits directly
+against the old. Read the existing sections for these and record them **before writing**:
+
+- **House terms.** What the paper calls its system, its adversary, its dataset, its unit of
+  analysis. Copy them exactly, including capitalization and italics. Never introduce a synonym
+  for a term the paper has already fixed - not for variety, not to avoid repetition.
+- **Person and tense.** Almost always `we` / `our study`; past tense for what was run, present
+  for what the paper does. Follow whatever the paper does, not the genre default.
+- **How numbers are written.** Percentage-then-count or count-then-percentage, thousands
+  separators, `\SI{}`/`\num{}` or plain digits, and whether every percentage carries a named
+  instance.
+- **The paper's own labelled beats.** `**Roadmap.**`, `**Our study.**`, `**Adversary model.**`,
+  `**Takeaway.**` - reuse the labels the paper already uses, in its formatting.
+- **Citation and macro habits.** `~\cite{}` placement, `\system{}` / `\name{}` macros, custom
+  environments. Use the macros; never inline what a macro expands to.
+
+Show the sample as part of the argument brief - a handful of lines is enough. When the
+manuscript has no prose yet, say so and take the register from the guides and the constitution
+instead.
+
 ## 2. Load the craft for this section
 
 Infer the paper type from the manuscript (threat model and adversary -> attack; a detection or
 mitigation system -> defense; corpus, RQs and findings -> measurement; dataset, baselines and
 leaderboard -> benchmark; taxonomy over prior work -> SoK). State which and why in one line.
-Load `.research/templates/paper/<type>.md`.
+Load `.research/templates/paper/<type>.md` for the section skeleton, and read your type's block
+in `.research/templates/sections/moves-by-type.md` for the rhetoric that only that type uses.
 
 Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 
@@ -68,8 +92,10 @@ the wrong reason is worse than none.
   argument and the evidence behind it. A paragraph that advances nothing gets cut here, not
   after it is written. Hand back a skeleton, not prose.
 - **REVISE** - when the section already has prose and the request is to change it. Run the blast
-  radius below, then propose a located change list (`file:line` -> what changes and why).
-  **Never apply in the same turn as the proposal.**
+  radius below, then propose a located change list (`file:line` -> what changes and why). New
+  sentences must be indistinguishable from the surrounding prose - same terms, same person and
+  tense, same number formatting as the voice sample. **Never apply in the same turn as the
+  proposal.**
 - **CRITIQUE** - located findings on voice, claim traceability, overclaim, and tightening. Do
   not rewrite the user's prose.
 - **DRAFT** - full prose, only on the explicit word `draft`, in the user's voice, every
@@ -94,6 +120,11 @@ a reviewer. This check is the main value of a revision pass.
 Apply the loaded craft guides and the constitution's writing voice. Use a move only where it
 fits the section's job - a move applied for its own sake reads as pastiche, and a reviewer who
 knows the genre notices.
+
+**Where the manuscript and a guide disagree, the manuscript wins.** The guides describe the
+genre; the voice sample describes this paper. Consistency inside one paper beats conformity to
+the genre, so never "correct" an established term, formatting habit, or heading style to match a
+guide. If the paper's habit looks like a real problem, say so in the report and leave it.
 
 Non-negotiable regardless of mode: motivation before method; every novelty claim scoped; active
 `we`; each statistic paired with a named instance and an absolute count; a "so what" after each

@@ -32,7 +32,7 @@ research-kit mirrors spec-kit's constitution -> specify -> plan -> tasks -> impl
 
 All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research.<name>` custom agent).
 
-- `/research.init` — One-time per paper repo: copy the bundled templates into `.research/templates/` so commands can load them.
+- `/research.init` — One-time per paper repo: copy the bundled templates into `.research/templates/` so commands can load them, then report any local template that has drifted from the bundle (no-clobber means an upgrade never reaches an existing file on its own).
 - `/research.constitution` — Establish or update the research constitution (quality principles, writing voice, venue norms).
 - `/research.proposal` — Pipeline entry point: turn a raw idea into `proposal.md`, a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue + paper-type).
 - `/research.relatedwork` — Survey prior work and position the contribution against the closest baselines.

@@ -1,4 +1,4 @@
-> Loaded by explicit `/research.implement paper related-work` mode. Craft for the paper's
+> Loaded by `/research.write` or explicit `/research.implement paper related-work` mode. Craft for the paper's
 > related-work section. The upstream survey lives in `.research/related-work.md` (produced by
 > `/research.relatedwork`); this guide is about turning it into the section reviewers read.
 

@@ -21,7 +21,7 @@ The spec-kit `implement` analogue and the single queue executor. Setup/Build pro
    - **Polish:** artifact README, reproduction pass, figures, and tables.
 
 ## Manuscript mode: explicit user-led work
-4. Follow `.research/templates/sections/manuscript-procedure.md` end to end - it is the shared procedure behind this mode and `/research.write`, so the two cannot drift. It covers: read the whole manuscript and show the argument brief before any prose; load the paper-type skeleton and route to the section craft guide; pin the section's claim, evidence, reviewer objection, and boundary; pick the mode (OUTLINE by default, REVISE / CRITIQUE / DRAFT on request, full prose only on the explicit word `draft`); run the blast radius on a revision; and never invent a number or overwrite prose silently.
+4. Follow `.research/templates/sections/manuscript-procedure.md` end to end - it is the shared procedure behind this mode and `/research.write`, so the two cannot drift. It covers: read the whole manuscript and show the argument brief plus a voice sample of the paper's own terms, person, tense, and number formatting before any prose; load the paper-type skeleton, `sections/rhetorical-moves.md`, the type's block in `sections/moves-by-type.md`, and the section craft guide; pin the section's claim, evidence, reviewer objection, and boundary; pick the mode (OUTLINE by default, REVISE / CRITIQUE / DRAFT on request, full prose only on the explicit word `draft`); run the blast radius on a revision; and never invent a number or overwrite prose silently.
 5. Resolve the manuscript once: use the valid path in `.research/paper-repo`; else ask for an existing local path or Git URL; else derive `<shortname>-<venueabbrev><yy>-latex`, confirm it, create a private repo with `gh`, and clone it as a sibling. Never overwrite. Seed a new repo from the venue's current official CFP/LaTeX template, with `main.tex`, `refs.bib`, `.gitignore`, README, anonymization if required, and READY/BLOCKED section stubs. Record local path on line 1 and optional URL on line 2 of `.research/paper-repo`. If the selected task is manuscript setup only, mark it done and stop here.
 6. Select the section from input or the next unfinished Paper task, then run the procedure above against it.
 7. Write to `<manuscript>/<section>.md` or a labeled `.outline.md`/`.critique.md`. Never silently overwrite user prose. Update only the selected Paper task with `outlined`, `drafted`, `critiqued`, `revised`, or `blocked` plus any evidence/citation gaps. This queue bookkeeping is what this mode adds over `/research.write`.
@@ -32,7 +32,8 @@ The spec-kit `implement` analogue and the single queue executor. Setup/Build pro
 ## Validate
 - Empty/default execution did not perform a `[USER-LED]` task; Manuscript mode had explicit user selection.
 - Build code is outside `.research/`; eval files, index, claims, and task states agree.
-- Manuscript mode followed the shared procedure: whole manuscript read, argument brief shown before writing, section job pinned, outline by default, prose never overwritten, and a REVISE run reported its blast radius and proposed before applying.
+- Manuscript mode followed the shared procedure: whole manuscript read, argument brief and voice sample shown before writing, section job pinned, outline by default, prose never overwritten, and a REVISE run reported its blast radius and proposed before applying.
+- New prose matches the paper's established terms, person, tense, and number formatting, and applies the cross-cutting moves, the paper type's own moves, and the section guide.
 - Full prose was produced only after the explicit word `draft`.
 
 ## Completion

@@ -36,7 +36,15 @@ research-kit commands load skeletons and craft guides from `./.research/template
 
    `${CLAUDE_PLUGIN_ROOT}` is set by Claude Code, while OMP's plugin root comes from its installed-plugin registry. Otherwise the loop falls through to the `install.sh` staging directory. `cp -Rn` is no-clobber: existing files in `./.research/templates/` are preserved. Report which files were copied and which were left untouched.
 
-3. **Confirm.** List the populated `./.research/templates/` tree (one level deep) so the user can see the skeletons and craft guides are now local.
+3. **Report drift.** `cp -Rn` never updates a file that already exists, so an upgraded bundle can carry changes this repo will not see. List them, without touching anything:
+
+   ```sh
+   diff -rq "$SRC" ./.research/templates/ 2>/dev/null | grep '^Files .* differ$' || echo "No drift: local templates match the bundle."
+   ```
+
+   For each differing file, say whether it looks like the user's own customization or a bundle update they may want, and point at the refresh recipe in Notes. Never overwrite one on your own initiative.
+
+4. **Confirm.** List the populated `./.research/templates/` tree (one level deep) so the user can see the skeletons and craft guides are now local.
 
 ## Notes
 
