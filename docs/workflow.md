@@ -25,7 +25,7 @@ flowchart TD
 - `implement` owns every queue section. Empty/default runs work automated Setup/Build/Eval/Polish tasks and skip `[USER-LED]` Paper tasks. Manuscript work runs only after explicit task-id or `paper`/`outline`/`critique`/`draft` input.
 - `analyze` detects drift among plan, tasks, code, evidence, and manuscript and routes the exact re-run.
 - `review` reads only the manuscript and routes findings back to explicit implement modes.
-- Build remains paper-type aware; auxiliaries are `rebuttal`, `ae`, and the optional review UIs `mdreview` / `mdsplit` (markdown) and `texreview` (LaTeX + PDF).
+- Build remains paper-type aware; auxiliaries are `write` (one manuscript section, outside the queue), `rebuttal`, `ae`, and the optional review UIs `mdreview` / `mdsplit` (markdown) and `texreview` (LaTeX + PDF).
 
 ## Input → output, per command
 
@@ -40,6 +40,7 @@ All tracking docs live under `./.research/`; code, data, evaluation outputs, and
 | `plan` | `proposal.md` + `feasibility.md` (+ `related-work.md`) | `plan.md` | itself on re-run |
 | `tasks` | `plan.md` + `proposal.md` | `tasks.md` | itself on re-run (refine; states preserved) |
 | `implement` | `plan.md` + `tasks.md`; Manuscript mode also reads proposal, related work, claims, and skeleton | code, `eval/NN-*.md`, `eval/index.md`, `<manuscript>/<section>.md` | `claims.md`, `tasks.md`, `plan.md` deviations, `paper-repo` pointer |
+| `write` (aux) | manuscript + section craft guides (+ `.research/` artifacts when present) | `<manuscript>/<section>.md` or `.outline.md`/`.critique.md` | — (does not touch `tasks.md`) |
 | `analyze` (+ sync) | everything (read-only) | `analyze-report.md` | — (routes re-runs) |
 | `review` (loop) | manuscript only (+ constitution) | `review/round-N.md` | — (suggests a fix command per finding; you route) |
 | `rebuttal` (aux) | reviewer comments | `rebuttal/rebuttal.md` | — |

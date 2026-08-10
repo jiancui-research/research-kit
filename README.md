@@ -170,6 +170,7 @@ Gotchas seen in practice:
 /research.tasks                      # one work queue derived from the plan (tasks.md)
 /research.implement                  # work automated queue tasks
 /research.implement paper intro      # explicitly outline a user-led manuscript task
+/research.write related-work         # or write a section directly, outside the queue
 /research.analyze                    # also a "sync" check: what drifted, what to re-run
 /research.review
 ```
@@ -188,6 +189,7 @@ Gotchas seen in practice:
 | `/research.plan` | The study's technical design into `plan.md`: architecture, evaluation design, key decisions, project layout. Stable; tasks derive from it. |
 | `/research.tasks` | Derive the single work queue `tasks.md` from the plan (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine, preserving checkbox states. |
 | `/research.implement` | Execute the whole queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only when explicitly selected (`paper`, `outline`, `critique`, or `draft`). |
+| `/research.write` | Write or revise one manuscript section: reads the whole paper and states its argument before any prose, then outlines, revises, critiques, or drafts. Same work as `/research.implement paper <section>`, reachable on its own. |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across plan, tasks, code, evidence, and manuscript: flags drift and names the exact re-run. |
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |

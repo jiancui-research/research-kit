@@ -40,6 +40,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.plan` — The study's technical design into `plan.md` (architecture, evaluation design, decisions, layout incl. the code-folder declaration). Stable; tasks derive from it.
 - `/research.tasks` — Derive the single work queue `tasks.md` from `plan.md` (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine and preserve checkbox states.
 - `/research.implement` — Execute the single queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only after explicit task-id or Manuscript-mode input.
+- `/research.write` — Write or revise a single manuscript section without walking the queue. Shares one procedure with `/research.implement`'s Manuscript mode (`templates/sections/manuscript-procedure.md`), so the two cannot drift; `implement` additionally updates the Paper task's status.
 - `/research.analyze` — Read-only cross-artifact consistency + review-readiness audit, and the sync checker across plan, tasks, code, evidence, and manuscript; routes findings and re-runs to the owning commands.
 - `/research.review` — Simulate a reviewer panel reading **only the paper**; report mock reviews + scores with a suggested fix command per finding (writes only `review/round-N.md`, never another artifact), and loop until clean.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
