@@ -42,7 +42,11 @@ One paragraph: **the mess → the organizing contribution → the payoff**.
 
 [Position against prior surveys and SoKs on or near this topic, not just the primary literature. For each, state in one line how yours differs and why a new systematization was needed: newer scope, a sharper organizing axis, or lessons the earlier survey could not yet see.]
 
-## 7. Conclusion
+## 7. Ethics considerations
+
+[Several major security venues require this section of *every* paper, systematization included. An SoK runs no new experiments, so the argument is about the artifact you produce: what a taxonomy of attacks makes easier for an adversary, whether any surveyed technique is described in more operational detail than the original, and how you handled any vendor-specific findings you aggregated. Say what you did and why it was the right call - a blanket "not applicable" reads as not having looked. Craft guide: `.research/templates/sections/ethics-disclosure.md`.]
+
+## 8. Conclusion
 
 [Under one column. Restate the organizing insight and the single most important lesson, point to the agenda, and stop. Do not rehash the taxonomy, list sections, or add new claims.]
 
