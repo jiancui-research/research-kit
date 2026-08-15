@@ -526,6 +526,7 @@ PAGE = r"""<!doctype html>
     --find:rgba(223,142,29,.35); --find-cur:rgba(254,100,11,.5);
     --tex-comment:#8c8fa1; --tex-cmd:#8839ef; --tex-math:#179299;
     --tex-brace:#7c7f93; --tex-env:#df8e1d;
+    --brace-hit:rgba(30,102,245,.28); --brace-bad:rgba(210,15,57,.28);
   }
   :root[data-theme="dark"] {
     --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
@@ -539,6 +540,7 @@ PAGE = r"""<!doctype html>
     --find:rgba(249,226,175,.32); --find-cur:rgba(250,179,135,.62);
     --tex-comment:#6c7086; --tex-cmd:#cba6f7; --tex-math:#94e2d5;
     --tex-brace:#9399b2; --tex-env:#f9e2af;
+    --brace-hit:rgba(137,180,250,.34); --brace-bad:rgba(243,139,168,.34);
   }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -589,6 +591,10 @@ PAGE = r"""<!doctype html>
   #mirror .te { color:var(--tex-env); }
   #mirror mark { background:var(--find); border-radius:2px; }
   #mirror mark.cur { background:var(--find-cur); }
+  /* background only - a weight or style change here would shift the glyph advance and
+     slide the mirror out of register with the textarea underneath it */
+  #mirror .bm { background:var(--brace-hit); border-radius:2px; }
+  #mirror .bm.bad { background:var(--brace-bad); }
   /* the mirror paints the text; the textarea keeps only the caret and the selection */
   #editor { outline:none; resize:none; overflow:auto; background:transparent;
             color:transparent; caret-color:var(--accent); }
@@ -842,6 +848,7 @@ async function openDoc(path) {
   lastSrcSel = null;              // a selection belongs to the file it was made in
   $("editor").value = d.content;
   findHits = []; findAt = -1; $("findCount").textContent = "";   // offsets were the old file's
+  braceHi = null;                 // ditto - these are offsets into the file we just closed
   queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
@@ -852,7 +859,11 @@ async function openDoc(path) {
   for (let i = 1; i < parts.length; i++) collapsed.delete(parts.slice(0, i).join("/") + "/");
   renderSidebar();
 }
-$("editor").addEventListener("input", () => { queueMirror(); if (state) setDirty(true); });
+$("editor").addEventListener("input", () => { syncBrace(); queueMirror(); if (state) setDirty(true); });
+// caret moves (arrows, click, drag) do not fire `input`; selectionchange covers all of them
+document.addEventListener("selectionchange", () => {
+  if (document.activeElement === $("editor")) syncBrace();
+});
 async function save(overwrite) {
   if (!state) return;
   const body = { path: state.path, content: $("editor").value };
@@ -963,10 +974,61 @@ function texScan(line) {
   }
   return out;
 }
+/* Bracket matching. A bracket only delimits when it is neither escaped (\{ is a literal)
+   nor inside a comment, so both tests gate every candidate. The scan walks the whole
+   document, which is cheap next to the repaint it feeds, and only ever inspects bracket
+   characters - inComment's walk back to the line start is paid per bracket, not per char. */
+const OPENB = { "{": "}", "[": "]" }, CLOSEB = { "}": "{", "]": "[" };
+function escapedAt(t, i) {
+  let b = 0;
+  for (let j = i - 1; j >= 0 && t[j] === "\\"; j--) b++;
+  return b % 2 === 1;   // \{ is literal, \\{ is a delimiter after an escaped backslash
+}
+function inComment(t, i) {
+  for (let j = i - 1; j >= 0 && t[j] !== "\n"; j--)
+    if (t[j] === "%" && !escapedAt(t, j)) return true;
+  return false;
+}
+// -> [from, to, matched] or null. Checks the character after the caret, then before it.
+function matchBrace(t, caret) {
+  for (const p of [caret, caret - 1]) {
+    const ch = t[p];
+    if (!ch || (!OPENB[ch] && !CLOSEB[ch])) continue;
+    if (escapedAt(t, p) || inComment(t, p)) continue;
+    const fwd = !!OPENB[ch], want = fwd ? OPENB[ch] : CLOSEB[ch];
+    let depth = 0;
+    for (let i = p; fwd ? i < t.length : i >= 0; i += fwd ? 1 : -1) {
+      if (t[i] !== ch && t[i] !== want) continue;
+      if (escapedAt(t, i) || inComment(t, i)) continue;
+      depth += t[i] === ch ? 1 : -1;
+      if (!depth) return [Math.min(p, i), Math.max(p, i), true];
+    }
+    // an unbalanced brace is a compile error worth flagging; an unbalanced [ is ordinary prose
+    return (ch === "{" || ch === "}") ? [p, p, false] : null;
+  }
+  return null;
+}
+let braceHi = null;
+function syncBrace() {
+  const ed = $("editor");
+  // with a selection the textarea paints its own highlight over the same glyphs
+  const m = ed.selectionStart === ed.selectionEnd ? matchBrace(ed.value, ed.selectionStart) : null;
+  const same = (!m && !braceHi) ||
+    (m && braceHi && m[0] === braceHi[0] && m[1] === braceHi[1] && m[2] === braceHi[2]);
+  if (same) return;   // most caret moves change nothing, so most cost no repaint
+  braceHi = m;
+  queueMirror();
+}
 function renderLine(line, base, q, cur) {
   const n = line.length;
   if (!n) return "";
   const cls = texScan(line);
+  let ba = -1, bb = -1, bok = true;
+  if (braceHi) {
+    bok = braceHi[2];
+    if (braceHi[0] >= base && braceHi[0] < base + n) ba = braceHi[0] - base;
+    if (braceHi[1] >= base && braceHi[1] < base + n) bb = braceHi[1] - base;
+  }
   // 0 = no hit, otherwise the hit's 1-based index so two adjacent hits stay distinct
   let mk = null, curIdx = -1;
   if (q) {
@@ -987,9 +1049,11 @@ function renderLine(line, base, q, cur) {
     if (m) {   // a hit wins over syntax colour, so each hit stays one <mark>
       while (k < n && mk[k] === m) k++;
       out += "<mark" + (m === curIdx ? ' class="cur"' : "") + ">" + esc(line.slice(j, k)) + "</mark>";
+    } else if (j === ba || j === bb) {   // one character, so it never joins a run
+      out += '<span class="bm' + (bok ? "" : " bad") + '">' + esc(line[j]) + "</span>";
     } else {
       const c = cls[j];
-      while (k < n && !(mk && mk[k]) && cls[k] === c) k++;
+      while (k < n && !(mk && mk[k]) && k !== ba && k !== bb && cls[k] === c) k++;
       const txt = esc(line.slice(j, k));
       out += c === " " ? txt : '<span class="t' + c + '">' + txt + "</span>";
     }
@@ -1001,6 +1065,10 @@ let mirrorQueued = false;
 function paintMirror() {
   mirrorQueued = false;
   const ed = $("editor");
+  // a write that bypasses syncBrace (replaceRange, a reload) can leave these offsets
+  // pointing at characters that are no longer brackets - drop them rather than paint a lie
+  if (braceHi && !(/[{}[\]]/.test(ed.value[braceHi[0]] || "") && /[{}[\]]/.test(ed.value[braceHi[1]] || "")))
+    braceHi = null;
   const q = $("findbar").style.display === "flex" ? $("findInput").value : "";
   const cur = findAt >= 0 ? findHits[findAt] : -1;
   const lines = ed.value.split("\n");
