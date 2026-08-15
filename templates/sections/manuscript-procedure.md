@@ -71,6 +71,10 @@ Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 | limitations, future work | `sections/limitations-future-work.md` |
 | figures, tables | `sections/figures-tables.md` |
 
+A guide that is not in this repo is a gap to **name**, not to fill from memory. Say which one was
+unavailable, suggest `/research.init`, and proceed without it - never paraphrase what you assume
+it says.
+
 ## 3. Pin the section's job
 
 Four lines, settled before any prose. Ask when the manuscript does not answer one; do not write

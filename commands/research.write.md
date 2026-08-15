@@ -25,7 +25,9 @@ working the queue and a Paper task comes up - that path also updates the task's 
 2. Resolve the manuscript: use the valid path on line 1 of `./.research/paper-repo`; else ask for
    an existing local path; else fall back to `./paper/`. If none resolves, say so and stop -
    creating a manuscript repo belongs to `/research.implement`, not here.
-3. Follow `.research/templates/sections/manuscript-procedure.md` end to end. That file holds the
+3. Read `.research/templates/sections/manuscript-procedure.md`. It is **required**: if it is
+   missing, say so, route to `/research.init` (it is no-clobber, so it only fills the gap), and
+   stop - never reconstruct the procedure from memory or context. Then follow it end to end. That file holds the
    procedure: read the whole paper, show the argument brief **and a voice sample of the paper's
    own terms, person, tense, and number formatting**, load the paper-type skeleton plus the
    cross-cutting, per-type, and per-section craft guides, pin the section's job in four lines,
