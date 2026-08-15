@@ -121,6 +121,18 @@ a reviewer. This check is the main value of a revision pass.
 
 ## 6. Write, and report honestly
 
+**Resolve where the section lives before writing it.** You already followed `main.tex` in step 1,
+so read the layout off its `\input`/`\include` lines: the directory (`sections/`, `tex/`, flat),
+the extension, and the file-naming style (`related_work` vs `related-work` vs `relatedwork`).
+Follow that convention exactly - a new file named against it will not match the paper it joins.
+The constitution's layout section is the default for a manuscript that has none; a manuscript
+that has one always wins.
+
+Then: **a new section file is not done until its `\input` line is in `main.tex`**, placed where
+the section belongs in the reading order. Say that you added it. Scratch outputs (`.outline.md`,
+`.critique.md`) are yours, not the paper's - put them beside the section file and never
+`\input` them.
+
 Apply the loaded craft guides and the constitution's writing voice. Use a move only where it
 fits the section's job - a move applied for its own sake reads as pastiche, and a reviewer who
 knows the genre notices.

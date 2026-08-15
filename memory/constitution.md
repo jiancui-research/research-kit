@@ -73,6 +73,24 @@ Focus areas: general (set your field, target venue family, and priorities when y
 - Pass the desk-reject gate as a binary pre-flight: scope fit, page/format limits,
   anonymization, required sections (limitations, ethics), reproducibility checklist.
 
+## Manuscript layout (customizable)
+
+- One file per section, `\input` from a thin `main.tex` that holds only the preamble,
+  title/author block, and the `\input` list:
+
+  ```
+  main.tex          sections/    one .tex per section       figures/
+  references.bib    tables/      generated .tex, \input'd    code/  (optional)
+  ```
+
+- Why: a section per file keeps diffs reviewable, lets co-authors edit in parallel without
+  conflicts, and lets a section be commented out of `main.tex` instead of deleted.
+- **An existing manuscript's layout wins.** Detect the convention from `main.tex` - directory,
+  extension, and file-naming style - and follow it exactly. Never reorganize someone's
+  manuscript as a side effect of writing one section.
+- A new section file is not finished until its `\input` line is added to `main.tex` in the
+  right position. An orphan file that never compiles into the paper is worse than no file.
+
 ## Self-review stance
 
 - Before submission, write a mock review of your own draft across the five axes:

@@ -32,8 +32,10 @@ working the queue and a Paper task comes up - that path also updates the task's 
    own terms, person, tense, and number formatting**, load the paper-type skeleton plus the
    cross-cutting, per-type, and per-section craft guides, pin the section's job in four lines,
    choose the mode, run the blast radius on a revision, and write.
-4. Write to the section's file in the manuscript, or to a labeled `.outline.md` / `.critique.md`
-   beside it. Never silently overwrite existing prose.
+4. Write to the section's own file in the manuscript's existing layout (typically
+   `sections/<name>.tex`, named the way `main.tex` names its siblings), or to a labeled
+   `.outline.md` / `.critique.md` beside it. A new section file also needs its `\input` line in
+   `main.tex`. Never silently overwrite existing prose.
 5. If `./.research/tasks.md` has a Paper task for this section, note that its status was **not**
    updated - say so, and point at `/research.implement <task-id>` for the run that does. This
    command deliberately does not touch the queue.
