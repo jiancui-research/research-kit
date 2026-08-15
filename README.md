@@ -25,14 +25,27 @@ Every stage produces one reviewable Markdown document. The documents are what yo
 
 ## 🤔 Why
 
-The document is the only thing you, the researcher, need to check — the code gets written from it.
+research-kit gives you three things. Each one buys back time you were spending on something that is not research.
 
-- **You review documents, never code.** Every stage produces one Markdown doc under `./.research/` — the spec, the record, and the thing you actually check. The implementation plan derives from these docs, the agent builds from the plan, and results flow back into `claims.md` and the draft, where you judge them.
-- **Each document is iterated, not just generated.** You refine it with your AI as advisor and peer — critiques, comments, replies — plus your own edits, until it says what you mean. Only then does the next stage build on it.
-- **A kill-switch and a drift-catcher keep it honest.** `feasibility` returns **GO / NO-GO / PIVOT** before you over-invest; `analyze` catches the lanes drifting from the docs and names the exact re-run; `review` simulates a reviewer panel reading only the paper.
-- **The agent's work stays visible.** Implementation and evaluation are the agent's job; reading and judging are yours. So every artifact it produces — the tracking docs and the paper itself — opens in a [bundled review UI](#review-ui) where you comment in place, and the agent picks those comments up from the repo and acts on them.
+### 1. Write the document, not the plumbing
 
-Checking and refining documents is the whole job — which is why research-kit bundles two review UIs to make it comfortable.
+Your attention goes to the argument. Code, experiment scripts, and LaTeX formatting are the agent's job.
+
+Every stage produces one Markdown doc under `./.research/` — the spec, the record, and the thing you actually check. The implementation plan derives from these docs, the agent builds from the plan, and results flow back into `claims.md` and the draft, where you judge them. Two guardrails keep that honest: `feasibility` returns **GO / NO-GO / PIVOT** before you over-invest, and `analyze` catches the lanes drifting from the docs and names the exact re-run.
+
+### 2. Think on the page, and hand your thinking to the agent
+
+Reading and judging are yours; you should be able to do both in place.
+
+Both your Markdown docs and your LaTeX manuscript open in a [bundled review UI](#review-ui) with Google-Docs-style comments anchored to `file:line`. The agent picks them up straight from the repo — `.mdreview/comments.json`, `.texreview/comments.json` — so "read the comments and address them" needs no export at all. When you want a different model, or just a conversation, one button copies every open comment with its target and reply format into any chat.
+
+### 3. Write in your paper's voice, not an agent's
+
+Prose that reads as generated is prose you have to rewrite.
+
+`/research.write` reads the **whole** manuscript before it writes a word, states the paper's argument back to you, and takes a voice sample — your terms, your tense, your number formatting — so a new section matches the ones around it. Under that sit craft guides for the genre, per section and per paper type. And with `/research.style` you point it at papers whose writing you admire, and it distills them into one living profile that every later section reads, extended each time you correct it.
+
+The three compound: the argument is settled in documents, checked by commenting on them, and written up in a voice that is yours.
 
 ## 🗺️ The pipeline
 
@@ -69,7 +82,7 @@ Handing the build and the evaluation to an agent only works if you can *see* wha
 - 💬 **Comment on either side, fix in the source.** Select text in the rendered paper *or* in the LaTeX, then right-click it to attach a note (selecting alone no longer interrupts you). Every comment records the quote *and* a `file.tex:line` target — resolved through SyncTeX for a PDF selection, known outright for a source one — so an agent working in the paper repo knows exactly where to edit — *"read `.texreview/comments.json` and address the open comments"*. It replies with what it changed and marks them resolved; the fix is highlighted on the next compile.
 - 🎯 **Click the PDF, land on the line.** Click any rendered word and the editor jumps to its source. When SyncTeX can only point at a structural line — `acmart` typesets `\begin{abstract}` during `\maketitle`, the `comment` package routes blocks through a generated file — texreview falls back to searching the sources for the words you actually clicked, so you land somewhere you can edit. **Reveal →** goes the other way, flashing the PDF box for your cursor line.
 - 🔨 **Save and it recompiles.** `⌘S` runs `latexmk -pdf -synctex=1` and reloads the pane; saves landing mid-compile queue one follow-up instead of stacking. Errors show a parsed log. Compile in a terminal instead and the pane still refreshes.
-- ⌨️ **Editor basics that matter in LaTeX** — `⌘B`/`⌘I` wrap the selection in `\textbf{}`/`\textit{}` (press again to unwrap), find in file (`⌘F`) with a live match count, comment toggle (`⌘/`) over the selection, collapsible folders so a 25-file paper repo opens at six rows.
+- ⌨️ **Editor basics that matter in LaTeX** — `⌘B`/`⌘I` wrap the selection in `\textbf{}`/`\textit{}` (press again to unwrap), find in file (`⌘F`) with a live match count, comment toggle (`⌘/`) over the selection, syntax colour with line numbers, bracket matching that tints the partner of whichever `{` or `[` your cursor sits on (and reddens one with no partner, which is a compile error waiting to happen), collapsible folders so a 25-file paper repo opens at six rows.
 - 📋 **Export with targets** — open comments copy to the clipboard with ids, `file:line` targets, and reply instructions, for any AI outside the repo.
 
 Launch from the manuscript repo, or from the research repo (it follows `.research/paper-repo`): `/research.texreview`, or directly `uv run tools/texreview.py --open`. Needs `uv` plus a TeX install (`latexmk` / `synctex`, bundled with MacTeX and TeX Live).
@@ -163,6 +176,7 @@ Gotchas seen in practice:
 ```sh
 /research.init                       # once per repo: copy templates into .research/
 /research.constitution <focus>       # optional: set writing voice + venue
+/research.style                      # optional: learn a register from papers you admire
 /research.proposal <your raw idea>   # pipeline entry
 /research.relatedwork
 /research.feasibility
@@ -190,6 +204,7 @@ Gotchas seen in practice:
 | `/research.tasks` | Derive the single work queue `tasks.md` from the plan (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine, preserving checkbox states. |
 | `/research.implement` | Execute the whole queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only when explicitly selected (`paper`, `outline`, `critique`, or `draft`). |
 | `/research.write` | Write or revise one manuscript section: reads the whole paper and states its argument before any prose, then outlines, revises, critiques, or drafts. Same work as `/research.implement paper <section>`, reachable on its own. |
+| `/research.style` | Optional: distill papers you admire (dropped in `.research/style/samples/`) into one living style profile the writing commands read, and record corrections you make so they outlive the conversation. |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across plan, tasks, code, evidence, and manuscript: flags drift and names the exact re-run. |
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
@@ -233,6 +248,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   .research/               all research-kit tracking docs:
     memory/constitution.md   research principles + writing voice
     templates/               skeletons + craft guides (from /research.init)
+    style/                   optional: samples/ you chose + the profile.md distilled from them
     proposal.md              problem, NABC, gap, contributions, RQs, venue, paper type
     related-work.md          prior work + positioning
     feasibility.md           de-risk probe + GO / NO-GO / PIVOT
@@ -252,7 +268,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
 
 ## 🎨 Customization
 
-`.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`.
+`.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`. `/research.style` is the optional layer on top: drop papers you admire into `.research/style/samples/` and it distils one `profile.md` that every section you write reads.
 
 ## 🤝 Contributing
 

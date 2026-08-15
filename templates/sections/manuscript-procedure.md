@@ -71,6 +71,19 @@ Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 | limitations, future work | `sections/limitations-future-work.md` |
 | figures, tables | `sections/figures-tables.md` |
 
+Finally, load `./.research/style/profile.md` **when it exists** - the register distilled from the
+user's own chosen exemplars by `/research.style`. Its **Learned while writing** entries are
+corrections this user has already made once; re-earning them is a waste of their time.
+
+That gives three sources of voice, and they rank:
+
+```
+the manuscript's own prose   >   the style profile   >   the craft guides
+```
+
+The paper is what the reader sees, the profile is what this user prefers, and the guides are what
+the genre does. A guide never overrides the profile, and neither overrides the paper.
+
 A guide that is not in this repo is a gap to **name**, not to fill from memory. Say which one was
 unavailable, suggest `/research.init`, and proceed without it - never paraphrase what you assume
 it says.
@@ -153,3 +166,8 @@ existing prose - show what is being replaced.
 
 Close by reporting: what was written or proposed, which craft guides were loaded, every gap left
 behind, and anything the blast radius surfaced that you did not touch.
+
+If the user corrects the voice while reviewing what you wrote - a word they never use, an opener
+they dislike, a hedge they want gone - offer once to record it with
+`/research.style "<their correction>"` so the next section starts from it. Offer; do not write to
+the profile from here.

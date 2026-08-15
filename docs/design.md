@@ -41,6 +41,7 @@ All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research
 - `/research.tasks` — Derive the single work queue `tasks.md` from `plan.md` (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine and preserve checkbox states.
 - `/research.implement` — Execute the single queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only after explicit task-id or Manuscript-mode input.
 - `/research.write` — Write or revise a single manuscript section without walking the queue. Shares one procedure with `/research.implement`'s Manuscript mode (`templates/sections/manuscript-procedure.md`), so the two cannot drift; `implement` additionally updates the Paper task's status.
+- `/research.style` — Optional: distill the exemplars in `.research/style/samples/` into `.research/style/profile.md`, a living register profile the writing commands load. Patterns and slots only, never sentences copied from a sample. Voice precedence when writing: the manuscript's own prose > the style profile > the craft guides.
 - `/research.analyze` — Read-only cross-artifact consistency + review-readiness audit, and the sync checker across plan, tasks, code, evidence, and manuscript; routes findings and re-runs to the owning commands.
 - `/research.review` — Simulate a reviewer panel reading **only the paper**; report mock reviews + scores with a suggested fix command per finding (writes only `review/round-N.md`, never another artifact), and loop until clean.
 - `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
@@ -58,6 +59,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   .research/               ALL research-kit tracking docs:
     memory/constitution.md   research principles + writing voice
     templates/               skeletons + craft guides (copied by /research.init)
+    style/                   optional: samples/ + profile.md (from /research.style)
     proposal.md              problem, motivation (NABC), gap, contributions, RQs, approach, venue, paper-type
     related-work.md
     feasibility.md           de-risk result + GO/NO-GO/PIVOT
