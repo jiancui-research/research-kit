@@ -446,9 +446,9 @@ def is_structural(root: Path, rel: str, line: int) -> bool:
     try:
         lines = (root / rel).read_text(encoding="utf-8", errors="replace").splitlines()
     except OSError:
-        return False
+        return True
     if not 1 <= line <= len(lines):
-        return False
+        return True   # past the end of the file it names: not somewhere you can edit
     raw = lines[line - 1]
     return bool(_STRUCTURAL.match(raw)) or not _normalize(raw)
 
@@ -1852,18 +1852,23 @@ def route(root: Path, main_rel: str, method: str, path: str,
                                       float(body["x"]), float(body["y"])), "via": "synctex"}
             except RequestError:
                 hit = None
-            # Fall back to the words actually clicked when SyncTeX's answer is not
+            # Fall back to the words actually selected when SyncTeX's answer is not
             # somewhere you can edit: a prose-free structural line (acmart typesets
-            # \begin{abstract} during \maketitle) or a generated file (the comment
-            # package rewrites skipped blocks through comment.cut).
-            editable = set(list_tex_files(root))
-            unusable = hit is None or hit["file"] not in editable or is_structural(
-                root, hit["file"], hit["line"])
+            # \begin{abstract} during \maketitle), a generated file (the comment
+            # package rewrites skipped blocks through comment.cut), or a line past the
+            # end of the file it names.
             text = body.get("text") or ""
-            if text and unusable:
-                found = find_text(root, text)
-                if found:
-                    return 200, "application/json", {**found, "via": "text"}
+            found = find_text(root, text) if text else None
+            editable = set(list_tex_files(root))
+            unusable = (hit is None or hit["file"] not in editable
+                        or is_structural(root, hit["file"], hit["line"])
+                        # A selection dragged across columns or sections resolves from a
+                        # single anchor point that can land in an unrelated file, and the
+                        # comment would then carry one file's quote with another's target.
+                        # Words that were actually matched outrank a point query.
+                        or (found is not None and found["file"] != hit["file"]))
+            if found and unusable:
+                return 200, "application/json", {**found, "via": "text"}
             if hit is None:
                 raise RequestError(404, "SyncTeX has no source mapping for that spot")
             if hit["file"] not in editable:
