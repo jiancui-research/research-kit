@@ -1,11 +1,11 @@
 > Produced by `/research.style` from the exemplars in `.research/style/samples/`. Lives at
-> `./.research/style/profile.md`, and is loaded whenever a manuscript section is written.
+> `./.research/style/voice.md`, and is loaded whenever a manuscript section is written.
 >
 > **Patterns and slots only.** A sentence copied from a sample travels through this file into
 > the manuscript, which is plagiarism with extra steps. Describe the move; never paste the
 > sentence you found it in.
 
-# Style profile
+# Voice profile
 
 **Built from:** [N samples - venue and year is enough, titles are not needed]
 **Last refreshed:** [YYYY-MM-DD]

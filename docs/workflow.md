@@ -39,9 +39,9 @@ All tracking docs live under `./.research/`; code, data, evaluation outputs, and
 | `feasibility` | `proposal.md` (+ `related-work.md`) | `feasibility.md` | — |
 | `plan` | `proposal.md` + `feasibility.md` (+ `related-work.md`) | `plan.md` | itself on re-run |
 | `tasks` | `plan.md` + `proposal.md` | `tasks.md` | itself on re-run (refine; states preserved) |
-| `implement` | `plan.md` + `tasks.md`; Manuscript mode also reads proposal, related work, claims, skeleton, craft guides, and `style/profile.md` | code, `eval/NN-*.md`, `eval/index.md`, the section's file in the manuscript's layout (e.g. `sections/<name>.tex`) | `claims.md`, `tasks.md`, `plan.md` deviations, `paper-repo` pointer, `main.tex` (\input for a new section) |
-| `write` (aux) | manuscript + craft guides + `style/profile.md` (+ `.research/` artifacts when present) | the section's file in the manuscript's layout, or `.outline.md`/`.critique.md` | `main.tex` (\input for a new section) — never `tasks.md` |
-| `style` (aux) | `style/samples/*`, or a correction you pass in | `style/profile.md` | itself (refresh rebuilds sample-derived sections, preserves `Learned while writing`) |
+| `implement` | `plan.md` + `tasks.md`; Manuscript mode also reads proposal, related work, claims, skeleton, craft guides, and `style/voice.md` | code, `eval/NN-*.md`, `eval/index.md`, the section's file in the manuscript's layout (e.g. `sections/<name>.tex`) | `claims.md`, `tasks.md`, `plan.md` deviations, `paper-repo` pointer, `main.tex` (\input for a new section) |
+| `write` (aux) | manuscript + craft guides + `style/voice.md` (+ `.research/` artifacts when present) | the section's file in the manuscript's layout, or `.outline.md`/`.critique.md` | `main.tex` (\input for a new section) — never `tasks.md` |
+| `style` (aux) | `style/samples/*`, or a correction you pass in | `style/voice.md` | itself (refresh rebuilds sample-derived sections, preserves `Learned while writing`) |
 | `analyze` (+ sync) | everything (read-only) | `analyze-report.md` | — (routes re-runs) |
 | `review` (loop) | manuscript only (+ constitution) | `review/round-N.md` | — (suggests a fix command per finding; you route) |
 | `rebuttal` (aux) | reviewer comments | `rebuttal/rebuttal.md` | — |

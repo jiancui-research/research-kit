@@ -71,14 +71,14 @@ Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 | limitations, future work | `sections/limitations-future-work.md` |
 | figures, tables | `sections/figures-tables.md` |
 
-Finally, load `./.research/style/profile.md` **when it exists** - the register distilled from the
+Finally, load `./.research/style/voice.md` **when it exists** - the register distilled from the
 user's own chosen exemplars by `/research.style`. Its **Learned while writing** entries are
 corrections this user has already made once; re-earning them is a waste of their time.
 
 That gives three sources of voice, and they rank:
 
 ```
-the manuscript's own prose   >   the style profile   >   the craft guides
+the manuscript's own prose   >   the voice profile   >   the craft guides
 ```
 
 The paper is what the reader sees, the profile is what this user prefers, and the guides are what

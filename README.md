@@ -43,7 +43,7 @@ Both your Markdown docs and your LaTeX manuscript open in a [bundled review UI](
 
 Prose that reads as generated is prose you have to rewrite.
 
-`/research.write` reads the **whole** manuscript before it writes a word, states the paper's argument back to you, and takes a voice sample — your terms, your tense, your number formatting — so a new section matches the ones around it. Under that sit craft guides for the genre, per section and per paper type. And with `/research.style` you point it at papers whose writing you admire, and it distills them into one living profile that every later section reads, extended each time you correct it.
+`/research.write` reads the **whole** manuscript before it writes a word, states the paper's argument back to you, and takes a voice sample — your terms, your tense, your number formatting — so a new section matches the ones around it. Under that sit craft guides for the genre, per section and per paper type. And with `/research.style` you point it at papers whose writing you admire, and it distills them into one living `voice.md` that every later section reads, extended each time you correct it.
 
 The three compound: the argument is settled in documents, checked by commenting on them, and written up in a voice that is yours.
 
@@ -204,7 +204,7 @@ Gotchas seen in practice:
 | `/research.tasks` | Derive the single work queue `tasks.md` from the plan (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine, preserving checkbox states. |
 | `/research.implement` | Execute the whole queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only when explicitly selected (`paper`, `outline`, `critique`, or `draft`). |
 | `/research.write` | Write or revise one manuscript section: reads the whole paper and states its argument before any prose, then outlines, revises, critiques, or drafts. Same work as `/research.implement paper <section>`, reachable on its own. |
-| `/research.style` | Optional: distill papers you admire (dropped in `.research/style/samples/`) into one living style profile the writing commands read, and record corrections you make so they outlive the conversation. |
+| `/research.style` | Optional: distill papers you admire (dropped in `.research/style/samples/`) into one living voice profile the writing commands read, and record corrections you make so they outlive the conversation. |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across plan, tasks, code, evidence, and manuscript: flags drift and names the exact re-run. |
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
@@ -248,7 +248,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   .research/               all research-kit tracking docs:
     memory/constitution.md   research principles + writing voice
     templates/               skeletons + craft guides (from /research.init)
-    style/                   optional: samples/ you chose + the profile.md distilled from them
+    style/                   optional: samples/ you chose + the voice.md distilled from them
     proposal.md              problem, NABC, gap, contributions, RQs, venue, paper type
     related-work.md          prior work + positioning
     feasibility.md           de-risk probe + GO / NO-GO / PIVOT
@@ -268,7 +268,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
 
 ## 🎨 Customization
 
-`.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`. `/research.style` is the optional layer on top: drop papers you admire into `.research/style/samples/` and it distils one `profile.md` that every section you write reads.
+`.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`. `/research.style` is the optional layer on top: drop papers you admire into `.research/style/samples/` and it distils one `voice.md` that every section you write reads.
 
 ## 🤝 Contributing
 

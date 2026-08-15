@@ -1,18 +1,18 @@
 ---
-description: Distill the papers you admire into one living style profile the writing commands read, and keep it current as you work.
+description: Distill the papers you admire into one living voice profile the writing commands read, and keep it current as you work.
 argument-hint: (none) to build or refresh from samples, or a correction to record (e.g. "stop opening sections with 'In this section'")
 ---
 
 ## User input
 
-`$ARGUMENTS` is empty to build or refresh the profile from the samples on disk, or holds a
+`$ARGUMENTS` is empty to build or refresh the voice profile from the samples on disk, or holds a
 correction to record - something you told the agent about your writing that should outlive this
 conversation.
 
 ## What this phase is
 
 Craft guides describe the genre. This describes **your** register, learned from papers you chose.
-It is optional: writing works without it, and better with it. The profile is a living file, built
+It is optional: writing works without it, and better with it. `voice.md` is a living file, built
 from samples and extended every time you correct the prose.
 
 ## Steps
@@ -24,7 +24,7 @@ from samples and extended every time you correct the prose.
    `.gitignore`, and stop. Fewer than two samples is not enough to tell a habit from a
    coincidence - say so and stop.
 3. **With `$ARGUMENTS` empty:** read every sample in full and distill it into
-   `./.research/style/profile.md`, using `.research/templates/style-profile-template.md`. Record
+   `./.research/style/voice.md`, using `.research/templates/voice-template.md`. Record
    how sections open, the paragraph-level shape of each section, how findings land, which words
    recur and which never appear. Attribute each pattern to the number of samples showing it, and
    drop anything that appears in only one.
