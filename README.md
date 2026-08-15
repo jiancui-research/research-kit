@@ -43,9 +43,75 @@ Both your Markdown docs and your LaTeX manuscript open in a [bundled review UI](
 
 Prose that reads as generated is prose you have to rewrite.
 
-`/research.write` reads the **whole** manuscript before it writes a word, states the paper's argument back to you, and takes a voice sample — your terms, your tense, your number formatting — so a new section matches the ones around it. Under that sit craft guides for the genre, per section and per paper type. And with `/research.style` you point it at papers whose writing you admire, and it distills them into one living `voice.md` that every later section reads, extended each time you correct it.
+`/research.write` reads the **whole** manuscript before it writes a word, states the paper's argument back to you, and takes a voice sample — your terms, your tense, your number formatting — so a new section matches the ones around it. Under that sit craft guides for the genre, per section and per paper type. And with `/research.style` you point it at papers whose writing you admire, and it distills them into `.research/writing/style.md` — which then keeps growing, absorbing the instructions you give and the edits you make, so a preference stated once is never re-earned.
 
 The three compound: the argument is settled in documents, checked by commenting on them, and written up in a voice that is yours.
+
+## 🚪 Where you come in
+
+Nobody starts from nothing every time. Find the row that matches what is already on your disk — the pipeline is a chain you can join partway, not a gate you have to walk through.
+
+<details open>
+<summary><b>1. "I have an idea and nothing else."</b> — the full chain</summary>
+
+The canonical path, and the only one that uses every stage. `proposal` turns the idea into a falsifiable argument, `feasibility` tells you whether to keep going *before* you build, and `tasks` becomes the queue the agent works.
+
+```sh
+/research.init && /research.constitution
+/research.proposal "<your raw idea, however rough>"
+/research.relatedwork          # sharpens the gap back into proposal.md
+/research.feasibility          # GO / NO-GO / PIVOT — the cheapest stage to fail at
+/research.plan && /research.tasks
+/research.implement            # build + eval, until the queue is done
+```
+</details>
+
+<details>
+<summary><b>2. "I have code and results, but no paper."</b> — start at the argument, skip the gate</summary>
+
+The riskiest question is already answered, so `feasibility` has nothing to add. What you are missing is the argument the results support, and the ledger tying one to the other.
+
+```sh
+/research.init
+/research.proposal "<what the results show, and why it matters>"
+/research.plan                 # describe what you built, not what you planned to
+/research.tasks                # the queue comes out as mostly Eval + Paper
+/research.implement            # fills claims.md: every claim -> supported / partial / refuted
+/research.analyze              # names where code, evidence, and docs disagree
+```
+
+`claims.md` is the thing that makes this path worth it: it is what stops a number in the abstract from drifting away from the experiment that produced it.
+</details>
+
+<details>
+<summary><b>3. "I have rough notes, a half-written doc, an old draft."</b> — feed them to the entry stage</summary>
+
+`proposal` takes prose as input, not just a one-liner. Point it at what you have and it returns a 1–3 page argument you can actually judge — then iterate on *that* rather than on scattered notes.
+
+```sh
+/research.init
+/research.proposal "$(cat notes.md)"     # or just describe where the notes live
+/research.mdreview                       # read it, comment in place, let the agent revise
+```
+
+From there, join path 1 or 2 depending on whether the work exists yet.
+</details>
+
+<details>
+<summary><b>4. "I already have a LaTeX paper in flight."</b> — writing tool only, no pipeline</summary>
+
+**You do not need the pipeline to use the writing half.** The section commands read the manuscript itself, so a paper with no `proposal.md` behind it still works: the argument gets derived from your abstract and contribution list instead.
+
+```sh
+/research.init                       # just puts the templates and craft guides in place
+/research.style                      # optional: point it at papers you want to sound like
+/research.write related-work         # reads the WHOLE paper, states its argument, then works
+/research.texreview                  # comment on the PDF; the agent picks the comments up
+/research.review                     # mock reviewer panel, reading only the paper
+```
+
+`/research.write` reads every section before touching one, so a new paragraph lands in your terms, your tense, and your number formatting rather than in a generic register.
+</details>
 
 ## 🗺️ The pipeline
 
@@ -176,7 +242,7 @@ Gotchas seen in practice:
 ```sh
 /research.init                       # once per repo: copy templates into .research/
 /research.constitution <focus>       # optional: set writing voice + venue
-/research.style                      # optional: learn a register from papers you admire
+/research.style                      # optional: learn how you write, from samples + your instructions
 /research.proposal <your raw idea>   # pipeline entry
 /research.relatedwork
 /research.feasibility
@@ -204,7 +270,7 @@ Gotchas seen in practice:
 | `/research.tasks` | Derive the single work queue `tasks.md` from the plan (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine, preserving checkbox states. |
 | `/research.implement` | Execute the whole queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only when explicitly selected (`paper`, `outline`, `critique`, or `draft`). |
 | `/research.write` | Write or revise one manuscript section: reads the whole paper and states its argument before any prose, then outlines, revises, critiques, or drafts. Same work as `/research.implement paper <section>`, reachable on its own. |
-| `/research.style` | Optional: distill papers you admire (dropped in `.research/style/samples/`) into one living voice profile the writing commands read, and record corrections you make so they outlive the conversation. |
+| `/research.style` | Optional: build `.research/writing/style.md`, the file the writing commands read for how *you* want your paper written — distilled from papers you admire (`writing/samples/`), the instructions you give, and the edits you make to prose written for you. |
 | `/research.analyze` | Read-only cross-artifact audit **and** the sync checker across plan, tasks, code, evidence, and manuscript: flags drift and names the exact re-run. |
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding; you route them and loop until clean. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
@@ -248,7 +314,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
   .research/               all research-kit tracking docs:
     memory/constitution.md   research principles + writing voice
     templates/               skeletons + craft guides (from /research.init)
-    style/                   optional: samples/ you chose + the voice.md distilled from them
+    writing/                 optional: samples/ you chose + style.md (register, your standing instructions, what your edits taught it)
     proposal.md              problem, NABC, gap, contributions, RQs, venue, paper type
     related-work.md          prior work + positioning
     feasibility.md           de-risk probe + GO / NO-GO / PIVOT
@@ -268,7 +334,7 @@ The project is one repo (under `~/Projects`, outside the vault). research-kit's 
 
 ## 🎨 Customization
 
-`.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`. `/research.style` is the optional layer on top: drop papers you admire into `.research/style/samples/` and it distils one `voice.md` that every section you write reads.
+`.research/memory/constitution.md` sets the quality bar, writing voice, and venue norms every command reads first — edit it directly or via `/research.constitution`. Several commands are paper-type aware (measurement, attack, defense, benchmark, SoK); the skeletons and craft guides live in `templates/` and are copied in by `/research.init`. `/research.style` is the optional layer on top: drop papers you admire into `.research/writing/samples/` and it distils one `writing/style.md` that every section you write reads — a file that also accumulates your standing instructions and whatever your own edits reveal.
 
 ## 🤝 Contributing
 

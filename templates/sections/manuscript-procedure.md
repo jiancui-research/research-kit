@@ -71,18 +71,25 @@ Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 | limitations, future work | `sections/limitations-future-work.md` |
 | figures, tables | `sections/figures-tables.md` |
 
-Finally, load `./.research/style/voice.md` **when it exists** - the register distilled from the
-user's own chosen exemplars by `/research.style`. Its **Learned while writing** entries are
-corrections this user has already made once; re-earning them is a waste of their time.
+Finally, load `./.research/writing/style.md` **when it exists** - what `/research.style` has
+accumulated about how this user wants their paper written. Its **Standing instructions** and
+**Learned from edits** entries are things this user has already said or already fixed once;
+making them say it again is a waste of their time.
 
-That gives three sources of voice, and they rank:
+That gives four sources of voice, and they rank:
 
 ```
-the manuscript's own prose   >   the voice profile   >   the craft guides
+the manuscript's fixed terms and formatting   >   the user's standing instructions
+      >   the sample-derived register   >   the craft guides
 ```
 
-The paper is what the reader sees, the profile is what this user prefers, and the guides are what
-the genre does. A guide never overrides the profile, and neither overrides the paper.
+The paper's own terms and formatting win because consistency inside one document beats every
+other consideration. Below that, something the user said outranks something a tool inferred, and
+an inferred preference outranks the genre default.
+
+Where a standing instruction genuinely conflicts with what the paper has already fixed - they ask
+for a word the manuscript never uses, or against a convention it applies everywhere - **say so and
+ask.** Do not silently pick a side; both answers are defensible and only the user knows which.
 
 A guide that is not in this repo is a gap to **name**, not to fill from memory. Say which one was
 unavailable, suggest `/research.init`, and proceed without it - never paraphrase what you assume
@@ -167,7 +174,8 @@ existing prose - show what is being replaced.
 Close by reporting: what was written or proposed, which craft guides were loaded, every gap left
 behind, and anything the blast radius surfaced that you did not touch.
 
-If the user corrects the voice while reviewing what you wrote - a word they never use, an opener
-they dislike, a hedge they want gone - offer once to record it with
-`/research.style "<their correction>"` so the next section starts from it. Offer; do not write to
-the profile from here.
+If the user corrects the writing while reviewing what you wrote - a word they never use, an opener
+they dislike, a structure they want instead - offer once to record it with
+`/research.style "<their correction>"` so the next section starts from it. The same goes for an
+edit they make themselves to prose you wrote: the change is a preference stated in the clearest
+way available. Offer; never write to `writing/style.md` from here.
