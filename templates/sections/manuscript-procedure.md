@@ -48,10 +48,27 @@ against the old. Read the existing sections for these and record them **before w
   `**Takeaway.**` - reuse the labels the paper already uses, in its formatting.
 - **Citation and macro habits.** `~\cite{}` placement, `\system{}` / `\name{}` macros, custom
   environments. Use the macros; never inline what a macro expands to.
+- **Sentence construction.** Everything above is tokens, and getting every one of them right
+  still produces prose in the wrong voice. Record, by quoting: typical sentence length; how
+  sentences open (purpose clause first? `However,` / `Also,` / `Specifically,` / `Note that`?);
+  whether clauses are joined with semicolons and colons or split into separate sentences; and
+  what the paper never does. Most empirical security papers are plainly declarative and never
+  reach for cleft constructions (`What X establishes is ...`), aphorism (`Repair needs more than
+  observation:`), rhetorical parallelism, or literary connectives (`likewise`, `thereby`, `for
+  the same reason`). **If a sentence in your draft strikes you as well turned, it is probably in
+  your voice rather than the paper's.**
 
-Show the sample as part of the argument brief - a handful of lines is enough. When the
-manuscript has no prose yet, say so and take the register from the guides and the constitution
-instead.
+**Quote three to five real sentences from the manuscript, verbatim**, as part of the argument
+brief - not a description of them. This is the load-bearing half: a list of properties is easy to
+satisfy while still writing in your own register, and drafting against actual sentences is not.
+Pick them from the section nearest this one.
+
+(This does not contradict the "never sentences" rule in `/research.style`. That rule keeps
+*other people's* sentences from travelling into the manuscript. These are the author's own, and
+they stay in the conversation as a target to match, never reused as prose.)
+
+When the manuscript has no prose yet, say so and take the register from the guides and the
+constitution instead.
 
 ## 2. Load the craft for this section
 
@@ -71,10 +88,15 @@ Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 | limitations, future work | `sections/limitations-future-work.md` |
 | figures, tables | `sections/figures-tables.md` |
 
-Finally, load `./.research/writing/style.md` **when it exists** - what `/research.style` has
-accumulated about how this user wants their paper written. Its **Standing instructions** and
-**Learned from edits** entries are things this user has already said or already fixed once;
-making them say it again is a waste of their time.
+Finally, load `./.research/writing/style.md` - what `/research.style` has accumulated about how
+this user wants their paper written. Its **Standing instructions** and **Learned from edits**
+entries are things this user has already said or already fixed once; making them say it again is
+a waste of their time.
+
+**When that file does not exist, say so once and point at `/research.style`**, the same way a
+missing template routes to `/research.init`. Do not just proceed quietly: without it every run
+re-infers the author's register from scratch, so a correction they made last week is one you are
+about to need them to make again.
 
 That gives four sources of voice, and they rank:
 

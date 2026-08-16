@@ -43,9 +43,11 @@ working the queue and a Paper task comes up - that path also updates the task's 
 ## Validate
 
 - The whole manuscript was read, and the argument brief plus voice sample were shown before any
-  prose.
+  prose, including three to five sentences quoted verbatim from the manuscript.
 - New prose reuses the paper's established terms, person, tense, and number formatting; no term
   the paper already fixed was swapped for a synonym.
+- Sentences are built the way the paper builds them - no cleft construction, aphorism, or
+  literary connective the manuscript itself never uses.
 - The cross-cutting moves, the paper type's own moves, and the section guide were all applied.
 - The section's claim, evidence, objection, and boundary were settled first.
 - Default was outline; full prose only after the explicit word `draft`.
