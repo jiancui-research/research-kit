@@ -527,6 +527,7 @@ PAGE = r"""<!doctype html>
     --tex-comment:#8c8fa1; --tex-cmd:#8839ef; --tex-math:#179299;
     --tex-brace:#7c7f93; --tex-env:#df8e1d;
     --brace-hit:rgba(30,102,245,.28); --brace-bad:rgba(210,15,57,.28);
+    --reflink:rgba(30,102,245,.16); --reflink-line:rgba(30,102,245,.45);
   }
   :root[data-theme="dark"] {
     --bg:#1e1e2e; --bg-alt:#181825; --surface:#313244; --raised:#45475a;
@@ -541,6 +542,7 @@ PAGE = r"""<!doctype html>
     --tex-comment:#6c7086; --tex-cmd:#cba6f7; --tex-math:#94e2d5;
     --tex-brace:#9399b2; --tex-env:#f9e2af;
     --brace-hit:rgba(137,180,250,.34); --brace-bad:rgba(243,139,168,.34);
+    --reflink:rgba(137,180,250,.2); --reflink-line:rgba(137,180,250,.5);
   }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -625,6 +627,12 @@ PAGE = r"""<!doctype html>
   .page { position:relative; margin:12px auto; background:#fff;
           box-shadow:0 2px 12px var(--page-shadow); border-radius:2px; }
   .page canvas { display:block; border-radius:2px; }
+  /* internal \ref / \cite / \eqref targets, sitting above the text layer so a click
+     navigates instead of syncing to source. Invisible until hovered - hyperref already
+     colours the words underneath. */
+  .linkLayer { position:absolute; inset:0; overflow:hidden; }
+  .linkLayer a { position:absolute; display:block; border-radius:2px; cursor:pointer; }
+  .linkLayer a:hover { background:var(--reflink); outline:1px solid var(--reflink-line); }
   .textLayer { position:absolute; inset:0; overflow:hidden; line-height:1; }
   .textLayer span, .textLayer br { color:transparent; position:absolute; white-space:pre;
                                    cursor:text; transform-origin:0% 0%; }
@@ -717,6 +725,7 @@ PAGE = r"""<!doctype html>
     <div class="bar">
       <span class="path" id="mainName"></span>
       <span id="status"></span>
+      <button id="pdfBack" title="Back to where you were before the last link jump" disabled>↩</button>
       <button id="zOut" title="Zoom out">−</button>
       <button id="zIn" title="Zoom in">+</button>
       <button id="zFit" title="Fit width">Fit</button>
@@ -1302,7 +1311,8 @@ async function renderAllPages() {
     canvas.width = Math.floor(vp.width * dpr); canvas.height = Math.floor(vp.height * dpr);
     canvas.style.width = vp.width + "px"; canvas.style.height = vp.height + "px";
     const tl = document.createElement("div"); tl.className = "textLayer";
-    pd.append(canvas, tl);
+    const ll = document.createElement("div"); ll.className = "linkLayer";
+    pd.append(canvas, tl, ll);
     pages.appendChild(pd); pageEls.push(pd);
   }
   gotoAnchor(anchor);
@@ -1318,8 +1328,76 @@ async function renderAllPages() {
     await pdfjsLib.renderTextLayer({textContentSource: tc, textContent: tc,
                                     container: pd.querySelector(".textLayer"),
                                     viewport: vp, textDivs: []}).promise;
+    await paintLinks(page, vp, pd.querySelector(".linkLayer"));
   }
 }
+/* ---------- internal PDF links (\ref, \cite, \eqref via hyperref) ---------- */
+// hyperref emits a GoTo annotation per cross-reference. External URLs are left alone:
+// an inert-looking anchor is worse than none, and clicking through belongs elsewhere.
+async function paintLinks(page, vp, layer) {
+  layer.textContent = "";
+  let annots;
+  try { annots = await page.getAnnotations({intent: "display"}); } catch (e) { return; }
+  for (const a of annots) {
+    if (a.subtype !== "Link" || !a.dest) continue;
+    const r = vp.convertToViewportRectangle(a.rect);
+    const el = document.createElement("a");
+    el.style.left = Math.min(r[0], r[2]) + "px";
+    el.style.top = Math.min(r[1], r[3]) + "px";
+    el.style.width = Math.abs(r[2] - r[0]) + "px";
+    el.style.height = Math.abs(r[3] - r[1]) + "px";
+    el.title = "Go to reference";
+    el.addEventListener("click", ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      // a drag that ended on a link is a text selection, not a click on it
+      if (!String(window.getSelection() || "")) followDest(a.dest);
+    });
+    layer.appendChild(el);
+  }
+}
+let pdfBackStack = [];
+function pushBack() {
+  pdfBackStack.push(viewAnchor());
+  if (pdfBackStack.length > 50) pdfBackStack.shift();
+  $("pdfBack").disabled = false;
+}
+async function followDest(dest) {
+  try {
+    const d = typeof dest === "string" ? await pdfDoc.getDestination(dest) : dest;
+    if (!Array.isArray(d) || !d.length) return;
+    const idx = await pdfDoc.getPageIndex(d[0]);
+    const pd = pageEls[idx];
+    if (!pd) return;
+    pushBack();
+    // An /XYZ destination carries the target's top edge in PDF user space, measured
+    // from the page bottom; anything else (/Fit, /FitH) just means the page top.
+    let into = 0;
+    const page = await pdfDoc.getPage(idx + 1);
+    const y = d[3];
+    if (d[1] && d[1].name === "XYZ" && typeof y === "number") {
+      const h = page.getViewport({scale: 1}).height;
+      into = Math.min(0.92, Math.max(0, (h - y) / h));
+    }
+    const w = $("pdfwrap");
+    // leave a little headroom so the target is not flush against the pane's top edge
+    w.scrollTop = Math.max(0, pd.offsetTop + into * pd.offsetHeight - 12);
+    flashPage(pd, into);
+  } catch (e) { /* a malformed destination is not worth interrupting the user over */ }
+}
+function flashPage(pd, into) {
+  const box = document.createElement("div");
+  box.className = "syncflash";
+  box.style.left = "0"; box.style.width = "100%";
+  box.style.top = Math.max(0, into * pd.offsetHeight - 6) + "px";
+  box.style.height = "2.2em";
+  pd.appendChild(box);
+  setTimeout(() => box.remove(), 1400);
+}
+$("pdfBack").onclick = () => {
+  const a = pdfBackStack.pop();
+  if (a) gotoAnchor(a);
+  $("pdfBack").disabled = !pdfBackStack.length;
+};
 $("zIn").onclick = () => setZoom(zoomFactor * 1.15);
 $("zOut").onclick = () => setZoom(zoomFactor / 1.15);
 $("zFit").onclick = () => setZoom(1);
