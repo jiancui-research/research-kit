@@ -891,6 +891,7 @@ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
 let state = null;          // {path, mtime} - the open source file
 let mainRel = "";
 let pdfDoc = null, pdfScale = 1, zoomFactor = 1, loadedMtime = 0, renderToken = 0;
+let synctexRepairTried = false;
 let pageEls = [];          // .page divs, index = page-1
 let comments = [];
 let pending = null;        // captured selection awaiting comment text
@@ -1482,8 +1483,18 @@ async function loadPdf() {
     return;
   }
   if (!info.synctex) {
-    warn.textContent = "No .synctex.gz next to the PDF - click-to-source is disabled. Recompile regenerates it.";
     warn.style.display = "block";
+    // A PDF built outside this tool has no .synctex.gz, and click-to-source stays dead
+    // until someone compiles. That is the one thing the Recompile button would fix, so
+    // do it once rather than making you find it. Once per session: if the build does not
+    // produce synctex (no latexmk, a failing paper), retrying on every reload is a loop.
+    if (!synctexRepairTried && !compiling) {
+      synctexRepairTried = true;
+      warn.textContent = "Building SyncTeX data so click-to-source works - compiling once…";
+      startCompile();
+    } else {
+      warn.textContent = "No .synctex.gz next to the PDF - click-to-source is disabled. Recompile regenerates it.";
+    }
   } else warn.style.display = "none";
   loadedMtime = info.mtime;
   lastSel = null;                 // page coordinates do not survive a re-layout
@@ -1526,12 +1537,23 @@ function drawOrder(from) {
   }
   return order;
 }
+// The fit scale is derived from the pane width, so a pane that changes width without a
+// re-render leaves the PDF at the old size - which is what dragging the divider, toggling
+// the comments panel, or resizing the window all do. Re-fit on any real width change; the
+// 4px deadband keeps a scrollbar appearing or vanishing from starting a render loop.
+let lastFitW = 0, refitTimer = null;
+new ResizeObserver(() => {
+  if (!pdfDoc || Math.abs($("pdfwrap").clientWidth - lastFitW) < 4) return;
+  clearTimeout(refitTimer);
+  refitTimer = setTimeout(() => { if (pdfDoc) renderAllPages(); }, 150);
+}).observe($("pdfwrap"));
 async function renderAllPages() {
   const my = ++renderToken;
   const wrap = $("pdfwrap"), pages = $("pages");
   const anchor = viewAnchor();
   pages.innerHTML = ""; pageEls = [];
   const first = await pdfDoc.getPage(1);
+  lastFitW = wrap.clientWidth;    // the width this render was fitted to
   const base = (wrap.clientWidth - 36) / first.getViewport({scale: 1}).width;
   pdfScale = Math.max(0.35, Math.min(5, base * zoomFactor));
   const dpr = window.devicePixelRatio || 1;
