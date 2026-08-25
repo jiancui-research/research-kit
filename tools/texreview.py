@@ -1030,6 +1030,7 @@ async function openDoc(path) {
   $("editor").value = d.content;
   findHits = []; findAt = -1; $("findCount").textContent = "";   // offsets were the old file's
   braceHi = null;                 // ditto - these are offsets into the file we just closed
+  histReset();                    // undo must never cross a file boundary
   queueMirror();
   setDirty(false);
   $("bar").style.visibility = "visible";
@@ -1040,7 +1041,11 @@ async function openDoc(path) {
   for (let i = 1; i < parts.length; i++) collapsed.delete(parts.slice(0, i).join("/") + "/");
   renderSidebar();
 }
-$("editor").addEventListener("input", () => { syncBrace(); queueMirror(); if (state) setDirty(true); });
+$("editor").addEventListener("input", () => {
+  // an IME composition is still pending text; snapshot once it commits, not per keystroke
+  if (!$("edarea").classList.contains("composing")) histRecord();
+  syncBrace(); queueMirror(); if (state) setDirty(true);
+});
 // caret moves (arrows, click, drag) do not fire `input`; selectionchange covers all of them
 document.addEventListener("selectionchange", () => {
   if (document.activeElement === $("editor")) syncBrace();
@@ -1277,17 +1282,18 @@ $("editor").addEventListener("scroll", () => { $("mirror").scrollTop = $("editor
 // mirror, so hand the colour back to the textarea until the composition commits
 $("editor").addEventListener("compositionstart", () => $("edarea").classList.add("composing"));
 $("editor").addEventListener("compositionend", () => {
-  $("edarea").classList.remove("composing"); queueMirror();
+  $("edarea").classList.remove("composing"); histFence(); histRecord(); queueMirror();
 });
 // wrapping changes with the pane width and the font size, which moves every number
 new ResizeObserver(queueMirror).observe($("editor"));
 
 /* ---------- comment toggle (⌘/) ---------- */
 /* ---------- wrap the selection in a LaTeX command (Overleaf-style) ---------- */
-// setRangeText does NOT push an undo entry in Chrome, so ⌘Z would not reverse these.
-// execCommand("insertText") is deprecated but is the only mutation the textarea's own
-// undo stack records - it also fires `input`, which repaints the mirror and marks dirty.
+// execCommand("insertText") is deprecated, but unlike setRangeText it fires `input` - which
+// is what repaints the mirror, marks the buffer dirty, and feeds the undo history above.
+// (Undo no longer depends on Chrome's own stack; histFence makes each command one step.)
 function replaceRange(el, from, to, text) {
+  histFence();                    // a command is one undo step, never glued to your typing
   el.focus();
   el.setSelectionRange(from, to);
   if (!document.execCommand("insertText", false, text)) {
@@ -1342,6 +1348,14 @@ addEventListener("beforeunload", ev => {
 const chord = (ev, k) => (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && !ev.altKey
                          && (ev.key || "").toLowerCase() === k;
 document.addEventListener("keydown", ev => {
+  if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && (ev.key === "z" || ev.key === "Z")
+      && document.activeElement === $("editor")) {
+    ev.preventDefault();
+    ev.shiftKey ? histRedo() : histUndo();
+    return;
+  }
+  if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && ev.key === "y"
+      && document.activeElement === $("editor")) { ev.preventDefault(); histRedo(); return; }
   if (chord(ev, "s")) { ev.preventDefault(); save(false); }
   if (chord(ev, "f") && state) { ev.preventDefault(); openFind(); }
   if (chord(ev, "b") && document.activeElement === $("editor")) {
@@ -1357,6 +1371,60 @@ document.addEventListener("keydown", ev => {
   }
   if (ev.key === "Escape" && $("findbar").style.display === "flex") closeFind();
 });
+/* ---------- undo history ----------
+   Chrome's own textarea undo groups at its own granularity, and we cannot reach in to
+   change it, so we keep the stack ourselves and suppress the native one. Grouping follows
+   what editors converge on (CodeMirror and ProseMirror both default to a 500ms new-group
+   delay): consecutive edits join one entry until a pause, a caret jump, a switch between
+   inserting and deleting, a newline, or a command that edits on your behalf. */
+const UNDO_GROUP_MS = 500;
+const UNDO_MAX = 200;                 // a section is a few KB, so this is a couple of MB
+let hist = [], hi = -1, histAt = 0, histOp = "", histEnd = -1, histBreak = true;
+function histReset() {
+  const ed = $("editor");
+  hist = [{v: ed.value, sel: ed.selectionStart}];
+  hi = 0; histAt = 0; histOp = ""; histEnd = -1; histBreak = true;
+}
+// call before a programmatic edit so it lands as its own undo step, not glued to typing
+function histFence() { histBreak = true; }
+function histRecord() {
+  const ed = $("editor"), v = ed.value, sel = ed.selectionStart;
+  if (hi < 0) { histReset(); return; }
+  const prev = hist[hi];
+  if (v === prev.v) return;
+  const delta = v.length - prev.v.length;
+  const op = delta > 0 ? "ins" : delta < 0 ? "del" : "rep";
+  const now = Date.now();
+  // a continued run leaves the caret exactly where the last edit left it, advanced by this
+  // edit's own length; anything else means the caret was moved in between
+  const brk = histBreak
+    || now - histAt > UNDO_GROUP_MS
+    || op !== histOp
+    || sel !== histEnd + delta
+    || (op === "ins" && v[sel - 1] === "\n");            // a line is a natural undo boundary
+  if (brk) {
+    hist = hist.slice(0, hi + 1);
+    hist.push({v, sel});
+    if (hist.length > UNDO_MAX) hist.shift(); else hi++;
+  } else {
+    hist[hi] = {v, sel};                                 // extend the group in place
+  }
+  histAt = now; histOp = op; histEnd = sel; histBreak = false;
+}
+function histApply(entry) {
+  const ed = $("editor");
+  ed.value = entry.v;                                    // programmatic: fires no `input`
+  ed.focus();
+  ed.setSelectionRange(entry.sel, entry.sel);
+  ed.scrollTop = Math.max(0, caretTop(ed, entry.sel) - ed.clientHeight / 2);
+  $("mirror").scrollTop = ed.scrollTop;
+  queueMirror(); syncBrace();
+  if (state) setDirty(true);
+  histBreak = true;                                      // never merge across an undo
+}
+function histUndo() { if (hi > 0) histApply(hist[--hi]); }
+function histRedo() { if (hi >= 0 && hi < hist.length - 1) histApply(hist[++hi]); }
+
 function caretTop(ed, pos) {
   // mirror the textarea's text up to pos in a hidden div with identical wrapping,
   // so soft-wrapped long lines measure at their true visual height
