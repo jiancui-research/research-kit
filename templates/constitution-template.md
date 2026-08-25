@@ -1,3 +1,9 @@
+> The default research constitution. Copied into a paper repo by `/research.init`, then
+> adapted in place by `/research.constitution` and written to `./.research/memory/constitution.md`,
+> which every other command reads first.
+>
+> Edit your paper's copy, not this one - this is the starting point, not the live file.
+
 # Research constitution
 
 > The default, project-wide principles read by every `/research.*` command.

@@ -8,16 +8,16 @@ research-kit is **not an application** - it is a bundle of AI-agent slash comman
 
 The product is a Spec-Driven Development pipeline for research papers. Each command turns one fuzzy stage (proposal, related work, feasibility, plan, tasks, implement, analyze, review, ...) into reviewable artifacts on disk.
 
-Because the shipped Markdown *is* the product (read by AI agents and users, never compiled), editing prose is the main activity here - match the existing voice: sentence-case headers, spaced hyphens not em-dashes, distilled/original guidance (never paste private notes, names, or unpublished drafts), and the writing-voice rules in `memory/constitution.md`.
+Because the shipped Markdown *is* the product (read by AI agents and users, never compiled), editing prose is the main activity here - match the existing voice: sentence-case headers, spaced hyphens not em-dashes, distilled/original guidance (never paste private notes, names, or unpublished drafts), and the writing-voice rules in `templates/constitution-template.md`.
 
 ## The two repos you must never confuse
 
 When editing this repo you are authoring the **bundle**. The `.research/...` paths written inside command bodies refer to the **end user's paper repo at runtime**, not to this repo.
 
-- **This repo (the bundle):** `commands/`, `templates/` (root), `tools/` (optional utilities), `memory/constitution.md` (root), `install.sh`, `.claude-plugin/`.
+- **This repo (the bundle):** `commands/`, `templates/` (root, including `constitution-template.md`), `tools/` (optional utilities), `install.sh`, `.claude-plugin/`.
 - **The user's paper repo (runtime, never exists here):** `./.research/` holds tracking docs; code, eval, feasibility, and manuscript work live outside it. The manuscript may be a dedicated sibling repo (`<name>-<venue><yy>-latex`) recorded in `.research/paper-repo`, resolved by explicit implement Manuscript mode; manuscript readers fall back to `./paper/`.
 
-So: this repo's root `templates/` and `memory/constitution.md` are the **source** that gets *copied into* a user's `./.research/templates/` and `./.research/memory/constitution.md`. Command bodies read from the `.research/` copies, never from this repo's paths.
+So: this repo's root `templates/` is the **source** that gets *copied into* a user's `./.research/templates/`; `/research.constitution` then adapts `constitution-template.md` into `./.research/memory/constitution.md`. Command bodies read from the `.research/` copies, never from this repo's paths.
 
 ## Distribution: one source, four agents, two mechanisms
 
@@ -74,5 +74,5 @@ There is no test runner or linter. The validation loop (from `CONTRIBUTING.md`) 
 - **Don't let a command write into another command's artifact.** The only two allowed cross-writes are `relatedwork → proposal.md` and `implement → claims.md`; `analyze` and `review` are report-only (they route a re-run, never edit other artifacts).
 - **Don't inline a long checklist or skeleton** into a command body - it belongs in `templates/` and is referenced via `.research/templates/...`. Keep command files short (< ~120 lines).
 - **`cp -Rn` (init) and the install copy are no-clobber by design.** They fill in missing files and never overwrite a user's customized `./.research/` content - that's a feature; don't "fix" it into an overwrite.
-- **Don't add machinery.** No Python CLI, hooks, MCP servers, daemon, or build step for the pipeline itself. Two deliberate exceptions exist: `tools/mdreview.py` (optional markdown review UI serving both `/research.mdreview` and `/research.mdsplit`, one layout each) and `tools/texreview.py` (optional LaTeX + PDF review UI behind `/research.texreview`, run against the manuscript repo) - leaf utilities; nothing in the pipeline depends on them, and it must stay that way. The plugin packaging is a manifest around the same Markdown - nothing more.
+- **Don't add machinery.** No Python CLI, hooks, MCP servers, daemon, or build step for the pipeline itself. Two deliberate exceptions exist: `tools/mdreview.py` (optional markdown review UI behind `/research.mdreview`, one pane by default or `split` for two) and `tools/texreview.py` (optional LaTeX + PDF review UI behind `/research.texreview`, run against the manuscript repo) - leaf utilities; nothing in the pipeline depends on them, and it must stay that way. The plugin packaging is a manifest around the same Markdown - nothing more.
 - **Editing one place means editing the mirrors.** A flow change must stay consistent across `README.md`, `docs/workflow.md`, and `docs/design.md`; a command's one-line description lives in its frontmatter *and* the README Commands table.

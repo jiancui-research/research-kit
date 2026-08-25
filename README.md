@@ -196,7 +196,7 @@ Click any paragraph, list item, table row or code block in the **rendered** view
 <details>
 <summary>Layouts, mermaid, safe saves</summary>
 
-- 🔀 **`Preview / Markdown` toggle** — one wide pane, swapped for the full source editor when you need the raw file. Prefer source and preview side by side? `/research.mdsplit` is the same tool in the two-pane layout with click-to-source sync.
+- 🔀 **Two layouts, one tool** — the default is one wide pane you edit in; `/research.mdreview split` puts raw source beside the rendered preview with click-to-source sync. Same server, same comments.
 - ✍️ **Why editing is safe** — the source range comes from the markdown parser rather than from converting HTML back to markdown, so tables, spacing, and raw HTML elsewhere are never reflowed.
 - 🧜 **Mermaid diagrams** — ` ```mermaid ` fences render with a zoom + pan lightbox (via CDN; they fall back to code blocks offline).
 - 🔒 **Safe saves** — atomic writes with a conflict guard for when the file changed on disk mid-review, plus a `.research/ only` sidebar filter.
@@ -227,8 +227,7 @@ Launch from any repo: `/research.mdreview`, or `uv run tools/mdreview.py --open`
 | `/research.review` | Simulate a reviewer panel reading **only the paper**: mock reviews + scores, plus a suggested fix command per finding. |
 | `/research.rebuttal` | Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit. |
 | `/research.ae` | Prepare an artifact-evaluation submission: reproducibility checklist, artifact README, badge plan, archival link. |
-| `/research.mdreview` | Local web UI for the repo's markdown: revise directly in the rendered view, comment, export (needs `uv`). |
-| `/research.mdsplit` | The same UI in the source-beside-preview layout. Same comments. |
+| `/research.mdreview` | Local web UI for the repo's markdown: revise directly in the rendered view, comment, export (needs `uv`). Add `split` for source beside preview. |
 | `/research.texreview` | Review the compiled paper: LaTeX left, PDF right, SyncTeX sync, comments carrying `file:line`, recompile on save (needs `uv` + TeX). |
 
 ## 🗺️ The pipeline

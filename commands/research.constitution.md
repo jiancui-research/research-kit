@@ -32,10 +32,13 @@ reads this file, so keep it durable, paper-type-agnostic, and project-wide.
    edits, fold `$ARGUMENTS` in, and report a short diff of what changed. Never
    silently overwrite hand-written principles.
 
-3. **Seed from the default below if absent.** If no constitution exists, write the
-   default template in this file's "Default constitution" section, then specialize
-   it using `$ARGUMENTS` (set the venue family, foreground the user's stated
-   priorities). If `$ARGUMENTS` is empty, write the default verbatim and say so.
+3. **Seed from the template if absent.** If no constitution exists, read
+   `.research/templates/constitution-template.md` and write it to
+   `.research/memory/constitution.md`, then specialize it using `$ARGUMENTS` (set the
+   venue family, foreground the user's stated priorities). If `$ARGUMENTS` is empty,
+   write it through unchanged apart from the focus line, and say so.
+   The template is **required**: if it is missing, say so, route to `/research.init`,
+   and stop - never reconstruct a constitution from memory.
 
 4. **Specialize, do not bloat.** Keep it readable in one screen-scroll per section.
    Add at most a few user-specific bullets; do not invent project facts, names,
@@ -46,96 +49,6 @@ reads this file, so keep it durable, paper-type-agnostic, and project-wide.
    from their target venue.
 
 5. **Validate** against the checklist below, then write the file.
-
-## Default constitution
-
-Write the following to `.research/memory/constitution.md`, adapting the bracketed
-slots to `$ARGUMENTS` where given.
-
-```markdown
-# Research constitution
-
-> Project-wide principles read by every /research.* command. Edit freely;
-> this file is the source of truth for quality bar and writing voice.
-
-Focus areas: [field / target venue family / priorities from user, or "general"]
-
-## Quality principles
-
-- **Rigor.** Every claim is falsifiable, scoped, and backed by a pointer (a number,
-  figure, proof, or citation). Conclusions never outrun the evidence: do not claim a
-  general capability from a narrow proxy, and bound explicitly what was not shown.
-- **Reproducibility.** Each contribution is backed by a releasable artifact (code,
-  data, proof) or by method detail complete enough to reproduce the headline result
-  from the paper alone: hyperparameters, hardware, prompts, seeds, licenses, access.
-- **Honest reporting.** Report variance (error bars / CIs / significance), tune
-  baselines fairly, explain anomalous results, and never train on test data. Report
-  negative and null results rather than burying them. Validate any automated or
-  LLM-as-judge metric against ground truth on this specific task before trusting it.
-- **Ethics.** State what was done AND why it was the ethical choice, in self-contained
-  prose. Identify stakeholders, acknowledge dual-use and second-order harms, and for
-  work touching real systems include responsible disclosure (who was notified, how
-  they responded). If ethics review was post-hoc, label it as such, do not disguise it.
-- **Integrity.** Every citation genuinely supports its sentence; related work states
-  how each neighbor differs rather than just listing it. No fabricated, hallucinated,
-  or mischaracterized references.
-
-## Writing voice
-
-- **Motivation first (NABC).** Lead with why the target matters - a named example, a
-  dated incident, or a concrete number - then surface the tension, then the method.
-  Before drafting, be able to state Need, Approach, Benefits (quantified, substantially
-  better), and Competition as a sub-one-minute pitch. If you cannot, the framing is not
-  ready.
-- **Unmissable gap.** After motivation, state plainly what is not yet known or done so a
-  reader can recite the gap in one sentence. Escalate it ("nobody has even tried to
-  detect/mitigate/exploit X") to widen the contribution space.
-- **Scoped novelty.** Qualify every novelty claim (first *systematic* study of X *on* Y,
-  first *large-scale* measurement of Z). The qualifier is what makes it defensible.
-- **Active "we" voice.** Use "we show / discover / design / measure" for what you did;
-  reserve impersonal voice for stated facts and system behavior.
-- **Evidence-bound emphasis.** Pair every statistic with a named, recognizable instance
-  and its absolute count. Reserve "surprisingly" for genuinely surprising results, and
-  attach a number to every superlative or performance adjective.
-- **Name the artifact early.** Give the system/attack/threat a short memorable name on
-  first mention, then reuse it in headers and topic sentences.
-- **Translate results into stakes.** Close each key finding with a "so what" sentence -
-  who is affected, what practice it questions, what it implies for defense or policy.
-- **Related work is positioning.** Synthesize prior work into themes, treat the closest
-  2-3 baselines generously (no strawmen), and end each paragraph with an explicit delta
-  ("Unlike these, we..."). Name the single closest prior work in the intro itself.
-
-## Venue norms (a menu, not a template)
-
-- Tailor structure to genre (attack / defense / measurement / benchmark) and to the
-  target venue. Read 3 recent accepted papers from that venue before fixing structure.
-- Security venues: expect an explicit, labeled threat/adversary model (capabilities,
-  knowledge, goals), a disclosure/ethics paragraph, and a roadmap sentence ending the
-  intro. ML venues: often front-load related work and omit the threat-model beat and
-  roadmap sentence. Inherit the host venue's conventions and translate the rest.
-- Pass the desk-reject gate as a binary pre-flight: scope fit, page/format limits,
-  anonymization, required sections (limitations, ethics), reproducibility checklist.
-
-## Manuscript layout (customizable)
-
-- One file per section, `\input` from a thin `main.tex` holding only the preamble,
-  title/author block, and the `\input` list: `sections/` (one .tex per section),
-  `figures/`, `tables/` (generated .tex, `\input`'d), `references.bib`.
-- Why: a section per file keeps diffs reviewable, lets co-authors edit in parallel, and
-  lets a section be commented out of `main.tex` instead of deleted.
-- **An existing manuscript's layout wins.** Detect the convention from `main.tex` -
-  directory, extension, naming style - and follow it exactly. Never reorganize someone's
-  manuscript as a side effect of writing one section.
-- A new section file is not finished until its `\input` line is in `main.tex`.
-
-## Self-review stance
-
-- Before submission, write a mock review of your own draft across the five axes:
-  motivation, contribution, evaluation, related work, presentation. Each axis must
-  yield one concrete, specific weakness - then fix it or pre-empt it in the text.
-- Maintain a claim <-> evidence ledger: every abstract/intro claim mapped to the exact
-  result that supports it. Any unsupported row is an overclaim to rescope or back up.
-```
 
 ## Quality checklist
 
