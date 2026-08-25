@@ -125,6 +125,28 @@ Section [N+1] [verb-s] [topic]; ... and Section [last] concludes the paper.
 Clauses joined by semicolons, one per section. Skip it only where the venue's page budget
 genuinely forbids it (short papers, some workshops).
 
+## 10. Referential clarity
+
+The moves above shape how a sentence sounds. They do not catch a sentence the reader cannot
+resolve. A definite noun phrase promises that the reader already holds the referent; when they
+do not, the sentence stalls even though every word in it is plain.
+
+Check each noun phrase before delivering it:
+
+- **A definite article with no antecedent.** "the task pairs", when no pair has been introduced.
+  Define it in place, or make it indefinite.
+- **A comparative with no second term.** "errors fall on different tasks" - different from what?
+  Name the other side.
+- **A partitive with no whole.** "both halves", "either side", "the remainder", when the thing
+  being divided was never stated.
+- **Two or more of these in one clause.** One unresolved reference is a stumble the reader
+  recovers from. Three in a row is a sentence they give up on.
+
+Define a term where it first does work, in the same sentence, rather than leaning on a table or
+an earlier section to have carried it. This is where the failure usually comes from: a term that
+read fine while a table defined it becomes undefined the moment that table changes, and no
+register check will flag it.
+
 ---
 
 ## What this register avoids
