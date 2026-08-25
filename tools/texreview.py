@@ -658,7 +658,7 @@ PAGE = r"""<!doctype html>
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
          color:var(--text); background:var(--bg); }
-  #app { display:grid; grid-template-columns:210px 1fr 6px 1fr 300px; height:100vh; }
+  #app { display:grid; grid-template-columns:210px 0.4fr 6px 0.6fr 300px; height:100vh; }
   /* grid/flex items default to min-height:auto, so a long PDF would stretch the grid
      past 100vh and scroll the page (taking the toolbars with it); force pane scrolling */
   #app > * { min-width:0; min-height:0; }
@@ -2063,7 +2063,14 @@ $("exportBtn").onclick = async () => {
 
 /* ---------- draggable divider + panel toggle + fonts ---------- */
 let panelVisible = localStorage.getItem("texreview.panel") !== "hidden";
-let splitFrac = 0.5;
+// The PDF is what you are reading; the source is what you reach into, so it gets less
+// room by default. Clamped on read because a hand-edited or stale value would otherwise
+// collapse a pane to nothing with no way back except clearing site data.
+const SPLIT_MIN = 0.2, SPLIT_MAX = 0.8, SPLIT_DEFAULT = 0.4;
+let splitFrac = (() => {
+  const v = parseFloat(localStorage.getItem("texreview.split"));
+  return Number.isFinite(v) ? Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, v)) : SPLIT_DEFAULT;
+})();
 function applyLayout() {
   $("panel").style.display = panelVisible ? "" : "none";
   $("app").style.gridTemplateColumns =
@@ -2087,12 +2094,14 @@ $("gutter").addEventListener("mousedown", e => {
   const move = ev => {
     const left = 210, right = panelVisible ? 300 : 0, gw = 6;
     const usable = innerWidth - left - right - gw;
-    splitFrac = Math.min(0.8, Math.max(0.2, (ev.clientX - left - gw / 2) / usable));
+    splitFrac = Math.min(SPLIT_MAX, Math.max(SPLIT_MIN, (ev.clientX - left - gw / 2) / usable));
     applyLayout();
   };
   const up = () => {
     $("gutter").classList.remove("dragging");
     document.body.style.userSelect = "";
+    // on release, not per frame: the split you settled on is the one worth keeping
+    localStorage.setItem("texreview.split", String(splitFrac));
     document.removeEventListener("mousemove", move);
     document.removeEventListener("mouseup", up);
   };
