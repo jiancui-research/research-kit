@@ -156,7 +156,10 @@ against the change and report the result **even when nothing else is affected**:
 - the contribution list in the introduction;
 - any related-work delta that leaned on the old number;
 - the conclusion;
-- any other section citing this result as support.
+- any other section citing this result as support;
+- any term whose definition was living in the table, figure, or caption you changed. A term
+  reads fine while a float defines it and goes undefined the moment that float moves, and no
+  register or voice check will catch it - the prose is untouched, so nothing looks edited.
 
 A number that disagrees between the abstract and the body costs the paper its credibility with
 a reviewer. This check is the main value of a revision pass.

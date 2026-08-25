@@ -48,6 +48,8 @@ working the queue and a Paper task comes up - that path also updates the task's 
   the paper already fixed was swapped for a synonym.
 - Sentences are built the way the paper builds them - no cleft construction, aphorism, or
   literary connective the manuscript itself never uses.
+- Every definite noun phrase resolves: no "the X" without an antecedent, no comparative without
+  its second term, no partitive without its whole.
 - The cross-cutting moves, the paper type's own moves, and the section guide were all applied.
 - The section's claim, evidence, objection, and boundary were settled first.
 - Default was outline; full prose only after the explicit word `draft`.
