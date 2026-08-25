@@ -252,8 +252,17 @@ def save_state(root: Path, st: dict) -> dict:
     different browser origin - the saved position would be invisible after a restart."""
     keep = {}
     path = st.get("path")
-    if isinstance(path, str) and (root / path).is_file():
-        keep["path"] = safe_resolve(root, path).relative_to(root.resolve()).as_posix()
+    if isinstance(path, str):
+        # Containment first, existence second. The other way round lets a path that
+        # resolves to a real file OUTSIDE the repo past the gate and into safe_resolve,
+        # which raises - and one bad field would then discard an otherwise valid save.
+        # Every other field here is dropped silently when invalid; this one should be too.
+        try:
+            q = safe_resolve(root, path)
+            if q.is_file():
+                keep["path"] = q.relative_to(root.resolve()).as_posix()
+        except RequestError:
+            pass
     for k in ("sel", "edScroll"):
         v = st.get(k)
         if isinstance(v, (int, float)) and v >= 0:
