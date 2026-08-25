@@ -34,6 +34,7 @@ The spec-kit `implement` analogue and the single queue executor. Setup/Build pro
 - Build code is outside `.research/`; eval files, index, claims, and task states agree.
 - Manuscript mode followed the shared procedure: whole manuscript read, argument brief and voice sample shown before writing (with real sentences quoted, not described), section job pinned, outline by default, prose never overwritten, and a REVISE run reported its blast radius and proposed before applying.
 - New prose matches the paper's established terms, person, tense, number formatting, and sentence construction, and applies the cross-cutting moves, the paper type's own moves, and the section guide.
+- Every definite noun phrase resolves: no `the X` without an antecedent, no comparative without its second term, no partitive without its whole.
 - Full prose was produced only after the explicit word `draft`.
 
 ## Completion
