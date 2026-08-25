@@ -102,6 +102,75 @@ def list_tex_files(root: Path) -> list[str]:
     return out
 
 
+_SECT_RE = re.compile(r"\\(part|chapter|section|subsection|subsubsection)\*?\s*(?:\[[^\]]*\])?\s*\{")
+_INC_RE = re.compile(r"\\(?:input|include)\s*\{\s*([^}]+?)\s*\}")
+_SECT_LEVEL = {"part": 0, "chapter": 1, "section": 2, "subsection": 3, "subsubsection": 4}
+_TITLE_CLEAN = re.compile(r"\\[a-zA-Z@]+\*?(?:\[[^\]]*\])?|[{}$]")
+
+
+def _strip_comment(line: str) -> str:
+    """Drop an unescaped % and everything after it."""
+    for i, ch in enumerate(line):
+        if ch == "%" and (i == 0 or line[i - 1] != "\\"):
+            return line[:i]
+    return line
+
+
+def _braced(s: str, i: int) -> str:
+    """s[i] is '{'; return its balanced contents (rest of line when unbalanced)."""
+    depth = 0
+    for j in range(i, len(s)):
+        if s[j] == "{" and (j == 0 or s[j - 1] != "\\"):
+            depth += 1
+        elif s[j] == "}" and (j == 0 or s[j - 1] != "\\"):
+            depth -= 1
+            if depth == 0:
+                return s[i + 1:j]
+    return s[i + 1:]
+
+
+def outline(root: Path, main_rel: str) -> list[dict]:
+    """Headings in reading order, following \\input/\\include out from the main file.
+
+    Document order is what makes this navigable, so includes are walked in place
+    rather than collected per file - a section's position depends on where its
+    file was pulled in, not on the filename."""
+    out: list[dict] = []
+    seen: set[str] = set()
+
+    def walk(rel: str, depth: int) -> None:
+        if depth > 8 or rel in seen:
+            return          # \input cycles are legal LaTeX and would hang us
+        seen.add(rel)
+        try:
+            text = (root / rel).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return
+        for n, raw in enumerate(text.splitlines(), 1):
+            line = _strip_comment(raw)
+            events = [(m.start(), "sect", m) for m in _SECT_RE.finditer(line)]
+            events += [(m.start(), "inc", m) for m in _INC_RE.finditer(line)]
+            for _, kind, m in sorted(events, key=lambda e: e[0]):
+                if kind == "sect":
+                    title = _TITLE_CLEAN.sub("", _braced(line, m.end() - 1)).strip()
+                    out.append({"level": _SECT_LEVEL[m.group(1)],
+                                "title": " ".join(title.split()) or m.group(1),
+                                "file": rel, "line": n})
+                else:
+                    tgt = m.group(1).strip()
+                    if not tgt.lower().endswith(".tex"):
+                        tgt += ".tex"
+                    try:
+                        q = safe_resolve(root, tgt)
+                    except Exception:
+                        continue
+                    if q.is_file():
+                        walk(q.relative_to(root.resolve()).as_posix(), depth + 1)
+
+    walk(main_rel, 0)
+    return out
+
+
 def find_main_tex(root: Path, override: str | None = None) -> str:
     """The compilation entry point: --main if given, else the shallowest
     \\documentclass .tex, preferring main.tex then paper.tex."""
@@ -558,6 +627,15 @@ PAGE = r"""<!doctype html>
   #side { overflow-y:auto; border-right:1px solid var(--line); padding:10px; font-size:13px;
           background:var(--bg-alt); }
   #side .dir { font-weight:600; margin-top:6px; color:var(--muted); }
+  #sidetabs { display:flex; gap:4px; margin:-10px -10px 8px; padding:6px; position:sticky;
+              top:-10px; background:var(--bg-alt); border-bottom:1px solid var(--line); z-index:2; }
+  #sidetabs button { flex:1; text-align:center; font-size:11px; padding:3px 0; border-radius:4px;
+                     border:1px solid transparent; color:var(--muted); }
+  #sidetabs button.on { background:var(--surface); color:var(--text); border-color:var(--line); }
+  /* the outline is a reading order, so depth is carried by indent and weight, not bullets */
+  #side .sec.l0, #side .sec.l1, #side .sec.l2 { font-weight:600; }
+  #side .sec.l3, #side .sec.l4 { color:var(--muted); font-size:12px; }
+  #side .sec.here { background:var(--accent-soft); color:var(--accent); }
   #side .dir .count { font-weight:400; color:var(--faint); }
   #side button { display:block; width:100%; text-align:left; border:0; background:none;
                  padding:3px 6px; border-radius:5px; cursor:pointer; font:inherit; color:var(--text); }
@@ -698,7 +776,7 @@ PAGE = r"""<!doctype html>
   .empty { color:var(--faint); }
 </style></head><body>
 <div id="app">
-  <nav id="side"></nav>
+  <nav id="side"><div id="sidetabs"><button id="tabFiles" class="on" title="Files in this repo">Files</button><button id="tabOutline" title="Sections, in reading order">Outline</button></div><div id="sidebody"></div></nav>
   <section id="srcpane">
     <div class="bar" id="bar" style="visibility:hidden">
       <span class="path" id="path"></span>
@@ -803,15 +881,67 @@ async function loadFiles() {
   }
   renderSidebar();
 }
+let sideMode = localStorage.getItem("texreview.sideMode") || "files";
+let outlineData = [];
 function renderSidebar() {
+  const body = $("sidebody");
+  $("tabFiles").classList.toggle("on", sideMode === "files");
+  $("tabOutline").classList.toggle("on", sideMode === "outline");
+  body.innerHTML = "";
+  if (sideMode === "outline") { renderOutline(body); return; }
   const tree = {};
   for (const f of allFiles) {
     const parts = f.split("/"); let node = tree;
     for (const p of parts.slice(0, -1)) node = (node[p + "/"] ??= {});
     node[parts.at(-1)] = f;
   }
-  $("side").innerHTML = "";
-  renderTree(tree, $("side"), 0, "");
+  renderTree(tree, body, 0, "");
+}
+function setSideMode(m) {
+  sideMode = m;
+  localStorage.setItem("texreview.sideMode", m);
+  if (m === "outline" && !outlineData.length) loadOutline(); else renderSidebar();
+}
+$("tabFiles").onclick = () => setSideMode("files");
+$("tabOutline").onclick = () => setSideMode("outline");
+async function loadOutline() {
+  try {
+    const r = await api("/api/outline");
+    if (r.ok) outlineData = await r.json();
+  } catch (e) { /* an outline is a convenience; never block the editor on it */ }
+  renderSidebar();
+}
+function renderOutline(body) {
+  if (!outlineData.length) {
+    const p = document.createElement("p");
+    p.className = "empty";
+    p.textContent = "No \\section commands found in the main file.";
+    body.appendChild(p);
+    return;
+  }
+  const top = Math.min(...outlineData.map(e => e.level));
+  for (const e of outlineData) {
+    const b = document.createElement("button");
+    b.className = "sec l" + e.level;
+    b.textContent = e.title;
+    b.title = e.file + ":" + e.line;
+    b.style.paddingLeft = ((e.level - top) * 11 + 6) + "px";
+    b.classList.toggle("here", !!state && state.path === e.file && e.line === activeSecLine);
+    b.onclick = () => gotoSection(e);
+    body.appendChild(b);
+  }
+}
+let activeSecLine = -1;
+// the point of the outline is landing in BOTH panes: the source jump is local, the
+// PDF jump needs SyncTeX, and a paper that has not compiled yet still gets the source
+async function gotoSection(e) {
+  activeSecLine = e.line;
+  await gotoSource(e.file, e.line);
+  renderSidebar();
+  try {
+    const r = await api("/api/sync/view", {file: e.file, line: e.line});
+    if (r.ok) { const {page, h, v, W, H} = await r.json(); flashPdfBox(page, h, v, W, H); }
+  } catch (err) { /* no synctex yet - the source pane already moved */ }
 }
 function countFiles(node) {
   let n = 0;
@@ -1464,7 +1594,7 @@ async function pollCompile() {
   const s = await (await api("/api/compile")).json();
   if (s.running) { setTimeout(pollCompile, 700); return; }
   setCompiling(false);
-  if (s.ok) { $("errlog").style.display = "none"; toast("Compiled ✓"); loadPdf(); }
+  if (s.ok) { $("errlog").style.display = "none"; toast("Compiled ✓"); loadPdf(); loadOutline(); }
   else {
     $("errpre").textContent = s.log || "compile failed (no log)";
     $("errlog").style.display = "block";
@@ -1889,6 +2019,7 @@ applyLayout();
   await openDoc(mainRel);
   comments = await (await api("/api/comments")).json();
   await loadPdf();
+  loadOutline();
 })();
 </script></body></html>"""
 
@@ -1902,6 +2033,8 @@ def route(root: Path, main_rel: str, method: str, path: str,
         if method == "GET" and path == "/api/root":
             return 200, "application/json", {"root": str(root), "main": main_rel,
                                              "tool": "texreview", "build": BUILD}
+        if method == "GET" and path == "/api/outline":
+            return 200, "application/json", outline(root, main_rel)
         if method == "GET" and path == "/api/files":
             return 200, "application/json", list_tex_files(root)
         if method == "GET" and path == "/api/doc":
