@@ -229,6 +229,48 @@ def write_doc(root: Path, rel: str, content: str, expected_mtime: float | None) 
     return {"mtime": p.stat().st_mtime}
 
 
+# ---------- where you were (server-side so it survives a port change) ----------
+
+def _state_path(root: Path) -> Path:
+    return root / SIDECAR_DIR / "state.json"
+
+
+def load_state(root: Path) -> dict:
+    sp = _state_path(root)
+    if not sp.is_file():
+        return {}
+    try:
+        st = json.loads(sp.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}          # a corrupt state file must never block opening the paper
+    return st if isinstance(st, dict) else {}
+
+
+def save_state(root: Path, st: dict) -> dict:
+    """Persist the reading position. Kept server-side rather than in localStorage
+    because the port is chosen by scanning for a free one, and a different port is a
+    different browser origin - the saved position would be invisible after a restart."""
+    keep = {}
+    path = st.get("path")
+    if isinstance(path, str) and (root / path).is_file():
+        keep["path"] = safe_resolve(root, path).relative_to(root.resolve()).as_posix()
+    for k in ("sel", "edScroll"):
+        v = st.get(k)
+        if isinstance(v, (int, float)) and v >= 0:
+            keep[k] = int(v)
+    pdf = st.get("pdf")
+    if isinstance(pdf, dict):
+        keep["pdf"] = {k: float(pdf[k]) for k in ("page", "into", "xmid")
+                       if isinstance(pdf.get(k), (int, float))}
+    _atomic_write(_state_path(root), json.dumps(keep, indent=1))
+    # comments.json is meant to be committed - an agent reads it. A cursor position is
+    # not: it would churn on every scroll. Ignore it, without touching a file the user wrote.
+    gi = root / SIDECAR_DIR / ".gitignore"
+    if not gi.exists():
+        _atomic_write(gi, "state.json\n")
+    return keep
+
+
 # ---------- comments (one sidecar file: they annotate the compiled paper) ----------
 
 def _comments_path(root: Path) -> Path:
@@ -2011,14 +2053,45 @@ applyFonts();
 applyLayout();
 
 /* ---------- boot ---------- */
+/* ---------- reading position, so a reload does not send you back to page 1 ---------- */
+let stateSaveTimer = null;
+function rememberPosition() {
+  if (!state) return;
+  clearTimeout(stateSaveTimer);
+  // debounced: this fires on every scroll and caret move, and the point is where you
+  // came to rest, not every pixel on the way there
+  stateSaveTimer = setTimeout(() => {
+    const ed = $("editor");
+    api("/api/state", {path: state.path, sel: ed.selectionStart, edScroll: ed.scrollTop,
+                       pdf: viewAnchor()}).catch(() => {});
+  }, 700);
+}
+$("editor").addEventListener("scroll", rememberPosition);
+$("pdfwrap").addEventListener("scroll", rememberPosition);
+document.addEventListener("selectionchange", () => {
+  if (document.activeElement === $("editor")) rememberPosition();
+});
+
 (async function boot() {
   const info = await (await api("/api/root")).json();
   mainRel = info.main;
   await initWorker();
   await loadFiles();
-  await openDoc(mainRel);
+  let saved = {};
+  try { saved = await (await api("/api/state")).json(); } catch (e) {}
+  await openDoc(saved.path && allFiles.includes(saved.path) ? saved.path : mainRel);
+  if (saved.path === state?.path && typeof saved.sel === "number") {
+    const ed = $("editor");
+    const sel = Math.min(saved.sel, ed.value.length);   // the file may have shrunk since
+    ed.setSelectionRange(sel, sel);
+    ed.scrollTop = saved.edScroll || 0;
+    $("mirror").scrollTop = ed.scrollTop;
+    syncBrace();
+  }
   comments = await (await api("/api/comments")).json();
   await loadPdf();
+  // loadPdf renders from the top; put the PDF back where it was, after it has pages
+  if (saved.pdf && typeof saved.pdf.page === "number") gotoAnchor(saved.pdf);
   loadOutline();
 })();
 </script></body></html>"""
@@ -2092,6 +2165,10 @@ def route(root: Path, main_rel: str, method: str, path: str,
                 root, pdf, body["file"], int(body["line"]))
         if method == "GET" and path == "/api/export":
             return 200, "text/plain; charset=utf-8", export_text(root, main_rel)
+        if method == "GET" and path == "/api/state":
+            return 200, "application/json", load_state(root)
+        if method == "POST" and path == "/api/state":
+            return 200, "application/json", save_state(root, body)
         if method == "GET" and path == "/api/comments":
             return 200, "application/json", load_comments(root)
         if method == "POST" and path == "/api/comment/add":
