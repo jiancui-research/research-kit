@@ -29,7 +29,7 @@
 /plugin install research-kit@research-kit
 ```
 
-> **On Codex CLI or Copilot CLI, use the script below, not their plugin marketplaces.** Both will report research-kit installed and then expose no stages at all.
+> **On Copilot CLI, use the script below, not its plugin marketplace** — it reports research-kit installed and then exposes no stages at all. Codex CLI works either way: the plugin now ships skills, or use the script for the one-line `/research.x <input>` form.
 
 <details>
 <summary>OMP · Codex CLI · Copilot CLI · install script</summary>
@@ -43,7 +43,16 @@
 
 Update with `/marketplace update research-kit` then `/marketplace upgrade research-kit@research-kit`. From a shell it is `omp plugin marketplace update research-kit && omp plugin upgrade research-kit@research-kit` — marketplace management lives under `omp plugin marketplace`, and refreshing the marketplace alone does **not** bump an installed plugin.
 
-**Codex CLI and Copilot CLI — use the script, not their marketplaces:**
+**Codex CLI** — the plugin works (it ships `skills/`), and the script is still worth it:
+
+```text
+codex plugin marketplace add https://github.com/jiancui-research/research-kit
+codex plugin add research-kit@research-kit
+```
+
+Skills are invoked by name (`/skills`, or `$` to mention one) and take their input from what you say next, since Codex skills have no argument substitution. The script instead installs `~/.codex/prompts/`, where `/research.write related-work` works as one line — better while it lasts, but custom prompts are deprecated.
+
+**Copilot CLI — script only:**
 
 ```sh
 git clone https://github.com/jiancui-research/research-kit && cd research-kit
@@ -266,7 +275,7 @@ After feasibility's GO, `plan` fixes the stable study design and `tasks` derives
 <summary><b>Why Codex and Copilot need the script; self-pruning and overrides</b></summary>
 
 - **OMP** installs the same `.claude-plugin` bundle, reading `commands/` directly (it falls back to `.claude-plugin/marketplace.json` when `.omp-plugin/` is absent). Plugin commands resolve bundled templates and tools through `~/.omp/plugins/installed_plugins.json`.
-- **Codex** has a marketplace and installs this bundle cleanly — `codex plugin list` reports it `installed, enabled` — and then exposes **zero** stages. Re-verified on Codex CLI 0.149.1: no `research.*` reaches `~/.codex/skills/`, not even the argument-free `research.init` that used to survive at 0.145.0. Codex reads a plugin's `skills/` directory; this bundle carries `commands/`. Its current plugin format is `.codex-plugin/plugin.json` + `skills/<name>/SKILL.md`, and a skill's frontmatter is `name` + `description` only — no argument substitution, so 15 of our 16 stages could not take input even if we shipped that layout. The script installs every stage into `~/.codex/prompts/` instead, where `$ARGUMENTS`, `$1`–`$9`, and named `KEY=value` placeholders all work. Custom prompts are deprecated in favour of skills with no announced removal date, so that is a real if not immediate risk.
+- **Codex** reads a plugin's `skills/` directory, and until v0.38.0 this bundle shipped only `commands/` — so `codex plugin list` reported it `installed, enabled` while exposing **zero** stages (verified on Codex CLI 0.149.1; even argument-free `research.init`, which survived at 0.145.0, no longer appeared). It now ships `.codex-plugin/plugin.json` + `skills/<name>/SKILL.md` as well. Each skill is a **pointer**, not a copy: it carries the frontmatter Codex needs for discovery and then tells the agent to read `commands/<stage>.md` from the same plugin, so the instructions still have one home and cannot drift. Skills have no argument substitution — frontmatter is `name` + `description` only — so a stage takes its input from what you say when you invoke it. For the one-line `/research.write related-work` form, `./install.sh --codex` still installs `~/.codex/prompts/`, where `$ARGUMENTS`, `$1`–`$9`, and named `KEY=value` all work; those are deprecated in favour of skills with no announced removal date, which is why the plugin path now exists.
 - **Copilot** expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory; it no longer surfaces a plugin's `commands/`. This worked at Copilot CLI 1.0.40 and stopped by 1.0.63. The failure is quiet: install succeeds, `plugin list` prints a version, the bundle really is unpacked under `~/.copilot/installed-plugins/` — but the stages never appear.
 - **One install for all four** would require shipping stages as `skills/<name>/SKILL.md`, the one format every agent reads. The trade-off is that skills are model-invocable, so stages could fire without you asking; `docs/design.md` records the analysis.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
