@@ -29,6 +29,8 @@
 /plugin install research-kit@research-kit
 ```
 
+> **On Codex CLI or Copilot CLI, use the script below, not their plugin marketplaces.** Both will report research-kit installed and then expose no stages at all.
+
 <details>
 <summary>OMP · Codex CLI · Copilot CLI · install script</summary>
 
@@ -51,7 +53,9 @@ git clone https://github.com/jiancui-research/research-kit && cd research-kit
 ./install.sh --all        # all three
 ```
 
-Codex installs a plugin fine but converts commands to skills and drops every stage that takes arguments, leaving `research.init` alone. Copilot expects `plugin.json` at the repo root plus `agents/`, so a marketplace install exposes nothing. The script targets each agent's documented location: [Codex custom prompts](https://developers.openai.com/codex/custom-prompts) and [Copilot personal custom agents](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli).
+**Their marketplaces report success and give you nothing.** `codex plugin list` shows research-kit `installed, enabled` while delivering **zero** stages — Codex reads a plugin's `skills/`, this bundle carries `commands/`, and skills have no argument substitution anyway. Copilot fails the same silent way. Verify with `ls ~/.codex/prompts/research.*.md` (expect 16) or `ls ~/.copilot/agents/research.*.agent.md`, never the plugin list.
+
+The script targets each agent's documented location: [Codex custom prompts](https://learn.chatgpt.com/docs/custom-prompts) and [Copilot personal custom agents](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/create-custom-agents-for-cli).
 
 </details>
 
@@ -262,7 +266,7 @@ After feasibility's GO, `plan` fixes the stable study design and `tasks` derives
 <summary><b>Why Codex and Copilot need the script; self-pruning and overrides</b></summary>
 
 - **OMP** installs the same `.claude-plugin` bundle, reading `commands/` directly (it falls back to `.claude-plugin/marketplace.json` when `.omp-plugin/` is absent). Plugin commands resolve bundled templates and tools through `~/.omp/plugins/installed_plugins.json`.
-- **Codex** has a marketplace and will install this bundle — but it converts commands into skills, and skills have no `$ARGUMENTS` substitution, so every stage that takes input is silently skipped. Only `research.init` survives. The script installs all stages into `~/.codex/prompts/` as native `/research.*` commands. (Custom prompts are marked deprecated in favour of skills, still support `$ARGUMENTS`, no announced removal date.)
+- **Codex** has a marketplace and installs this bundle cleanly — `codex plugin list` reports it `installed, enabled` — and then exposes **zero** stages. Re-verified on Codex CLI 0.149.1: no `research.*` reaches `~/.codex/skills/`, not even the argument-free `research.init` that used to survive at 0.145.0. Codex reads a plugin's `skills/` directory; this bundle carries `commands/`. Its current plugin format is `.codex-plugin/plugin.json` + `skills/<name>/SKILL.md`, and a skill's frontmatter is `name` + `description` only — no argument substitution, so 15 of our 16 stages could not take input even if we shipped that layout. The script installs every stage into `~/.codex/prompts/` instead, where `$ARGUMENTS`, `$1`–`$9`, and named `KEY=value` placeholders all work. Custom prompts are deprecated in favour of skills with no announced removal date, so that is a real if not immediate risk.
 - **Copilot** expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory; it no longer surfaces a plugin's `commands/`. This worked at Copilot CLI 1.0.40 and stopped by 1.0.63. The failure is quiet: install succeeds, `plugin list` prints a version, the bundle really is unpacked under `~/.copilot/installed-plugins/` — but the stages never appear.
 - **One install for all four** would require shipping stages as `skills/<name>/SKILL.md`, the one format every agent reads. The trade-off is that skills are model-invocable, so stages could fire without you asking; `docs/design.md` records the analysis.
 - **Self-pruning & overrides.** Re-running `install.sh` removes commands deleted from the bundle. Override destinations with `CLAUDE_COMMANDS_DIR` / `CODEX_PROMPTS_DIR` / `COPILOT_AGENTS_DIR` (or `CODEX_HOME`); `--symlink` links instead of copies; `--uninstall` removes everything.
