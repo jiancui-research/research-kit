@@ -1,5 +1,5 @@
 ---
-description: Open texreview, a local web UI to review the compiled paper - LaTeX source left, PDF right, SyncTeX click-to-source, comments on PDF selections (requires uv + a TeX install). Comments are sidecar JSON in the paper repo's .texreview/ that any agent can read.
+description: Open texreview, a local web UI to review the compiled paper - LaTeX source left, PDF right, SyncTeX click-to-source, comments on selections in either pane (button, `⌘⇧M`, or right-click) (requires uv + a TeX install). Comments are sidecar JSON in the paper repo's .texreview/ that any agent can read.
 argument-hint: optional flags passed through, e.g. --main paper.tex --port 9000
 ---
 

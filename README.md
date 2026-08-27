@@ -185,7 +185,7 @@ Handing the build to an agent only works if you can *see* what it did. Both are 
 
 ![texreview: LaTeX source left, compiled PDF right, a comment carrying its file:line target](docs/assets/texreview-hero.png)
 
-Select text in the PDF *or* the source, right-click to attach a note, and every comment records the quote plus a `file.tex:line` target — so *"read `.texreview/comments.json` and address the open comments"* just works. `⌘S` recompiles. Click any rendered word to jump to its source.
+Select text in the PDF *or* the source and a **Comment** button appears — or press `⌘⇧M`, or right-click. Every comment records the quote plus a `file.tex:line` target — so *"read `.texreview/comments.json` and address the open comments"* just works. `⌘S` recompiles. Click any rendered word to jump to its source.
 
 <details>
 <summary>SyncTeX fallbacks, editor shortcuts, export</summary>

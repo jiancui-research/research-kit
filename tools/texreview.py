@@ -759,9 +759,11 @@ PAGE = r"""<!doctype html>
   /* internal \ref / \cite / \eqref targets, sitting above the text layer so a click
      navigates instead of syncing to source. Invisible until hovered - hyperref already
      colours the words underneath. */
-  .linkLayer { position:absolute; inset:0; overflow:hidden; }
-  .linkLayer a { position:absolute; display:block; border-radius:2px; cursor:pointer; }
-  .linkLayer a:hover { background:var(--reflink); outline:1px solid var(--reflink-line); }
+  /* Hit-tested on click rather than built from anchors: a DOM element over the text layer
+     takes the mousedown, so a drag that begins on "Table 1" grabs the link instead of
+     selecting the sentence - and \ref words sit in the middle of ordinary prose. */
+  .linkLayer { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .linkLayer i { position:absolute; display:block; border-radius:2px; background:var(--reflink); opacity:0; }
   .textLayer { position:absolute; inset:0; overflow:hidden; line-height:1; }
   .textLayer span, .textLayer br { color:transparent; position:absolute; white-space:pre;
                                    cursor:text; transform-origin:0% 0%; }
@@ -806,6 +808,13 @@ PAGE = r"""<!doctype html>
                 flex-wrap:wrap; }
   .card .meta button { border:0; background:none; color:var(--accent); cursor:pointer;
                        padding:0; font-size:11px; }
+  /* Selecting no longer opens the comment box on its own - that got in the way of reading -
+     but it does offer this, so commenting is discoverable without knowing to right-click. */
+  #selbtn { position:fixed; display:none; z-index:11; border:1px solid var(--line);
+            background:var(--surface); color:var(--text); border-radius:6px; cursor:pointer;
+            padding:5px 10px; font:inherit; font-size:12.5px; font-weight:600;
+            box-shadow:0 4px 14px var(--page-shadow); }
+  #selbtn:hover { border-color:var(--accent); color:var(--accent); }
   #pop { position:fixed; display:none; background:var(--surface); border:1px solid var(--line);
          border-radius:8px; box-shadow:0 8px 26px var(--page-shadow); padding:9px;
          width:280px; z-index:10; }
@@ -876,6 +885,7 @@ PAGE = r"""<!doctype html>
     <div id="cards"><p class="empty">Select PDF text to comment.</p></div>
   </aside>
 </div>
+<button id="selbtn" title="Comment on the selection (⌘⇧M)">💬 Comment</button>
 <div id="pop"><textarea id="popText" placeholder="Comment on the selection..."></textarea><br>
   <button id="popAdd">Add comment</button></div>
 <div id="toast"></div>
@@ -1366,6 +1376,18 @@ document.addEventListener("keydown", ev => {
   }
   if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && ev.key === "y"
       && document.activeElement === $("editor")) { ev.preventDefault(); histRedo(); return; }
+  // Cmd holds the UNSHIFTED key on macOS, so shiftKey is what distinguishes this from a
+  // plain chord; works from either pane, on whatever is selected there.
+  if ((ev.metaKey || ev.ctrlKey) && ev.shiftKey && !ev.altKey && ev.key.toLowerCase() === "m") {
+    ev.preventDefault();
+    const cap = selCap
+      || (document.activeElement === $("editor") ? captureSourceSelection() : capturePdfSelection());
+    hideSelBtn();
+    if (!cap) { toast("Select some text in the PDF or the source first"); return; }
+    // anchor the box mid-screen: a shortcut has no cursor position to hang it off
+    if (!openCommentPopover(innerWidth / 2 - 140, innerHeight / 3, cap)) toast("Nothing selected");
+    return;
+  }
   if (chord(ev, "s")) { ev.preventDefault(); save(false); }
   if (chord(ev, "f") && state) { ev.preventDefault(); openFind(); }
   if (chord(ev, "b") && document.activeElement === $("editor")) {
@@ -1379,7 +1401,11 @@ document.addEventListener("keydown", ev => {
       && document.activeElement === $("editor")) {
     ev.preventDefault(); toggleComment();
   }
-  if (ev.key === "Escape" && $("findbar").style.display === "flex") closeFind();
+  if (ev.key === "Escape") {
+    hideSelBtn();
+    if ($("pop").style.display === "block") { $("pop").style.display = "none"; pending = null; }
+    if ($("findbar").style.display === "flex") closeFind();
+  }
 });
 /* ---------- undo history ----------
    Chrome's own textarea undo groups at its own granularity, and we cannot reach in to
@@ -1599,32 +1625,31 @@ async function renderAllPages() {
     await pdfjsLib.renderTextLayer({textContentSource: tc, textContent: tc,
                                     container: pd.querySelector(".textLayer"),
                                     viewport: vp, textDivs: []}).promise;
-    await paintLinks(page, vp, pd.querySelector(".linkLayer"));
+    await paintLinks(page, vp, pd.querySelector(".linkLayer"), i);
   }
 }
 /* ---------- internal PDF links (\ref, \cite, \eqref via hyperref) ---------- */
 // hyperref emits a GoTo annotation per cross-reference. External URLs are left alone:
 // an inert-looking anchor is worse than none, and clicking through belongs elsewhere.
-async function paintLinks(page, vp, layer) {
+let pageLinks = [];          // pageLinks[i] = [{x, y, w, h, dest}] in viewport px
+async function paintLinks(page, vp, layer, idx) {
   layer.textContent = "";
+  pageLinks[idx] = [];
   let annots;
   try { annots = await page.getAnnotations({intent: "display"}); } catch (e) { return; }
   for (const a of annots) {
     if (a.subtype !== "Link" || !a.dest) continue;
     const r = vp.convertToViewportRectangle(a.rect);
-    const el = document.createElement("a");
-    el.style.left = Math.min(r[0], r[2]) + "px";
-    el.style.top = Math.min(r[1], r[3]) + "px";
-    el.style.width = Math.abs(r[2] - r[0]) + "px";
-    el.style.height = Math.abs(r[3] - r[1]) + "px";
-    el.title = "Go to reference";
-    el.addEventListener("click", ev => {
-      ev.preventDefault(); ev.stopPropagation();
-      // a drag that ended on a link is a text selection, not a click on it
-      if (!String(window.getSelection() || "")) followDest(a.dest);
+    pageLinks[idx].push({
+      x: Math.min(r[0], r[2]), y: Math.min(r[1], r[3]),
+      w: Math.abs(r[2] - r[0]), h: Math.abs(r[3] - r[1]), dest: a.dest,
     });
-    layer.appendChild(el);
   }
+}
+function linkAt(idx, x, y) {
+  for (const l of pageLinks[idx] || [])
+    if (x >= l.x && x <= l.x + l.w && y >= l.y && y <= l.y + l.h) return l;
+  return null;
 }
 let pdfBackStack = [];
 function pushBack() {
@@ -1801,26 +1826,63 @@ function captureSourceSelection() {
   return lastSrcSel;
 }
 $("editor").addEventListener("select", captureSourceSelection);
+// Both axes, and it measures rather than assumes: the box grows with its textarea, and the
+// old code clamped only the left edge - so a right-click near the bottom of the window put
+// the Add button below the fold with no way to reach it.
+function placeFixed(el, x, y) {
+  const m = 10, r = el.getBoundingClientRect();
+  el.style.left = Math.max(m, Math.min(x, innerWidth - r.width - m)) + "px";
+  // below the cursor when it fits, above it when it does not, clamped either way
+  const below = y + 8, above = y - r.height - 8;
+  el.style.top = Math.max(m, below + r.height + m <= innerHeight ? below : above) + "px";
+}
 function openCommentPopover(x, y, cap) {
   cap = cap || capturePdfSelection() || lastSel;
   if (!cap) return false;
   pending = cap.origin ? cap : {...cap, origin: "pdf"};
+  hideSelBtn();
   const pop = $("pop");
   pop.style.display = "block";
-  pop.style.left = Math.min(x, innerWidth - 300) + "px";
-  pop.style.top = (y + 8) + "px";
+  placeFixed(pop, x, y);
   $("popText").value = ""; $("popText").focus();
   return true;
 }
 // Selecting text no longer pops the comment box open by itself - it got in the way of
 // simply reading and re-selecting. Right-click on the selection to comment, in either pane.
+/* ---------- comment on a selection: button, or the shortcut ---------- */
+let selCap = null;                      // what the button would comment on, captured on mouseup
+function hideSelBtn() { $("selbtn").style.display = "none"; selCap = null; }
+function offerSelBtn(cap, ev) {
+  if (!cap) return hideSelBtn();
+  selCap = cap;
+  const b = $("selbtn");
+  b.style.display = "block";
+  placeFixed(b, ev.clientX, ev.clientY);
+}
+$("selbtn").onmousedown = ev => ev.preventDefault();   // do not drop the selection we captured
+$("selbtn").onclick = ev => {
+  const cap = selCap, r = $("selbtn").getBoundingClientRect();
+  hideSelBtn();
+  if (cap) openCommentPopover(r.left, r.top, cap);
+};
 $("pdfwrap").addEventListener("mouseup", ev => {
   if (ev.button !== 0) return;
   setTimeout(() => {
-    const sel = window.getSelection();
-    if (!sel.rangeCount || sel.isCollapsed) $("pop").style.display = "none";
+    const cap = capturePdfSelection();
+    offerSelBtn(cap, ev);
+    if (!cap) { $("pop").style.display = "none"; }   // clicking away closes an open box
   }, 0);
 });
+$("editor").addEventListener("mouseup", ev => {
+  if (ev.button !== 0) return;
+  setTimeout(() => offerSelBtn(captureSourceSelection(), ev), 0);
+});
+// any of these means you have moved on from that selection
+for (const el of ["pdfwrap", "editor"]) $(el).addEventListener("scroll", hideSelBtn);
+addEventListener("resize", hideSelBtn);
+$("pdfwrap").addEventListener("contextmenu", hideSelBtn);
+$("editor").addEventListener("contextmenu", hideSelBtn);
+
 $("pdfwrap").addEventListener("contextmenu", ev => {
   if (openCommentPopover(ev.clientX, ev.clientY)) ev.preventDefault();
 });
@@ -1839,6 +1901,9 @@ $("pdfwrap").addEventListener("click", async ev => {
   const pageDiv = ev.target.closest(".page");
   if (!pageDiv) return;
   const rect = pageDiv.getBoundingClientRect();
+  // a \ref / \cite / \eqref lands on its target instead of jumping to source
+  const hit = linkAt(pageEls.indexOf(pageDiv), ev.clientX - rect.left, ev.clientY - rect.top);
+  if (hit) { followDest(hit.dest); return; }
   const r = await api("/api/sync/edit", {
     page: +pageDiv.dataset.page,
     x: (ev.clientX - rect.left) / pdfScale,
