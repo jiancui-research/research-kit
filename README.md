@@ -4,7 +4,7 @@
 
 ### *Do research in documents, not code.*
 
-**Slash commands that turn each stage of a paper into a document you review — then your agent writes the code and the draft from it.**
+**Point it at your manuscript and it reads the whole paper before writing a line. Behind that, a spec-driven pipeline that carries an idea all the way to a draft.**
 
 [![License](https://img.shields.io/github/license/jiancui-research/research-kit)](LICENSE)
 [![Last commit](https://img.shields.io/github/last-commit/jiancui-research/research-kit)](https://github.com/jiancui-research/research-kit/commits/main)
@@ -71,11 +71,19 @@ The script targets each agent's documented location: [Codex custom prompts](http
 **2. Use it** — in your paper repo:
 
 ```sh
-/research.init                      # once per repo: puts templates in .research/
-/research.proposal "<your idea>"    # then just follow the "Next:" it prints
+/research.init                       # once per repo: puts templates in .research/
+
+# You already have a paper. This is the front door:
+/research.write related-work         # reads the WHOLE paper, then works on one section
+/research.texreview                  # LaTeX left, PDF right, comment on either
+
+# Starting from an idea instead:
+/research.proposal "<your idea>"     # then just follow the "Next:" it prints
 ```
 
-**Every command ends by naming the next one**, so the pipeline walks itself — you never have to remember the order. Each writes one Markdown doc under `./.research/`; you read it, comment on it, and only then does the next stage build on it.
+**Writing works on its own.** `/research.write` reads every section, your tables and captions included, states back what your paper argues, and quotes real sentences of yours to write against — so a new paragraph sounds like the ones around it. No pipeline artifacts required.
+
+**And the pipeline is there when you want it.** Every command ends by naming the next one, so it walks itself; each writes one Markdown doc under `./.research/` that you read and comment on before the next stage builds on it.
 
 Plugin installs namespace the stages: `/research-kit:research.proposal …`.
 
@@ -110,7 +118,21 @@ Gotchas seen in practice:
 Nobody starts from nothing every time. The pipeline is a chain you can join partway, not a gate you walk through.
 
 <details open>
-<summary><b>1. "I have an idea and nothing else."</b> — the full chain</summary>
+<summary><b>1. "I already have a LaTeX paper."</b> — writing tool only, no pipeline</summary>
+
+**You do not need the pipeline to use the writing half.** The section commands read the manuscript itself, so a paper with no `proposal.md` behind it still works — the argument gets derived from your abstract and contribution list instead.
+
+```sh
+/research.init                       # just puts the templates and craft guides in place
+/research.style                      # optional: point it at papers you want to sound like
+/research.write related-work         # reads the WHOLE paper, states its argument, then works
+/research.texreview                  # comment on the PDF; the agent picks the comments up
+/research.review                     # mock reviewer panel, reading only the paper
+```
+</details>
+
+<details>
+<summary><b>2. "I have an idea and nothing else."</b> — the full chain</summary>
 
 ```sh
 /research.init && /research.constitution
@@ -123,7 +145,7 @@ Nobody starts from nothing every time. The pipeline is a chain you can join part
 </details>
 
 <details>
-<summary><b>2. "I have code and results, but no paper."</b> — start at the argument, skip the gate</summary>
+<summary><b>3. "I have code and results, but no paper."</b> — start at the argument, skip the gate</summary>
 
 The riskiest question is already answered, so `feasibility` has nothing to add. What you are missing is the argument the results support, and the ledger tying one to the other.
 
@@ -140,7 +162,7 @@ The riskiest question is already answered, so `feasibility` has nothing to add. 
 </details>
 
 <details>
-<summary><b>3. "I have rough notes, a half-written doc, an old draft."</b> — feed them to the entry stage</summary>
+<summary><b>4. "I have rough notes or an old draft."</b> — feed them to the entry stage</summary>
 
 `proposal` takes prose as input, not just a one-liner.
 
@@ -153,25 +175,11 @@ The riskiest question is already answered, so `feasibility` has nothing to add. 
 From there, join path 1 or 2 depending on whether the work exists yet.
 </details>
 
-<details>
-<summary><b>4. "I already have a LaTeX paper in flight."</b> — writing tool only, no pipeline</summary>
-
-**You do not need the pipeline to use the writing half.** The section commands read the manuscript itself, so a paper with no `proposal.md` behind it still works — the argument gets derived from your abstract and contribution list instead.
-
-```sh
-/research.init                       # just puts the templates and craft guides in place
-/research.style                      # optional: point it at papers you want to sound like
-/research.write related-work         # reads the WHOLE paper, states its argument, then works
-/research.texreview                  # comment on the PDF; the agent picks the comments up
-/research.review                     # mock reviewer panel, reading only the paper
-```
-</details>
-
 ## 🤔 Why
 
-1. **Write the document, not the plumbing.** Every stage ends in one Markdown doc you review. Code, eval scripts, and LaTeX formatting are the agent's job. Two guardrails keep it honest: `feasibility` returns **GO / NO-GO / PIVOT** before you over-invest, and `analyze` names exactly what drifted and what to re-run.
-2. **Think on the page.** Comment on your docs and your compiled PDF in place; the agent reads the comments straight out of the repo and acts on them. No copy-paste round trip.
-3. **Write in your paper's voice.** `/research.write` reads the whole manuscript before touching a section, so new prose lands in your terms and your tense — and `/research.style` learns your register from papers you pick, instructions you give, and edits you make.
+1. **Write in your paper's voice, not an agent's.** `/research.write` reads the whole manuscript before touching a section — every table, every caption — then quotes real sentences of yours to write against, because a list of style rules is easy to satisfy while still writing in your own register. Underneath sit craft guides per section and per paper type, and `/research.style` learns what you tell it and what your edits reveal.
+2. **Think on the page.** Comment on your docs and your compiled PDF in place; the agent reads the comments straight out of the repo and acts on them. No copy-paste round trip. `/research.review` then reads **only** the paper — the way a committee does — using your venue's own reviewer guidelines.
+3. **A pipeline when the work needs one.** Every stage ends in one Markdown doc you review; code and eval scripts are the agent's job. Two guardrails keep it honest: `feasibility` returns **GO / NO-GO / PIVOT** before you over-invest, and `analyze` names exactly what drifted and what to re-run.
 
 <a id="review-ui"></a>
 
