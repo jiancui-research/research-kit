@@ -1,6 +1,6 @@
 {
   "name": "research-kit",
-  "version": "0.42.0",
+  "version": "0.42.1",
   "description": "Spec-Driven Development for research papers: proposal, related work, feasibility, plan, one task queue executed through implement, analyze, and review.",
   "skills": "./skills/"
 }

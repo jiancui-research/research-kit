@@ -68,6 +68,8 @@ The script targets each agent's documented location: [Codex custom prompts](http
 
 </details>
 
+**Which agent?** All four run the same stages. For the writing half I draft with Codex CLI, and in my own use it produces the best prose of the four. That is one author's experience rather than a benchmark, so try your own; the pipeline stages behave the same everywhere.
+
 **2. Use it** — in your paper repo:
 
 ```sh
