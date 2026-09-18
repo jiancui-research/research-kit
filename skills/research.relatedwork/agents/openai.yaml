@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.relatedwork"
+  short_description: "Survey prior work into .research/related-work.md AND sharpen the proposal's gap and positioning."
+policy:
+  allow_implicit_invocation: false

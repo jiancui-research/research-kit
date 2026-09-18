@@ -1,22 +1,24 @@
 ---
 name: research.plan
-description: Turn the proposal + feasibility into the study's technical design at .research/plan.md - architecture, evaluation design, key decisions, project layout. Stable; tasks derive from it.
+description: "Design the study and maintain its work queue in .research/plan.md and .research/tasks.md, preserving task IDs and progress."
 disable-model-invocation: true
 ---
 
 > **research-kit stage - `/research.plan`.**
 >
 > The instructions for this stage are not duplicated here. Read
-> `commands/research.plan.md` from this plugin's own directory - the folder two levels above
-> this file - and follow it end to end. If you cannot find it, say so and stop rather
+> `commands/research.plan.md` from this plugin's root - two directory levels above
+> this skill's directory. Use that root as `<bundle>` for the command's Preparation
+> and its `guides/`, `templates/`, and `tools/`. If it is missing, stop rather
 > than reconstructing the stage from memory.
 >
 > Two adaptations from its original slash-command form:
 >
 > - Where it references `$ARGUMENTS`, that means the user's latest message to you -
->   their free-text input for this stage (optional steering (e.g. "security venue, coverage over severity" or "code goes in ./src/core")). When they gave none, follow the
+>   their free-text input for this stage (optional design or queue steering (e.g. "coverage over severity", "prioritize the decisive eval", "refresh tasks from the existing plan")). When they gave none, follow the
 >   step's "if empty" guidance or ask for it; never invent one.
-> - Where a step ends with `Next: /research.<x>`, run the `research.<x>` skill next.
+> - Where a step ends with `Next: /research.<x>`, suggest that skill next;
+>   do not invoke it unless the user requested continuing to that stage.
 >
-> Everything else is unchanged: read and write only under `./.research/`, follow the
-> command contract, and stay paper-type aware.
+> Follow the command's file and mode boundaries: tracking docs live in
+> `./.research/`; code, evals, and manuscript files use their declared paths.

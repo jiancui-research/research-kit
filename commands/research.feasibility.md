@@ -1,7 +1,17 @@
 ---
-description: De-risk the core idea with one small, cheap probe before committing to the full study; write .research/feasibility.md with a GO / NO-GO / PIVOT verdict.
-argument-hint: optional steering (e.g. "5 examples is enough", "use the toy dataset", "just check the prototype compiles")
+description: "De-risk the core idea with one small, cheap probe before committing to the full study; write .research/feasibility.md with a GO / NO-GO / PIVOT verdict."
+argument-hint: "optional steering (e.g. \"5 examples is enough\", \"use the toy dataset\", \"just check the prototype compiles\")"
 ---
+
+## Preparation
+
+Resolve `<bundle>` from the enclosing installed plugin directory (the skill adapter
+supplies it), else `${CLAUDE_PLUGIN_ROOT}`, else the enabled OMP `installPath` in
+the nearest project `.omp/plugins/installed_plugins.json` or `~/.omp/plugins/installed_plugins.json`,
+else `${RESEARCH_KIT_HOME:-$HOME/.research-kit}`. Use the first candidate containing
+`guides/setup.md` and `templates/`; name the installation problem if none resolves.
+Read `<bundle>/guides/setup.md` and complete its setup for this command, then resume
+the request. Internal guides use this bundle; artifact templates use local copies.
 
 ## User input
 
@@ -29,7 +39,7 @@ It is a self-contained **plan → do → decide**: a short *Probe plan* (a few t
    - **benchmark** — **a few hand-built task instances + a baseline sanity check**: author 3-5 instances by hand, run one off-the-shelf baseline, and confirm the task is solvable-but-not-trivial (baseline neither 0% nor 100%) and that scoring works.
    - **systematization (SoK)** — **a draft taxonomy on a sample of papers**: apply a candidate taxonomy to ~5-10 papers and check that the axes actually separate them (every paper lands somewhere, the cells are not all empty or all one bucket).
 
-4. **Lay out the Probe plan (the feasibility tasks).** Break the probe into a short checklist of 3-5 concrete, throwaway steps you will actually do or run. Keep them cheap — the smallest sample, the toiest substrate, the shortest time that still gives a real signal; honor any budget in `$ARGUMENTS`; if the plan starts to look like the full study, shrink it. These tasks live in `feasibility.md` and stay separate from the study's real queue — they inform GO/NO-GO, not the paper's claims (rigor is `/research.plan` → `/research.tasks` → `/research.implement`).
+4. **Lay out the Probe plan (the feasibility tasks).** Break the probe into a short checklist of 3-5 concrete, throwaway steps you will actually do or run. Keep them cheap — the smallest sample, the toiest substrate, the shortest time that still gives a real signal; honor any budget in `$ARGUMENTS`; if the plan starts to look like the full study, shrink it. These tasks live in `feasibility.md` and stay separate from the study's real queue — they inform GO/NO-GO, not the paper's claims (rigor is `/research.plan` → `/research.implement`).
 
 5. **Work the plan — run it inline, then fill the blanks.** Actually execute each step you can: write and run the throwaway script, pull the real cases, apply the draft taxonomy. Any throwaway probe code lives in `./feasibility/` at the project root, not in `.research/` (which holds only the `feasibility.md` doc). Only fall back to *specifying* a step for the user when you genuinely cannot reach it (system access, a long run, a human judgment call). **If `feasibility.md` already has a Probe plan the user wrote or edited, treat it as the spec** — execute it as written; do not re-plan or rewrite it. Record what each step revealed including the inconvenient parts: what worked, what surprised you, what assumption cracked. A probe that exposes a fatal flaw is a *success* of this phase, not a failure. Do not launder a bad result into a hopeful one.
 

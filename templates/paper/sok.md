@@ -62,4 +62,4 @@ One paragraph: **the mess → the organizing contribution → the payoff**.
 - [ ] No new-system claim is smuggled in: the contribution is understanding, not artifact.
 - [ ] Abstract leads with the mess → organizing contribution → payoff.
 
-**Next**: `/research.analyze` to keep `claims.md` in sync with the taxonomy and lessons above.
+**Next**: `/research.implement check` to keep `claims.md` in sync with the taxonomy and lessons above.

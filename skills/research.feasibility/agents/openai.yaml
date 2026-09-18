@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.feasibility"
+  short_description: "De-risk the core idea with one small, cheap probe before committing to the full study; write .research/feasibility.md with a GO / NO-GO / PIVOT verdict."
+policy:
+  allow_implicit_invocation: false

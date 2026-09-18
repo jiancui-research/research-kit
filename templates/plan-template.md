@@ -2,10 +2,10 @@
 
 > Produced by `/research.plan`. Lives at `./.research/plan.md`.
 > The **technical design of the study** - stable and reviewable, with no task list
-> (tasks derive from this via `/research.tasks` and churn separately in `tasks.md`).
+> (the same `/research.plan` run derives its queue separately in `tasks.md`).
 > This doc is the source for the paper's System Design section and the contract the
-> evaluation must satisfy. Change it only when the *study* changes; `/research.analyze`
-> flags anything downstream that a change makes stale.
+> evaluation must satisfy. Change it only when the *study* changes; implementation and
+> writing check affected downstream artifacts for consistency before finishing.
 
 ## System architecture (paper-type aware)
 
@@ -80,4 +80,4 @@ existing projects using `./design/` keep it (legacy).]
 - [ ] For measurement / SoK the architecture section is correctly minimal.
 
 ---
-Next: `/research.tasks` (derive the single task queue from this plan).
+Finish this planning run by deriving `tasks.md`, then suggest `/research.implement`.

@@ -1,14 +1,12 @@
-> The default research constitution. Copied into a paper repo by `/research.init`, then
-> adapted in place by `/research.constitution` and written to `./.research/memory/constitution.md`,
-> which every other command reads first.
+> The default project preferences. Automatic setup seeds `./.research/memory/constitution.md`
+> from this template; research and writing commands read that live file.
 >
 > Edit your paper's copy, not this one - this is the starting point, not the live file.
 
 # Research constitution
 
-> The default, project-wide principles read by every `/research.*` command.
-> `/research.constitution` copies this file into a project at
-> `./.research/memory/constitution.md` and specializes it. Edit freely there;
+> Project-wide principles for research and writing commands. Automatic setup
+> seeds `./.research/memory/constitution.md`. Edit freely there;
 > the copied file is the source of truth for your quality bar and writing voice.
 
 Focus areas: general (set your field, target venue family, and priorities when you specialize this file)

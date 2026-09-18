@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.write"
+  short_description: "Write or revise a manuscript section in the paper's style; also learn and maintain writing preferences from samples, instructions, and edits."
+policy:
+  allow_implicit_invocation: false

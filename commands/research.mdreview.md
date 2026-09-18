@@ -1,7 +1,17 @@
 ---
-description: Open mdreview, a local web UI for this repo's markdown: one wide pane you revise directly in the rendered view, or `split` for source beside preview. Comments are sidecar JSON in ./.mdreview/ that any agent can read (requires uv).
-argument-hint: (none) for the one-pane layout, `split` for source beside preview; any other flags pass through, e.g. `split --port 9000`
+description: "Open mdreview, a local web UI for this repo's markdown: one wide pane you revise directly in the rendered view, or `split` for source beside preview. Comments are sidecar JSON in ./.mdreview/ that any agent can read (requires uv)."
+argument-hint: "(none) for the one-pane layout, `split` for source beside preview; any other flags pass through, e.g. `split --port 9000`"
 ---
+
+## Preparation
+
+Resolve `<bundle>` from the enclosing installed plugin directory (the skill adapter
+supplies it), else `${CLAUDE_PLUGIN_ROOT}`, else the enabled OMP `installPath` in
+the nearest project `.omp/plugins/installed_plugins.json` or `~/.omp/plugins/installed_plugins.json`,
+else `${RESEARCH_KIT_HOME:-$HOME/.research-kit}`. Use the first candidate containing
+`guides/setup.md` and `templates/`; name the installation problem if none resolves.
+Read `<bundle>/guides/setup.md` and complete its setup for this command, then resume
+the request. Internal guides use this bundle; artifact templates use local copies.
 
 ## User input
 `$ARGUMENTS` selects the layout and passes everything else to the tool. A leading bare word
@@ -24,14 +34,10 @@ Both layouts share Google-Docs-style comments on selected rendered text, conflic
 and one-click export (document + open comments) for any AI. Editing is in-memory until you save:
 `Save` (or `⌘S`) writes to disk, so nothing lands in the file behind your back.
 
-It is a leaf utility - no other command depends on it, and it works in any repo. (Like /research.init, this command does not read the constitution; it only launches a tool.)
+It is a leaf utility - no other command depends on it, and it works in any repo. (This command only launches a tool; it does not create project settings.)
 
 ## Steps
-1. Resolve the tool from the same three locations as the bundled templates:
-   - `${CLAUDE_PLUGIN_ROOT}/tools/mdreview.py` (Claude Code plugin install), else
-   - `<installPath>/tools/mdreview.py`, where `installPath` comes from the enabled `research-kit@research-kit` entry in the nearest project-scoped `.omp/plugins/installed_plugins.json`, falling back to `~/.omp/plugins/installed_plugins.json` (OMP plugin install), else
-   - `${RESEARCH_KIT_HOME:-$HOME/.research-kit}/tools/mdreview.py` (staged by `install.sh`).
-   If none exists, say so and point to `./install.sh`, `/plugin install research-kit@research-kit`, or `/marketplace install research-kit@research-kit`, then stop.
+1. Use `<bundle>/tools/mdreview.py` from Preparation. If it is absent, report the missing tool and ask the user to repair the research-kit installation. Do not create `.research/` to launch a viewer.
 2. Check `uv` is available (`command -v uv`). If missing, point to https://docs.astral.sh/uv/ and stop.
 3. Read the layout off `$ARGUMENTS`: strip a leading bare `split` (or a `--split` flag) and keep it as the `--split` option; whatever remains is passed through as-is.
    From the repo root, run it in the background: `uv run <resolved-path> [--split] --open <remaining arguments>`. Report the URL it prints, and which layout opened.

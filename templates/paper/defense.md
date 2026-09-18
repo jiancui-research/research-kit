@@ -117,4 +117,4 @@ delta table makes the gap visual.]
 - [ ] Related work placed by contribution type and ends each paragraph with a delta.
 
 ---
-**Next**: `/research.analyze` to keep `claims.md` in sync before you submit.
+**Next**: `/research.implement check` to keep `claims.md` in sync before you submit.

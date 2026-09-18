@@ -94,4 +94,4 @@ Then state how the claim's wording in `claims.md` should change, if at all.]
 - [ ] The takeaway updates `claims.md` honestly - refuted claims get rescoped, not hidden.
 
 ---
-Next: `/research.implement` (next eval task) or `/research.analyze` when the batch is done.
+Next: `/research.implement` (next eval task) or `/research.implement check` for an explicit audit after the batch.

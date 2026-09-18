@@ -32,4 +32,4 @@ Mandatory. Name vendors/parties notified, the embargo timeline, and any CVE assi
 Short, with a forward-looking sentence about defense even if you propose none: name what would have to change to defeat the attack, and close with a community/policy implication (a norm, vetting process, or default your attack should change).
 
 ---
-**Next**: `/research.analyze` to keep `claims.md` in sync before you submit.
+**Next**: `/research.implement check` to keep `claims.md` in sync before you submit.

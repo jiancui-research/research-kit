@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.review"
+  short_description: "Self-review panel. Simulate reviewers reading ONLY the submitted paper, score it, and list specific findings each with a suggested fix command. After automatic setup, writes only .research/review/round-N.md; never edits the paper."
+policy:
+  allow_implicit_invocation: false

@@ -1,17 +1,33 @@
-> Produced and maintained by `/research.style`. Lives at `./.research/writing/style.md`, and is
+> Produced and maintained through `/research.write` style requests. Lives at `./.research/writing/style.md`, and is
 > loaded whenever a manuscript section is written.
 >
 > Three sources feed it and are deliberately kept apart: patterns distilled from the exemplars in
 > `writing/samples/`, standing instructions you gave in conversation, and preferences read off
 > edits you made to prose written for you. **A refresh rebuilds only the first.** The other two
-> are yours and are never rewritten.
+> are yours and are never rewritten. Example selection and skip decisions also survive refreshes.
 >
 > **Patterns and slots only.** A sentence copied from a sample travels through this file into the
 > manuscript, which is plagiarism with extra steps.
 
 # Writing style
 
-**Built from:** [N samples - venue and year is enough] · **Last refreshed:** [YYYY-MM-DD]
+**Built from:** [N distinct papers] · **Last refreshed:** [YYYY-MM-DD]
+
+## Example papers
+
+**Choice:** [selected / skipped] · **Decided:** [YYYY-MM-DD]
+**Scope:** [this project and topic, or only the current request if the user said so]
+
+Record the user's choice. A skipped choice needs no justification and no sample
+analysis. A selected choice needs at least two papers read in full. A refresh
+preserves this decision unless the user changes it; an empty field is no decision.
+
+| Paper and year | Source link or local path | Topic and paper-type fit | Writing lesson and section/page |
+|---|---|---|---|
+| [selected paper] | [readable source] | [why it fits this project] | [specific observed move] |
+
+An individual paper's lesson is an example. Only patterns supported by at least
+two papers belong in the shared-pattern sections below.
 
 ## Standing instructions
 

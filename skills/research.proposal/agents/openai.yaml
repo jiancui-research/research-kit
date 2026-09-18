@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.proposal"
+  short_description: "Pipeline entry. Turn a raw research idea into proposal.md, a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue + paper-type)."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.mdreview"
+  short_description: "Open mdreview, a local web UI for this repo's markdown: one wide pane you revise directly in the rendered view, or `split` for source beside preview. Comments are sidecar JSON in ./.mdreview/ that any agent can read (requires uv)."
+policy:
+  allow_implicit_invocation: false

@@ -1,7 +1,17 @@
 ---
-description: Survey prior work into .research/related-work.md AND sharpen the proposal's gap and positioning.
-argument-hint: optional pointers to key prior work, themes, or the closest baselines
+description: "Survey prior work into .research/related-work.md AND sharpen the proposal's gap and positioning."
+argument-hint: "optional pointers to key prior work, themes, or the closest baselines"
 ---
+
+## Preparation
+
+Resolve `<bundle>` from the enclosing installed plugin directory (the skill adapter
+supplies it), else `${CLAUDE_PLUGIN_ROOT}`, else the enabled OMP `installPath` in
+the nearest project `.omp/plugins/installed_plugins.json` or `~/.omp/plugins/installed_plugins.json`,
+else `${RESEARCH_KIT_HOME:-$HOME/.research-kit}`. Use the first candidate containing
+`guides/setup.md` and `templates/`; name the installation problem if none resolves.
+Read `<bundle>/guides/setup.md` and complete its setup for this command, then resume
+the request. Internal guides use this bundle; artifact templates use local copies.
 
 ## User input
 The user request arrives via the $ARGUMENTS placeholder (e.g., names of must-cite works, themes to group by, or the single closest baseline).

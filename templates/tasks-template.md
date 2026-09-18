@@ -1,11 +1,11 @@
 # Tasks: [project / paper short name]
 
-> Produced by `/research.tasks`, derived from `./.research/plan.md`. Lives at
+> Produced by `/research.plan`, derived from `./.research/plan.md`. Lives at
 > `./.research/tasks.md` - the single work queue for the whole study.
 > Continuous ids (T001, T002, ...); `[P]` marks tasks that can run in parallel;
 > `(after Txxx)` marks dependencies. `/research.implement` owns the whole queue,
 > but `[USER-LED]` Paper tasks run only when explicitly selected by task id or
-> `paper <section>`; empty/default runs skip them. Re-running `/research.tasks`
+> `paper <section>`; empty/default runs skip them. Re-running `/research.plan`
 > refines the queue while preserving checkbox states and done-notes.
 
 ## Setup

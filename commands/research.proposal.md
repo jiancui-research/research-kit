@@ -1,7 +1,17 @@
 ---
-description: Pipeline entry. Turn a raw research idea into proposal.md, a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue + paper-type).
-argument-hint: a sentence or paragraph describing the rough idea (or steering to refine an existing proposal)
+description: "Pipeline entry. Turn a raw research idea into proposal.md, a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue + paper-type)."
+argument-hint: "a sentence or paragraph describing the rough idea (or steering to refine an existing proposal)"
 ---
+
+## Preparation
+
+Resolve `<bundle>` from the enclosing installed plugin directory (the skill adapter
+supplies it), else `${CLAUDE_PLUGIN_ROOT}`, else the enabled OMP `installPath` in
+the nearest project `.omp/plugins/installed_plugins.json` or `~/.omp/plugins/installed_plugins.json`,
+else `${RESEARCH_KIT_HOME:-$HOME/.research-kit}`. Use the first candidate containing
+`guides/setup.md` and `templates/`; name the installation problem if none resolves.
+Read `<bundle>/guides/setup.md` and complete its setup for this command, then resume
+the request. Internal guides use this bundle; artifact templates use local copies.
 
 ## User input
 The raw idea arrives via the $ARGUMENTS placeholder. It is the INPUT to the whole pipeline. Treat it as raw material to formalize, not a finished pitch. There is no separate idea command - the idea is folded into this proposal.

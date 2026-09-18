@@ -1,6 +1,18 @@
 {
   "name": "research-kit",
-  "version": "0.42.1",
-  "description": "Spec-Driven Development for research papers: proposal, related work, feasibility, plan, one task queue executed through implement, analyze, and review.",
-  "skills": "./skills/"
+  "version": "0.45.0",
+  "description": "Nine commands for the research loop, manuscript writing, and Markdown/LaTeX review; automatic setup, task planning, style learning, and consistency checks.",
+  "author": {
+    "name": "Jian Cui"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Research Kit",
+    "shortDescription": "Research, writing, and review in nine commands.",
+    "longDescription": "Nine commands for the research loop, manuscript writing, and Markdown/LaTeX review; automatic setup, task planning, style learning, and consistency checks.",
+    "developerName": "Jian Cui",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Show me the research-kit stages so I can choose one."
+  }
 }

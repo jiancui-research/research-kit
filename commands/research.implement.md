@@ -1,41 +1,99 @@
 ---
-description: Work the tasks.md queue across Setup, Build, Eval, explicit user-led manuscript work, and Polish; keep claims and task status current.
-argument-hint: task id/section (e.g. T012, eval, or "paper intro"); Manuscript mode also accepts outline, critique, or explicit "draft <section>"
+description: "Work the study queue, build and evaluate, maintain claims and progress, and check consistency before finishing; manuscript tasks require explicit selection."
+argument-hint: "task ID or queue section, explicit paper work, or check (e.g. \"T012\", \"eval\", \"paper intro\", \"draft evaluation\", \"check claims\")"
 ---
 
-## User input
-The user request arrives via `$ARGUMENTS`. It may name task ids, a queue section, a result/blocker, or explicit manuscript work (`paper intro`, `outline threat-model`, `critique <path>`, `draft eval`). If empty, work automated tasks top to bottom and **never** execute `[USER-LED]` tasks.
+## Preparation
 
-## What this phase is
-The spec-kit `implement` analogue and the single queue executor. Setup/Build produce real project artifacts in the folders `plan.md` declares; Eval runs experiments and keeps `claims.md` honest; Polish closes reproducibility gaps. Paper tasks stay human-led inside an explicit mode: outline by default, critique an existing draft, and write full prose only when the user says `draft`. `.research/` remains docs-only.
+Resolve `<bundle>` from the enclosing installed plugin directory (the skill adapter
+supplies it), else `${CLAUDE_PLUGIN_ROOT}`, else the enabled OMP `installPath` in
+the nearest project `.omp/plugins/installed_plugins.json` or `~/.omp/plugins/installed_plugins.json`,
+else `${RESEARCH_KIT_HOME:-$HOME/.research-kit}`. Use the first candidate containing
+`guides/setup.md` and `templates/`; name the installation problem if none resolves.
+Read `<bundle>/guides/setup.md` and complete its setup for this command, then resume
+the request. Internal guides use this bundle; artifact templates use local copies.
 
-## Dispatch before reading broad context
-1. Read `./.research/memory/constitution.md` if it exists and `./.research/tasks.md` (required; route to `/research.tasks` if missing).
-2. Enter **Manuscript mode** only when `$ARGUMENTS` explicitly names a `[USER-LED]` manuscript-setup or Paper task, starts with `paper`/`outline`/`critique`/`draft`, or points to a draft while naming its task. Otherwise enter **Execution mode**. Empty input always skips `[USER-LED]` tasks and reports which are READY/BLOCKED. Treat a legacy `[HUMAN]` tag (pre-0.8 queues) exactly like `[USER-LED]` - never execute it by default.
+## User input and dispatch
 
-## Execution mode: Setup, Build, Eval, Polish
-3. Read `./.research/plan.md` (required; route to `/research.plan` if missing) and `./.research/claims.md` if present. Work selected tasks in dependency order:
-   - **Setup / Build:** implement per the architecture in the declared code folder (default `./src/`, legacy `./design/`). A `[spec-kit]` task gets its own spec-driven pass. If reality changes the design, update `plan.md` to built reality and flag the deviation for `/research.analyze`.
-   - **Eval:** create `./eval/NN-slug.md` from `.research/templates/eval-template.md`; pre-write hypothesis, linked claim, setup, metric, baselines, variance, and falsifier; run it; record all results. Maintain `./eval/index.md` and `./.research/claims.md` with `supported / partial / refuted / pending`. No orphan claim or eval.
-   - **Paper `[USER-LED]`:** skip unless explicitly selected. Never auto-outline or draft while walking the queue.
-   - **Polish:** artifact README, reproduction pass, figures, and tables.
+`$ARGUMENTS` names tasks, queue sections, a result/blocker, manuscript work, or an
+explicit `check`. Empty input works automated tasks in dependency order and skips
+all `[USER-LED]` tasks. A Next suggestion never authorizes another stage.
 
-## Manuscript mode: explicit user-led work
-4. Read `.research/templates/sections/manuscript-procedure.md` (**required**; if missing, say so, route to `/research.init` to fill the gap, and stop - never reconstruct the procedure from context), then follow it end to end - it is the shared procedure behind this mode and `/research.write`, so the two cannot drift. It covers: read the whole manuscript and show the argument brief plus a voice sample of the paper's own terms, person, tense, number formatting, and sentence construction - with three to five of its sentences quoted verbatim - before any prose; load the paper-type skeleton, `sections/rhetorical-moves.md`, the type's block in `sections/moves-by-type.md`, and the section craft guide; pin the section's claim, evidence, reviewer objection, and boundary; pick the mode (OUTLINE by default, REVISE / CRITIQUE / DRAFT on request, full prose only on the explicit word `draft`); run the blast radius on a revision; and never invent a number or overwrite prose silently.
-5. Resolve the manuscript once: use the valid path in `.research/paper-repo`; else ask for an existing local path or Git URL; else derive `<shortname>-<venueabbrev><yy>-latex`, confirm it, create a private repo with `gh`, and clone it as a sibling. Never overwrite. Seed a new repo from the venue's current official CFP/LaTeX template, using the constitution's manuscript layout: a thin `main.tex` (preamble, title/author block, `\input` list), `sections/` with one stub per section, `figures/`, `tables/`, `references.bib`, `.gitignore`, README, and anonymization if required. Mark each stub READY or BLOCKED. Record local path on line 1 and optional URL on line 2 of `.research/paper-repo`. If the selected task is manuscript setup only, mark it done and stop here.
-6. Select the section from input or the next unfinished Paper task, then run the procedure above against it.
-7. Write to the section's own file in the manuscript's existing layout (typically `sections/<name>.tex`, named the way `main.tex` names its siblings), adding its `\input` line to `main.tex` when the file is new, or to a labeled `.outline.md`/`.critique.md` beside it. Never silently overwrite user prose. Update only the selected Paper task with `outlined`, `drafted`, `critiqued`, `revised`, or `blocked` plus any evidence/citation gaps. This queue bookkeeping is what this mode adds over `/research.write`.
+1. Read the project constitution. For an explicit consistency check, follow
+   `<bundle>/guides/consistency.md`, report available evidence and gaps, then stop.
+   This mode needs no queue and does not edit code, manuscript, claims, or tasks.
+2. Otherwise read `./.research/tasks.md` and `./.research/plan.md` (both required;
+   route to `/research.plan` if either is missing). Read `claims.md` when present.
+3. Enter **Manuscript mode** only for explicitly selected Paper/manuscript-setup
+   tasks or input beginning with `paper`, `outline`, `critique`, or `draft`.
+   Otherwise enter **Execution mode**. Treat legacy `[HUMAN]` tags as `[USER-LED]`.
 
-## Shared queue bookkeeping
-9. Check off completed tasks with `done: <what landed, where>`; mark blockers `BLOCKED: <reason>`. Preserve ids and dependency history. Reference files rather than pasting source into `.research/`.
+## Execution mode
 
-## Validate
-- Empty/default execution did not perform a `[USER-LED]` task; Manuscript mode had explicit user selection.
-- Build code is outside `.research/`; eval files, index, claims, and task states agree.
-- Manuscript mode followed the shared procedure: whole manuscript read, argument brief and voice sample shown before writing (with real sentences quoted, not described), section job pinned, outline by default, prose never overwritten, and a REVISE run reported its blast radius and proposed before applying.
-- New prose matches the paper's established terms, person, tense, number formatting, and sentence construction, and applies the cross-cutting moves, the paper type's own moves, and the section guide.
-- Every definite noun phrase resolves: no `the X` without an antecedent, no comparative without its second term, no partitive without its whole.
-- Full prose was produced only after the explicit word `draft`.
+Work the selected tasks in dependency order:
+
+- **Setup / Build:** implement in the code directory declared by the plan (default
+  `./src/`, legacy `./design/` is valid). If the built design changes, record the
+  deviation in `plan.md`, report it, and check the affected tasks and evidence.
+- **Eval:** create `./eval/NN-slug.md` from the local eval template. Pre-write the
+  hypothesis, claim IDs, setup, baselines, metric, variability, and falsifier; run
+  the experiment and record inconvenient results as well as successes. Maintain
+  `./eval/index.md` and `./.research/claims.md` with supported/partial/refuted/pending
+  verdicts. Every claim and evaluation needs its evidence links.
+- **Paper `[USER-LED]`:** skip unless selected explicitly. Default execution must
+  never start outlining or drafting the manuscript.
+- **Polish:** reproduction checks, figures, tables, and project documentation.
+
+Real code, data, and experiment outputs live outside `.research/`. Do not re-plan
+an entire study merely to make a task appear complete; route design/queue changes
+beyond the current work to `/research.plan`.
+
+## Manuscript mode
+
+1. Resolve an explicit manuscript path, else `.research/paper-repo`, else the
+   current manuscript repo, else `./paper/`. For an explicit setup task with no
+   manuscript, use the user's requested local path or Git URL. Creating a new
+   remote repository requires the user's instruction; it is not a writing prerequisite.
+2. New manuscript setup uses the venue's official template and the constitution's
+   layout: thin `main.tex`, `sections/`, `figures/`, `tables/`, `references.bib`,
+   README, and `.gitignore`. Honor anonymity requirements; mark stubs READY/BLOCKED.
+   Record the local path and optional URL in `.research/paper-repo`. A setup-only
+   task finishes here after validating the layout and recording task status.
+3. Before outlining, drafting, or revising a section, follow **Before section writing**
+   in `<bundle>/guides/writing-style.md`: use 2–3 relevant example papers or an
+   explicit skip, reusing the project's choice. If undecided, ask and wait; do not
+   mark the Paper task complete. Critique-only work bypasses this step. This
+   requirement takes precedence over older local templates that omit it.
+4. For section work, read `.research/templates/sections/manuscript-procedure.md`
+   (required). Follow the same procedure as `/research.write`: whole-paper reading,
+   argument brief, three to five verbatim voice-sample sentences, section/type craft,
+   section purpose and evidence, and revision impact checks. Setup fills missing
+   templates; a required file still absent is a named blocker, never improvised.
+5. Read `.research/writing/style.md` when present. To record requested preferences,
+   follow `<bundle>/guides/writing-style.md`, as the shared section procedure directs.
+6. Write into the actual section file and include a new section in the manuscript.
+   Keep scratch outlines/critiques beside the section, never included in TeX.
+   Outline by default; full prose requires an explicit drafting request. Preserve
+   existing conventions and never silently overwrite user prose.
+7. Update only the selected Paper task with outlined/drafted/critiqued/revised/blocked
+   and any evidence or citation gaps. An outline is not a completed draft task.
+
+## Finish and validate
+
+1. Follow `<bundle>/guides/consistency.md` against changed work and its dependencies.
+   Correct issues within scope; name broader stale artifacts and the action needed.
+2. Check off tasks only when their done-when criteria and validation are met.
+   Record `done: <what landed, where>` or `BLOCKED: <reason>`. Preserve IDs, notes,
+   and dependency history. Do not turn missing evidence into a supported claim.
+3. Confirm code/eval/claims/task states agree and default execution skipped Paper work.
+   Outline/draft/revise work required analyzed examples or an explicit skip, with
+   the choice and scope saved in the style file. For manuscript work, verify sentence
+   construction, terms, number formatting, referential clarity, section/type craft,
+   and all remaining `[UNVERIFIED]`/`[cite?]` gaps.
 
 ## Completion
-Report selected tasks, paths changed, eval/claim verdicts, manuscript path and Paper status when applicable, all `[UNVERIFIED]`/`[cite?]` gaps, and queue counts (done/blocked/remaining). End with `Next: /research.implement` while work remains, otherwise `Next: /research.analyze`.
+
+Report selected tasks, paths changed, evidence verdicts, consistency status, and
+queue counts. Suggest `/research.implement` for remaining automated work,
+`/research.write <section>` for a paper needing prose, or `/research.review` when
+the manuscript is ready. Explicit check-only work reports findings without fixes.

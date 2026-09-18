@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.texreview"
+  short_description: "Open texreview, a local web UI to review the compiled paper - LaTeX source left, PDF right, SyncTeX click-to-source, comments on selections in either pane (button, `⌘⇧M`, or right-click) (requires uv + a TeX install). Comments are sidecar JSON in the paper repo's .texreview/ that any agent can read."
+policy:
+  allow_implicit_invocation: false

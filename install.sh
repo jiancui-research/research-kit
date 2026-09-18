@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Install research-kit slash commands for one or more AI coding agents, and
-# stage the bundled templates so /research.init can copy them into a paper repo.
+# stage internal guides, templates, and tools for automatic project setup.
 #
 # Supported agents:
 #   claude    Claude Code slash commands  -> ~/.claude/commands/research.*.md
@@ -36,7 +36,7 @@ CLAUDE_DIR="${CLAUDE_COMMANDS_DIR:-$HOME/.claude/commands}"
 CODEX_DIR="${CODEX_PROMPTS_DIR:-${CODEX_HOME:-$HOME/.codex}/prompts}"
 COPILOT_DIR="${COPILOT_AGENTS_DIR:-$HOME/.copilot/agents}"
 
-# Agent-neutral staging home for the bundled templates that /research.init copies in.
+# Agent-neutral staging home for guides, templates, and optional tools.
 BUNDLE_HOME="${RESEARCH_KIT_HOME:-$HOME/.research-kit}"
 
 # staging rm -rf's its subdirectories and --uninstall removes the whole thing, so refuse
@@ -211,7 +211,7 @@ install_copilot() {
         {
             echo "---"
             echo "name: $base"
-            echo "description: \"$desc\""
+            echo "description: $desc"
             echo "---"
             echo
             echo "> **research-kit agent.** You are the \`$base\` stage of the research-kit"
@@ -221,11 +221,11 @@ install_copilot() {
             echo "> - Wherever the steps below reference \`\$ARGUMENTS\`, treat it as the user's latest"
             echo ">   message to you (their free-text input for this stage). If it is empty, follow the"
             echo ">   step's \"if empty\" guidance."
-            echo "> - Wherever a step ends with \`Next: /research.<x>\`, it means: switch to the"
-            echo ">   \`research.<x>\` agent (via \`/agent\`) for the next stage."
+            echo "> - Wherever a step ends with \`Next: /research.<x>\`, suggest the"
+            echo ">   \`research.<x>\` agent (via \`/agent\`). Do not run it unless requested."
             echo ">"
-            echo "> Everything else is unchanged: read and write only under \`./.research/\`, follow the"
-            echo "> command contract, and stay paper-type aware."
+            echo "> Follow the command's file and mode boundaries: tracking docs live in"
+            echo "> \`./.research/\`; code, evals, and manuscript files use their declared paths."
             echo
             read_body "$src"
         } > "$target"
@@ -247,7 +247,16 @@ stage_templates() {
         : > "$BUNDLE_HOME/.research-kit-home"
         rm -rf "$BUNDLE_HOME/templates"
         cp -R "$SCRIPT_DIR/templates" "$BUNDLE_HOME/templates"
-        echo "  staged   $BUNDLE_HOME/templates (bundled templates for /research.init)"
+        echo "  staged   $BUNDLE_HOME/templates (templates for automatic setup)"
+    fi
+}
+
+stage_guides() {
+    if [ -d "$SCRIPT_DIR/guides" ]; then
+        mkdir -p "$BUNDLE_HOME"
+        rm -rf "$BUNDLE_HOME/guides"
+        cp -R "$SCRIPT_DIR/guides" "$BUNDLE_HOME/guides"
+        echo "  staged   $BUNDLE_HOME/guides (internal procedures)"
     fi
 }
 
@@ -296,8 +305,9 @@ for agent in $AGENTS; do
     install_agent "$agent"
 done
 
-# Stage the bundled templates and tools once, regardless of how many agents were installed.
+# Stage shared resources once, regardless of how many agents were installed.
 stage_templates
+stage_guides
 stage_tools
 
-echo "Done. In your paper repo, run /research.init once, then /research.constitution."
+echo "Done. Start with /research.proposal for an idea or /research.write for a paper; project setup is automatic."

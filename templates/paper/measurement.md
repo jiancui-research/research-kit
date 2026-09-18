@@ -57,4 +57,4 @@ future work in one sentence. Do not rehash methodology, list subsections, or add
 
 ---
 **Artifact**: link the public artifact (dataset/code) in an abstract footnote and again in
-the intro. **Next**: `/research.analyze` to keep `claims.md` in sync with the findings above.
+the intro. **Next**: `/research.implement check` to keep `claims.md` in sync with the findings above.

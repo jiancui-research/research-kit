@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.plan"
+  short_description: "Design the study and maintain its work queue in .research/plan.md and .research/tasks.md, preserving task IDs and progress."
+policy:
+  allow_implicit_invocation: false

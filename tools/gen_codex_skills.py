@@ -8,7 +8,7 @@ only the frontmatter Codex needs for discovery, plus the note that adapts the sl
 form to a skill, and then tells the agent to read the command file that ships in the same
 plugin. The instructions have exactly one home.
 
-Run `python3 tools/gen_codex_skills.py` after adding or renaming a command;
+Run `python3 tools/gen_codex_skills.py` after adding, changing, or removing a command;
 `tools/test_codex_skills.py` fails if the committed tree does not match this generator.
 """
 from __future__ import annotations
@@ -37,7 +37,9 @@ def read_frontmatter(md: str) -> dict[str, str]:
     for line in m.group(1).splitlines():
         if ":" in line and not line.startswith(" "):
             k, v = line.split(":", 1)
-            out[k.strip()] = v.strip()
+            value = v.strip()
+            # Author string scalars as JSON-quoted YAML so punctuation is safe.
+            out[k.strip()] = json.loads(value) if value.startswith('"') else value
     return out
 
 
@@ -55,17 +57,19 @@ def skill_body(stage: str, hint: str) -> str:
         f"> **research-kit stage - `/{stage}`.**\n"
         f">\n"
         f"> The instructions for this stage are not duplicated here. Read\n"
-        f"> `commands/{stage}.md` from this plugin's own directory - the folder two levels above\n"
-        f"> this file - and follow it end to end. If you cannot find it, say so and stop rather\n"
+        f"> `commands/{stage}.md` from this plugin's root - two directory levels above\n"
+        f"> this skill's directory. Use that root as `<bundle>` for the command's Preparation\n"
+        f"> and its `guides/`, `templates/`, and `tools/`. If it is missing, stop rather\n"
         f"> than reconstructing the stage from memory.\n"
         f">\n"
         f"> Two adaptations from its original slash-command form:\n"
         f">\n"
         f"{arg_line}"
-        f"> - Where a step ends with `Next: /research.<x>`, run the `research.<x>` skill next.\n"
+        f"> - Where a step ends with `Next: /research.<x>`, suggest that skill next;\n"
+        f">   do not invoke it unless the user requested continuing to that stage.\n"
         f">\n"
-        f"> Everything else is unchanged: read and write only under `./.research/`, follow the\n"
-        f"> command contract, and stay paper-type aware.\n"
+        f"> Follow the command's file and mode boundaries: tracking docs live in\n"
+        f"> `./.research/`; code, evals, and manuscript files use their declared paths.\n"
     )
 
 
@@ -80,8 +84,8 @@ def build() -> list[Path]:
     for src in sorted(COMMANDS.glob("research.*.md")):
         stage = src.stem
         fm = read_frontmatter(src.read_text())
-        desc = fm.get("description", "").strip().strip('"')
-        hint = fm.get("argument-hint", "").strip().strip('"')
+        desc = fm.get("description", "").strip()
+        hint = fm.get("argument-hint", "").strip()
         if not desc:
             sys.exit(f"error: {src.name} has no description in its frontmatter")
         out = SKILLS / stage / "SKILL.md"
@@ -89,7 +93,7 @@ def build() -> list[Path]:
         out.write_text(
             "---\n"
             f"name: {stage}\n"
-            f"description: {desc}\n"
+            f"description: {json.dumps(desc, ensure_ascii=False)}\n"
             # Claude Code auto-discovers a plugin's skills/ and would otherwise let the model
             # fire a research stage on its own; every stage here is strictly user-driven.
             "disable-model-invocation: true\n"
@@ -97,6 +101,15 @@ def build() -> list[Path]:
             + skill_body(stage, hint)
         )
         written.append(out)
+        agent = out.parent / "agents" / "openai.yaml"
+        agent.parent.mkdir()
+        agent.write_text(
+            "interface:\n"
+            f"  display_name: {json.dumps(stage)}\n"
+            f"  short_description: {json.dumps(desc, ensure_ascii=False)}\n"
+            "policy:\n"
+            "  allow_implicit_invocation: false\n"
+        )
 
     MANIFEST_DIR.mkdir(exist_ok=True)
     codex_manifest = MANIFEST_DIR / "plugin.json"
@@ -104,7 +117,17 @@ def build() -> list[Path]:
         "name": manifest["name"],
         "version": manifest["version"],
         "description": manifest["description"],
+        "author": manifest["author"],
         "skills": "./skills/",
+        "interface": {
+            "displayName": "Research Kit",
+            "shortDescription": "Research, writing, and review in nine commands.",
+            "longDescription": manifest["description"],
+            "developerName": manifest["author"]["name"],
+            "category": "Productivity",
+            "capabilities": [],
+            "defaultPrompt": "Show me the research-kit stages so I can choose one.",
+        },
     }, indent=2) + "\n")
     written.append(codex_manifest)
     return written

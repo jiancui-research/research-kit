@@ -11,6 +11,15 @@ from whatever happens to be in context produces a report, not a paper.
 
 ---
 
+## 0. Resolve the example-paper choice
+
+Before OUTLINE, DRAFT, or REVISE, follow **Before section writing** in
+`<bundle>/guides/writing-style.md`. The calling command normally completes it
+first; reuse that result. Start section work only after relevant example papers
+have been selected and analyzed or the user explicitly skips. The same style file
+records the choice and its scope, so later sections do not repeat the question.
+CRITIQUE does not require this step.
+
 ## 1. Read the whole paper, then say what it argues
 
 Read **every** section of the manuscript, following `\input`/`\include` from the main file, plus
@@ -63,12 +72,13 @@ brief - not a description of them. This is the load-bearing half: a list of prop
 satisfy while still writing in your own register, and drafting against actual sentences is not.
 Pick them from the section nearest this one.
 
-(This does not contradict the "never sentences" rule in `/research.style`. That rule keeps
+(This does not contradict the "never sentences" rule in `/research.write style`. That rule keeps
 *other people's* sentences from travelling into the manuscript. These are the author's own, and
 they stay in the conversation as a target to match, never reused as prose.)
 
-When the manuscript has no prose yet, say so and take the register from the guides and the
-constitution instead.
+When the manuscript has no prose yet, say so and take the register from the selected
+examples and standing instructions. After an explicit skip, use whatever guidance is
+available in the style file, constitution, and craft guides.
 
 ## 2. Load the craft for this section
 
@@ -88,15 +98,15 @@ Always load `.research/templates/sections/rhetorical-moves.md`, then route:
 | limitations, future work | `sections/limitations-future-work.md` |
 | figures, tables | `sections/figures-tables.md` |
 
-Finally, load `./.research/writing/style.md` - what `/research.style` has accumulated about how
+Finally, load `./.research/writing/style.md` - what `/research.write style` has accumulated about how
 this user wants their paper written. Its **Standing instructions** and **Learned from edits**
 entries are things this user has already said or already fixed once; making them say it again is
 a waste of their time.
 
-**When that file does not exist, say so once and point at `/research.style`**, the same way a
-missing template routes to `/research.init`. Do not just proceed quietly: without it every run
-re-infers the author's register from scratch, so a correction they made last week is one you are
-about to need them to make again.
+For OUTLINE, DRAFT, and REVISE, step 0 has already recorded selected examples or an
+explicit skip. A skip permits writing without sample-derived guidance. For CRITIQUE,
+read the style file only if present and continue without it when absent. The user can
+change examples or record preferences through `/research.write style`.
 
 That gives four sources of voice, and they rank:
 
@@ -114,8 +124,8 @@ for a word the manuscript never uses, or against a convention it applies everywh
 ask.** Do not silently pick a side; both answers are defensible and only the user knows which.
 
 A guide that is not in this repo is a gap to **name**, not to fill from memory. Say which one was
-unavailable, suggest `/research.init`, and proceed without it - never paraphrase what you assume
-it says.
+unavailable after automatic setup and proceed without optional craft only - never paraphrase
+what you assume it says. The shared manuscript procedure itself is required.
 
 ## 3. Pin the section's job
 
@@ -199,8 +209,8 @@ existing prose - show what is being replaced.
 Close by reporting: what was written or proposed, which craft guides were loaded, every gap left
 behind, and anything the blast radius surfaced that you did not touch.
 
-If the user corrects the writing while reviewing what you wrote - a word they never use, an opener
-they dislike, a structure they want instead - offer once to record it with
-`/research.style "<their correction>"` so the next section starts from it. The same goes for an
-edit they make themselves to prose you wrote: the change is a preference stated in the clearest
-way available. Offer; never write to `writing/style.md` from here.
+When the user asks to remember a writing correction, follow
+`<bundle>/guides/writing-style.md` and record it in `writing/style.md`. Infer preferences from
+user edits only with attributable evidence and confirmation. The same internal guide serves
+`/research.write style` and explicitly selected manuscript work in `/research.implement`.
+Before reporting completion, follow `<bundle>/guides/consistency.md` for the changed section.

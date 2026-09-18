@@ -1,6 +1,6 @@
 # Mock peer review: [paper short title]
 
-> Produced by `/research.review`. Lives at `./.research/review/[short-name].md`.
+> Produced by `/research.review`. Lives at `./.research/review/round-N.md`.
 > Write this review about your OWN draft, as the most skeptical qualified reviewer
 > on the panel would - then fix what it surfaces or pre-empt it in the text.
 > Vague criticism ("motivation is weak", "not novel") is worthless from a reviewer
@@ -101,7 +101,7 @@ each, leading with the strongest result and citing it exactly.]
 - Read `./.research/memory/constitution.md` first for venue and paper-type, then
   review ONLY the submitted paper (the manuscript root from `.research/paper-repo`, fallback `./paper/`) - a real reviewer does not see your
   `claims.md`, `eval/`, or task lists, so judge every claim against the paper's own
-  evidence. (Internal consistency vs. those docs is `/research.analyze`'s job.)
+  evidence. (Implementation and writing check consistency against those internal docs in separate runs.)
 - Be paper-type aware: a benchmark paper adds checks (data construction transparency,
   inter-annotator agreement, bias / coverage, baseline results, maintenance plan); an
   attack / defense paper adds threat-model and dual-use checks. Pull the relevant
@@ -113,4 +113,4 @@ each, leading with the strongest result and citing it exactly.]
   wasted.
 
 ---
-Next: `/research/rebuttal` (pre-draft responses) or `/research.implement paper <section>` to fix what this surfaced.
+Next: `/research.implement paper <section>` to fix what this surfaced, then `/research.review` to check the revised manuscript.

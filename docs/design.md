@@ -1,128 +1,124 @@
-# research-kit - design (v0.8.0)
+# Research-kit design
 
-## Vision
+## Purpose and public surface
 
-Writing a research paper is a long-lived, multi-stage process with the same failure modes as building software: vague problem statements, untracked assumptions, claims that drift from evidence, and rework caused by skipping steps. **Spec-Driven Development** addresses these in code by making intent explicit before execution. research-kit applies the same discipline to papers.
+Research-kit is a bundle of agent instructions for developing research, running a
+study, and writing a paper. The model performs the work; Markdown defines the
+procedures and reviewable artifacts. The two optional Python viewers provide local
+editing and commenting without becoming dependencies of the research pipeline.
 
-It is an agent-agnostic toolkit: a set of slash commands plus Markdown templates and a default research "constitution", installable for Claude Code, Codex CLI, GitHub Copilot CLI, or Oh My Pi (OMP). Each command turns one fuzzy stage of paper writing - proposal, related work, feasibility, tasks, evals, drafting, rebuttal - into a concrete, reviewable artifact on disk. The artifacts form a chain, so later stages inherit the decisions made earlier instead of re-deriving them, and a claim-to-evidence matrix keeps the eventual paper honest.
+The nine commands are `proposal`, `relatedwork`, `feasibility`, `plan`, `implement`,
+`write`, `review`, `mdreview`, and `texreview`, all under `/research.*`.
 
-Simplicity is the top priority: Markdown in, Markdown out, no runtime.
+```text
+proposal -> relatedwork -> feasibility -> plan -> implement -> write -> review
+   ^                         |                 ^                ^         |
+   +------ NO-GO/PIVOT -------+                 +---- findings --+---------+
+```
 
-For the full pipeline diagram and the input/output of every command, see [workflow.md](workflow.md).
+The writing path is independently usable with an existing manuscript. Both viewers
+remain separate leaf utilities. No generic dispatcher replaces them.
 
-## Spec-kit → research mapping
+## One command source, several adapters
 
-research-kit mirrors spec-kit's constitution -> specify -> plan -> tasks -> implement pipeline, then extends it with research-specific artifacts. `implement` remains the single queue executor; manuscript tasks are a `[USER-LED]` branch that requires explicit selection rather than a separate command.
+`commands/research.<name>.md` is the authoritative instruction source. Claude Code
+and OMP plugins expose these commands directly. `tools/gen_codex_skills.py` generates
+`.codex-plugin/plugin.json` and `skills/<name>/SKILL.md`; each skill points back to
+its command and identifies the enclosing bundle root. It does not duplicate the
+procedure. Generate again whenever a command or the manifest changes.
 
-| research-kit stage | spec-kit analogue | What it maps to |
+`install.sh` copies raw command files for Claude/Codex custom-prompt installs and
+creates Copilot custom agents with an input adapter. It stages `guides/`,
+`templates/`, and `tools/` together. Its recorded install manifests let an upgrade
+prune retired stages without guessing ownership of user-created commands.
+
+Adapters preserve the command's actual file/mode boundaries, including code and
+manuscripts outside `.research/`. `Next:` is a suggestion, not automatic execution.
+Generated skills retain `disable-model-invocation: true` for hosts that support it;
+each skill also has `agents/openai.yaml` with Codex's
+`policy.allow_implicit_invocation: false`. Command bodies independently require
+explicit selection for manuscript work. String frontmatter is quoted so colons
+and quotation marks survive YAML parsing in every adapter.
+
+The local Codex loader accepts the shared Claude guard. The universal catalog
+validator rejects that field when true, so a successful local installation is
+not a catalog-submission validation. Keep this distinction explicit when checking
+distribution compatibility.
+See [installation](install.md) for invocation and update instructions.
+
+## Internal procedures and local customization
+
+Four procedures live in the bundle's `guides/` directory:
+
+| Procedure | Loaded by | Responsibility |
 |---|---|---|
-| `constitution` | constitution | Research quality principles, writing voice, and venue norms that govern every later stage. |
-| `proposal` | specify | The "spec" of the paper and the pipeline entry point: problem, motivation (NABC), gap, measurable contributions, testable research questions, approach, venue, paper type. The raw idea is the input; the idea is folded in here. |
-| `relatedwork` | (specify, positioning) | Survey of prior work that positions the contribution and names the closest baselines. |
-| `feasibility` | (de-risk gate) | A GO/NO-GO/PIVOT gate that de-risks the result before committing to the full build; a no-go or pivot points back to `proposal`. |
-| `plan` | plan | The study's technical design (`plan.md`): architecture, evaluation design, key decisions with rejected alternatives, project layout (declares the code folder). Stable; no task list. |
-| `tasks` | tasks | The single work queue (`tasks.md`): Setup / Build / Eval / Paper / Polish sections, continuous T-ids, `[P]` parallel markers, claim links. Expected to churn; re-runs refine and preserve states. |
-| `implement` | implement | Executes Setup/Build/Eval/Polish tasks and maintains claims; explicitly selected `[USER-LED]` manuscript tasks enter claim-aware outline, critique, or opt-in draft mode. Empty/default runs cannot start manuscript work. |
-| `analyze` | analyze | Read-only cross-artifact consistency + review-readiness audit, AND the **sync checker** across plan, tasks, code, evidence, and manuscript (detects drift, routes the re-run). |
-| `review` | — (research extension) | A self-review panel that reads **only the paper** (like a real reviewer), reports findings + scores with a suggested fix command each, and loops until no high-severity findings remain. Writes only its round file. |
-| `rebuttal` | — (research extension) | Evidence-backed response to reviewer comments, fitted to the venue limit. |
-| `ae` | — (research extension) | Artifact-evaluation package: reproducibility checklist, README, badge plan, archival link. |
+| `setup.md` | Every command; viewers take its resource-only branch | Missing templates and project preferences |
+| `task-planning.md` | `plan` | Derive/refine the queue without losing progress |
+| `writing-style.md` | `write`; explicit manuscript work in `implement` | Example selection or explicit skip, sample analysis, standing instructions, confirmed edit preferences |
+| `consistency.md` | `implement`, `write` | Check affected claims, evidence, code, tasks, and prose |
 
-## Commands
+Procedures are always read from the installed bundle so an upgrade reaches them.
+Customizable templates and craft guides are copied with no clobber into
+`.research/templates/`. Setup compares relevant copies, reports drift, and preserves
+local edits. It cannot attribute a diff to the user or an update without a baseline.
+Required missing guidance is a blocker; optional missing guidance is named.
 
-All commands are invoked as `/research.<name>` (in Copilot CLI, as the `research.<name>` custom agent).
+The example-paper decision is required before outlining, drafting, or revising;
+users can explicitly skip it. Both writing entry points load the bundled procedure
+directly, so an older local manuscript template cannot bypass the decision. The
+same `writing/style.md` records the choice, its scope, and the selected sources and
+lessons. A project-wide skip survives later runs and sample refreshes; a skip for
+one request does not become a permanent preference. Critiques and checks need no
+examples. Recommendations require verified sources and concrete writing lessons,
+and become selected examples only when the user chooses them.
 
-- `/research.init` — One-time per paper repo: copy the bundled templates into `.research/templates/` so commands can load them, then report any local template that has drifted from the bundle (no-clobber means an upgrade never reaches an existing file on its own).
-- `/research.constitution` — Establish or update the research constitution (quality principles, writing voice, venue norms).
-- `/research.proposal` — Pipeline entry point: turn a raw idea into `proposal.md`, a readable 1-3 page argument (falsifiable thesis, argued gap, pre-committed validation plan, venue + paper-type).
-- `/research.relatedwork` — Survey prior work and position the contribution against the closest baselines.
-- `/research.feasibility` — De-risk the result with a quick check and emit a GO/NO-GO/PIVOT verdict; a no-go or pivot routes back to `/research.proposal`.
-- `/research.plan` — The study's technical design into `plan.md` (architecture, evaluation design, decisions, layout incl. the code-folder declaration). Stable; tasks derive from it.
-- `/research.tasks` — Derive the single work queue `tasks.md` from `plan.md` (Setup/Build/Eval/Paper/Polish, T-ids, claim links); re-runs refine and preserve checkbox states.
-- `/research.implement` — Execute the single queue: build code, run evals, maintain claims, and handle `[USER-LED]` manuscript tasks only after explicit task-id or Manuscript-mode input.
-- `/research.write` — Write or revise a single manuscript section without walking the queue. Shares one procedure with `/research.implement`'s Manuscript mode (`templates/sections/manuscript-procedure.md`), so the two cannot drift; `implement` additionally updates the Paper task's status.
-- `/research.style` — Optional: maintain `.research/writing/style.md`, the accumulating record of how this user wants their paper written. Three sources, kept apart: exemplars in `writing/samples/` (rebuilt on refresh), standing instructions the user gives, and preferences read off edits they made (both never rewritten). Patterns and slots only, never sentences copied from a sample. Voice precedence when writing: the manuscript's fixed terms and formatting > standing instructions > the sample-derived register > the craft guides.
-- `/research.analyze` — Read-only cross-artifact consistency + review-readiness audit, and the sync checker across plan, tasks, code, evidence, and manuscript; routes findings and re-runs to the owning commands.
-- `/research.review` — Simulate a reviewer panel reading **only the paper**; report mock reviews + scores with a suggested fix command per finding (writes only `review/round-N.md`, never another artifact), and loop until clean. Loads a venue-family guide (`templates/review/security.md` or `ai-ml.md`), the paper type's probes from `review/by-type.md`, plus `review/unfair-heuristics.md`, which is what turns a reflex ("not novel", "doesn't beat SOTA", "I'd have done it differently") into either a specific finding or nothing.
-- `/research.rebuttal` — Draft a prioritized, evidence-backed rebuttal to reviewer comments, fitted to the venue word limit.
-- `/research.ae` — Prepare an artifact-evaluation submission (reproducibility checklist, artifact README, badge plan, archival link).
-- `/research.mdreview` — Optional review UI: launch `tools/mdreview.py` (local web server) over the repo's markdown. One wide pane renders the document and any block can be clicked to edit as its own markdown source; the source range comes from markdown-it's per-block line map, so no HTML-to-markdown conversion ever runs and untouched lines are left byte-identical. Comments land in `./.mdreview/` as sidecar JSON. `/research.mdreview split` runs the same server with `--split` for the source-beside-preview layout; a running instance of one layout is never reused for the other.
-- `/research.texreview` — Optional manuscript review UI: launch `tools/texreview.py` against the paper repo (the cwd if it holds a `\documentclass` `.tex`, else the repo `.research/paper-repo` points to) - editable LaTeX source beside the compiled PDF, SyncTeX click-to-source in both directions, comments on PDF selections with `file:line` targets in the paper repo's `.texreview/`, a latexmk Recompile button, and clipboard export for any AI.
+Old local templates can still mention retired stages. Setup translates those
+handoffs to current owners. It never deletes old project outputs or overrides
+current command boundaries to satisfy an old template.
 
-## Working-directory model
+## File ownership
 
-The project is one repo (under `~/Projects`, outside the vault). research-kit's **tracking docs** all live under `./.research/`; the actual **work products** (code, data, paper source) live in sibling root folders. The split is deliberate: `.research/` is the control plane (what we decided + what we're tracking), the root folders are the work itself.
-
-```
-<project>/                 one repo under ~/Projects, outside the vault
-  .research/               ALL research-kit tracking docs:
-    memory/constitution.md   research principles + writing voice
-    templates/               skeletons + craft guides (copied by /research.init)
-    writing/                 optional: samples/ you chose + style.md (what /research.style accumulates)
-    proposal.md              problem, motivation (NABC), gap, contributions, RQs, approach, venue, paper-type
-    related-work.md
-    feasibility.md           de-risk result + GO/NO-GO/PIVOT
-    plan.md                  study design: architecture + evaluation design + decisions + layout (stable)
-    tasks.md                 the single work queue: Setup/Build/Eval/Paper/Polish (churns)
-    claims.md                claim ↔ evidence matrix (the shared sync point; written by implement, read by paper/analyze/review)
-    analyze-report.md        consistency + sync + desk-reject report
-    review/round-N.md  rebuttal/  ae/   outputs of those commands
-  feasibility/             throwaway probe code
-  src/                     THE SYSTEM CODE (built by /research.implement; folder declared in plan.md - legacy projects use design/)
-  eval/                    eval writeups + index + scripts, data, results
-  paper/                   outlines + manuscript - or a dedicated sibling repo recorded in .research/paper-repo
+```text
+project/
+  .research/
+    memory/constitution.md   project preferences, seeded automatically
+    templates/               local skeletons and craft
+    writing/style.md         example choice, analysis, and writing preferences
+    writing/samples/         local example papers (links/paths also accepted)
+    proposal.md              argument and claim IDs
+    related-work.md          survey and positioning
+    feasibility.md           probe and verdict
+    plan.md                  study design
+    tasks.md                 queue with stable IDs and progress
+    claims.md                claim-to-evidence ledger
+    review/round-N.md         paper-only review reports
+    paper-repo               optional manuscript path and URL
+  feasibility/               probe code
+  src/                       implementation, or the plan's declared location
+  eval/                      scripts, results, writeups, and index
+  paper/                     manuscript, or an existing separate repo
 ```
 
-Command contract:
+`plan` owns both design and queue creation/refinement. `implement` records progress,
+claim verdicts, and built-design deviations; its explicit Paper mode additionally
+updates the selected manuscript task. `write` leaves the queue alone.
+`relatedwork` may sharpen proposal positioning. Requested writing preferences go
+into the existing style file. Consistency checks report broader work instead of
+silently editing unrelated artifacts.
 
-1. Read `./.research/memory/constitution.md` if it exists (skip silently otherwise).
-2. Read its upstream artifacts (for example, `plan` reads proposal + feasibility; `tasks` reads plan; `implement` reads plan + tasks and, only in Manuscript mode, proposal + related work + claims).
-3. Take user input via `$ARGUMENTS`.
-4. Produce or update only its owned work products; `implement` owns code/eval outputs, claims/task status, and explicitly selected manuscript work. End by reporting paths and `Next: /research.<x>`.
-5. Be paper-type aware where relevant (measurement / attack / defense / benchmark / systematization (SoK)) via `.research/templates/paper/<type>.md` (copied from the bundle by `/research.init`).
+After shared setup, `review` writes only its round file. It reads the manuscript
+and venue/type context without internal project evidence. This boundary is what
+makes it a useful simulation of an outside reader.
 
-Commands `mkdir -p` as needed and never overwrite user content without saying so.
+## Scope
 
-## Pipeline order
+Keep the full research loop and the specialized writing/review craft. Automatic
+setup, queue derivation, style learning, and consistency checks do not need public
+commands of their own. Standalone response-to-reviewer and artifact-submission
+commands are removed; their old project outputs are left alone.
 
-```
-constitution -> proposal -> relatedwork -> feasibility -> plan -> tasks -> implement -> analyze -> review (loop)
-            (+ rebuttal post-submission, ae once results exist, init for setup)
-```
-
-After a GO, `plan` fixes the study design and `tasks` derives one queue. `implement` works automated tasks by default and enters human-led manuscript mode only after explicit selection, reading `claims.md` and tagging unsupported beats `[UNVERIFIED]`. `analyze` detects drift and routes re-runs; `review` reads only the manuscript and routes fixes back to the appropriate explicit implement mode. Build remains paper-type aware.
-
-## Form factor
-
-Pure agent slash commands — no runtime of its own. Each command is a Markdown file at `commands/research.<name>.md` with minimal YAML frontmatter (`description`, optional `argument-hint`) and a prompt body that reads the user's free text from `$ARGUMENTS`. `install.sh` (POSIX sh, idempotent, prints what it does) installs them for one or more agents:
-
-- **Claude Code** — copied (or symlinked) into `~/.claude/commands/`.
-- **Codex CLI** — copied (or symlinked) into `~/.codex/prompts/` (honoring `$CODEX_HOME`); same `$ARGUMENTS` form.
-- **GitHub Copilot CLI** — via the script, transformed into custom agents in `~/.copilot/agents/research.<name>.agent.md`, each selected with `/agent`, with a generated adapter note mapping `$ARGUMENTS` → the user's message and `Next: /research.<x>` → switching agents. This is the only working Copilot path (see the marketplace note below). The command body is otherwise verbatim, so the pipeline is authored once.
-
-The default (no flag) installs for Claude Code, preserving the original behavior; `--all` covers every agent. Templates ship as plain Markdown; `install.sh` stages them to `~/.research-kit/` (override with `RESEARCH_KIT_HOME`) and `/research.init` copies them into a paper repo's `.research/templates/`. The default constitution is one of them (`constitution-template.md`), which `/research.constitution` adapts into `.research/memory/constitution.md`.
-
-The repo also doubles as a **plugin marketplace**, a zero-script path for the two agents that read a commands-only bundle. `.claude-plugin/marketplace.json` lists a single plugin whose source is the repo root, and `.claude-plugin/plugin.json` is its manifest; the existing `commands/` directory is the plugin's command set with no file movement. **Claude Code:** `/plugin marketplace add jiancui-research/research-kit` then `/plugin install research-kit@research-kit`, namespacing the stages as `/research-kit:research.<name>`. **OMP reads the same bundle:** `/marketplace add jiancui-research/research-kit` then `/marketplace install research-kit@research-kit` (OMP falls back to `.claude-plugin/marketplace.json` when `.omp-plugin/` is absent); its commands resolve bundled templates and tools through the `installPath` in OMP's installed-plugin registry at `~/.omp/plugins/installed_plugins.json`. In Claude's mode the plugin bundle (including `templates/`) is copied to Claude's cache, so `/research.init` reads templates from `${CLAUDE_PLUGIN_ROOT}/templates`, falling back to the `install.sh` staging dir otherwise. This is packaging only — no hooks, MCP servers, or runtime are added.
-
-**Codex: the plugin ships skills; the script ships prompts** (verified 2026-08, Codex CLI 0.149.1). Codex reads a plugin's `skills/` directory. Through v0.37.1 this bundle carried only `commands/`, so `codex plugin list` printed `installed, enabled` while surfacing **0 of 16** stages - `research.init`, the one argument-free stage that survived at 0.145.0, stopped appearing too. v0.38.0 adds `.codex-plugin/plugin.json` + `skills/<name>/SKILL.md` ([plugin docs](https://learn.chatgpt.com/docs/build-plugins)), generated from `commands/` by `tools/gen_codex_skills.py`. Each SKILL.md is a **pointer**: discovery frontmatter plus an adapter note, then "read `commands/<stage>.md` from this plugin". That keeps one home for the instructions - `tools/test_codex_skills.py` diffs the committed tree against a fresh generation, so the derived files cannot rot the way a copied tree would. SKILL.md frontmatter is `name` + `description` only, so skills take input from the invoking message rather than a placeholder; `~/.codex/prompts/` remains the surface that supports `$ARGUMENTS`, `$1`-`$9`, and named `KEY=value`, and is deprecated in favour of skills with no announced removal date. The generated skills also carry `disable-model-invocation: true`, because Claude Code auto-discovers a plugin's `skills/` and no research stage may fire unasked.
-
-**Why Copilot uses the script instead** (re-verified 2026-08, Copilot CLI 1.0.74). Copilot's plugin format expects `plugin.json` at the repo root plus an `agents/` or `skills/` directory and no longer surfaces `commands/`; an installed bundle reports zero available agents, though it worked at Copilot CLI 1.0.40 when this was first verified.
-
-There is no Python CLI, no daemon, no build step. The model does the work; the files are the interface.
-
-## Scope (v1)
-
-Full paper lifecycle: from a raw idea (via the proposal entry point) through related work, the feasibility gate, task planning, evals, drafting, the self-audit, and the self-review loop, plus the surrounding academic tasks of rebuttal and artifact evaluation. Paper-type awareness covers measurement, attack, defense, benchmark, and systematization (SoK) papers, with cross-cutting craft guides for abstract/intro, figures/tables, and venue norms.
-
-## Non-goals
-
-- No Python CLI or any other CLI - commands run inside the AI coding agent (Claude Code, Codex CLI, Copilot CLI, or OMP).
-- No hooks, MCP servers, or runtime machinery. The optional Claude Code plugin packaging (`.claude-plugin/`) is just a manifest around the same command files - no event handlers or background processes.
-- No daemon, server, or hosted state.
-- No speculative abstractions. If a feature is not needed for the lifecycle above, it is out.
-
-## Open-source and privacy stance
-
-- **License**: MIT. The toolkit is public and meant for anyone writing research papers, not a single author.
-- **Distilled, not copied**: all shipped guidance is original and generalizable. The templates and constitution capture transferable principles of good research writing - they never carry verbatim sentences, personal drafts, unpublished analyses, advisor-attributed style notes, person names, or other identifying details from any source material.
-- **User content stays local**: everything a user generates lives in their own `./.research/` directory; the toolkit defines structure and prompts, not a repository of anyone's work.
+There is no orchestration daemon, pipeline CLI, or automatic publication step.
+Changes to the public surface must update the adapters, documentation, and handoffs
+as one change. Tests cover packaging and the viewers; prompt behavior also needs
+representative runs in throwaway projects. Never use a personal research repo as
+a test fixture.

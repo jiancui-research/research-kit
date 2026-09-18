@@ -1,0 +1,5 @@
+interface:
+  display_name: "research.implement"
+  short_description: "Work the study queue, build and evaluate, maintain claims and progress, and check consistency before finishing; manuscript tasks require explicit selection."
+policy:
+  allow_implicit_invocation: false

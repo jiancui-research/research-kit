@@ -4,13 +4,14 @@ skills/ and .codex-plugin/plugin.json are generated from commands/. Generated fi
 live in a repo rot silently - this repo has already lost time to two of them - so the
 suite regenerates into a scratch copy and diffs.
 
-Run: uv run --with pytest pytest tools/test_codex_skills.py
+Run: uv run --with pytest --with pyyaml pytest tools/test_codex_skills.py
 """
 import json
 import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 import gen_codex_skills as gen
 
@@ -54,6 +55,9 @@ def test_skill_matches_generator(stage, tmp_path, monkeypatch):
     fresh = (scratch / "skills" / stage / "SKILL.md").read_text()
     committed = (SKILLS / stage / "SKILL.md").read_text()
     assert committed == fresh, f"{stage}: run python3 tools/gen_codex_skills.py"
+    assert (SKILLS / stage / "agents/openai.yaml").read_bytes() == (
+        scratch / "skills" / stage / "agents/openai.yaml"
+    ).read_bytes(), f"{stage}: regenerate agent metadata"
 
 
 def test_skill_frontmatter_is_what_codex_needs():
@@ -71,7 +75,26 @@ def test_description_matches_its_command():
     for stage in stages():
         cmd_fm = gen.read_frontmatter((COMMANDS / f"{stage}.md").read_text())
         skill_fm = gen.read_frontmatter((SKILLS / stage / "SKILL.md").read_text())
-        assert skill_fm["description"] == cmd_fm["description"].strip().strip('"'), stage
+        assert skill_fm["description"] == cmd_fm["description"], stage
+
+
+def test_frontmatter_parses_as_yaml_and_codex_requires_explicit_invocation():
+    for stage in stages():
+        for path in (COMMANDS / f"{stage}.md", SKILLS / stage / "SKILL.md"):
+            raw = path.read_text().split("---", 2)[1]
+            fm = yaml.safe_load(raw)
+            assert isinstance(fm["description"], str), path
+            if "argument-hint" in fm:
+                assert isinstance(fm["argument-hint"], str), path
+        agent = yaml.safe_load((SKILLS / stage / "agents/openai.yaml").read_text())
+        assert agent["policy"]["allow_implicit_invocation"] is False
+
+
+def test_codex_manifest_has_display_metadata():
+    manifest = json.loads(CODEX_MANIFEST.read_text())
+    assert manifest["author"]["name"]
+    assert manifest["interface"]["displayName"] == "Research Kit"
+    assert manifest["interface"]["defaultPrompt"]
 
 
 def test_skill_points_at_its_command_and_copies_nothing():

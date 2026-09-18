@@ -1,95 +1,109 @@
-# research-kit workflow
+# Research-kit workflow
 
-The pipeline and the input/output of every command. (See the [README](../README.md) for install + quickstart.)
+Nine public commands cover the research loop, writing, and two independent viewers.
+See the [README](../README.md) for a quick start and [installation](install.md) for upgrades.
 
-## Diagram
+## Research loop
 
 ```mermaid
 flowchart TD
-    C[constitution] --> P[proposal] --> RW[relatedwork] --> F{feasibility}
-    F -->|"NO-GO / PIVOT"| P
-    F -->|GO| PL["plan<br/>study design -> plan.md"]
-    PL --> T["tasks<br/>single queue -> tasks.md"]
-    T --> I["implement<br/>automated work + explicit user-led manuscript work"]
-    I --> AN["analyze<br/>(+ sync check)"]
-    AN -.->|"re-run what is stale"| T
-    AN --> RV["review<br/>(paper-only, loop)"]
-    RV -.->|"route findings"| I
+    P[proposal] --> RW[relatedwork] --> F{feasibility}
+    F -->|NO-GO / PIVOT| P
+    F -->|GO| PL["plan: design + task list"]
+    PL --> I["implement: build + evaluate + check consistency"]
+    I --> W["write: manuscript + check consistency"]
+    W --> R["review: paper only"]
+    R -.->|framing| P
+    R -.->|evidence| I
+    R -.->|prose| W
 ```
 
-**Reading it**
+Related work sharpens the proposal's gap. Feasibility tests the riskiest assumption;
+a GO authorizes planning, not a claim in the paper. `plan` produces the design and
+its queue in separate documents. `implement` performs automated work and records
+results. `write` works on the paper, including projects with no pipeline artifacts.
+`review` evaluates what a reader can establish from the submitted paper alone.
 
-- **Solid arrows** = the pipeline; **dashed** = the feedback loops.
-- `feasibility` is a GO / NO-GO / PIVOT gate; a NO-GO or PIVOT loops back to `proposal`.
-- After a GO, `plan` fixes the stable study design and `tasks` derives one Setup/Build/Eval/Paper/Polish queue.
-- `implement` owns every queue section. Empty/default runs work automated Setup/Build/Eval/Polish tasks and skip `[USER-LED]` Paper tasks. Manuscript work runs only after explicit task-id or `paper`/`outline`/`critique`/`draft` input.
-- `analyze` detects drift among plan, tasks, code, evidence, and manuscript and routes the exact re-run.
-- `review` reads only the manuscript and routes findings back to explicit implement modes.
-- Build remains paper-type aware; auxiliaries are `write` (one manuscript section, outside the queue), `rebuttal`, `ae`, and the optional review UIs `mdreview` (markdown, one pane or `split`) and `texreview` (LaTeX + PDF).
+A queue-only `/research.plan` refresh reuses the existing design and preserves
+progress. It flags missing feasibility evidence and blocks work tied to an unresolved
+NO-GO/PIVOT instead of requiring the study to start over.
 
-## Input → output, per command
+Every stage suggests what comes next. A suggestion does not invoke the next stage.
+Default implementation skips `[USER-LED]` manuscript tasks; select one explicitly
+when you want writing plus queue bookkeeping.
 
-All tracking docs live under `./.research/`; code, data, evaluation outputs, and manuscript source live outside it. A dedicated sibling manuscript repo (`<shortname>-<venue><yy>-latex`) is resolved by explicit `/research.implement paper <section>` mode and recorded in `.research/paper-repo`; manuscript readers use that pointer and fall back to `./paper/`.
+## Inputs and outputs
 
-| Command | Reads (input) | Writes (new) | Updates (existing) |
-| --- | --- | --- | --- |
-| `constitution` | your focus areas | `memory/constitution.md` | itself on re-run |
-| `proposal` | your raw idea | `proposal.md` | itself on re-run |
-| `relatedwork` | `proposal.md` | `related-work.md` | **`proposal.md`** (sharpens gap/positioning) |
-| `feasibility` | `proposal.md` (+ `related-work.md`) | `feasibility.md` | — |
-| `plan` | `proposal.md` + `feasibility.md` (+ `related-work.md`) | `plan.md` | itself on re-run |
-| `tasks` | `plan.md` + `proposal.md` | `tasks.md` | itself on re-run (refine; states preserved) |
-| `implement` | `plan.md` + `tasks.md`; Manuscript mode also reads proposal, related work, claims, skeleton, craft guides, and `writing/style.md` | code, `eval/NN-*.md`, `eval/index.md`, the section's file in the manuscript's layout (e.g. `sections/<name>.tex`) | `claims.md`, `tasks.md`, `plan.md` deviations, `paper-repo` pointer, `main.tex` (\input for a new section) |
-| `write` (aux) | manuscript + craft guides + `writing/style.md` (+ `.research/` artifacts when present) | the section's file in the manuscript's layout, or `.outline.md`/`.critique.md` | `main.tex` (\input for a new section) — never `tasks.md` |
-| `style` (aux) | `writing/samples/*`, the conversation, and diffs of prose you edited — or an instruction you pass in | `writing/style.md` | itself (refresh rebuilds only sample-derived sections; `Standing instructions` and `Learned from edits` are never rewritten) |
-| `analyze` (+ sync) | everything (read-only) | `analyze-report.md` | — (routes re-runs) |
-| `review` (loop) | manuscript only (+ constitution) | `review/round-N.md` | — (suggests a fix command per finding; you route) |
-| `rebuttal` (aux) | reviewer comments | `rebuttal/rebuttal.md` | — |
-| `ae` (aux) | `claims`, `plan.md`, `eval/` | `ae/*` | — |
+All paths below are relative to `.research/` unless they name a project-root folder.
+Automatic setup may first fill missing templates and seed project preferences.
 
-### Write-edges and explicit Manuscript mode
+| Command | Reads | Owns or updates |
+|---|---|---|
+| `proposal` | Idea/notes, constitution, existing proposal | `proposal.md` |
+| `relatedwork` | Proposal, prior literature, constitution | `related-work.md` and proposal positioning |
+| `feasibility` | Proposal, related work when available, probe evidence | `feasibility.md`; probe code in project-root `feasibility/` |
+| `plan` | Proposal, feasibility GO, existing plan/tasks/claims | `plan.md` and `tasks.md`, preserving queue history |
+| `implement` | Plan/tasks/claims and relevant implementation/evidence | Code, project-root `eval/`, claims, task status; built-design deviations in plan; explicitly selected manuscript work |
+| `write` | Whole manuscript, craft, style, available project evidence | Selected section or scratch outline/critique; manuscript inclusion for new sections; requested style updates |
+| `review` | Manuscript, venue/type guidance, constitution only | `review/round-N.md` after setup; no manuscript or pipeline edits |
+| `mdreview` | Project Markdown and `.mdreview/` comments | Viewer edits/comments on user action; no research setup |
+| `texreview` | Manuscript source/PDF and `.texreview/` | Viewer edits/comments/position, compilation on user action or required SyncTeX repair; no research setup |
 
-Only two semantic cross-writes make the pipeline a feedback loop:
+## Shared internal work
 
-1. **`relatedwork` -> `proposal.md`:** the survey sharpens gap and positioning.
-2. **`implement` -> `claims.md`:** Eval-task results fill the claim-to-evidence matrix.
+- **Setup:** `<bundle>/guides/setup.md` fills missing templates and seeds
+  `memory/constitution.md`. Existing preferences and customized templates are kept.
+- **Task planning:** `plan` loads `guides/task-planning.md`. `plan.md` holds the study
+  design; `tasks.md` holds stable T-IDs, dependencies, done-when criteria, and progress.
+- **Writing style:** `write` and explicit manuscript work in `implement` load
+  `guides/writing-style.md` before outlining, drafting, or revising. Users choose
+  2–3 relevant example papers (the agent can suggest candidates with reasons) or
+  explicitly skip. An unanswered question pauses section work. The choice and its
+  scope stay in `writing/style.md` alongside sample analysis, standing instructions,
+  and confirmed edit preferences. Reuse the choice on later sections; preserve it
+  and the user's instructions during refreshes. Critiques, checks, manuscript
+  setup, and preference-only requests do not require example selection.
+- **Consistency:** `implement` and `write` load `guides/consistency.md` before
+  finishing. Checks follow changed work and affected dependencies. An explicit
+  `check` request audits available evidence without editing it and reports in chat.
 
-`review` and `analyze` remain report-only. `implement` also performs status-keeping on its own inputs (`tasks.md`, and built-reality deviations in `plan.md`). In explicit Manuscript mode it reads `plan.md` and `claims.md`, writes only manuscript work plus the selected task status, and labels unsupported result beats `[UNVERIFIED]`. Default execution cannot select `[USER-LED]` tasks, so fusing the command does not make manuscript drafting automatic.
+Review never loads the internal audit or uses proposal, plan, claims, evals, tasks,
+or code as evidence. Its paper-type skeleton supplies expectations only; any
+instruction inside a skeleton to read internal artifacts is inapplicable to review.
 
-## Task surfaces
+## Existing projects
 
-The actual doing has two task surfaces:
+A manuscript resolves from an explicit path, then `.research/paper-repo`, then the
+current manuscript repo, then `./paper/`. Writing and review do not demand the
+pipeline retroactively. `write style` also works without a manuscript.
 
-| task surface | where | scope | feeds |
-| --- | --- | --- | --- |
-| **feasibility probe** | `feasibility.md` (Probe plan) | throwaway de-risk | GO/NO-GO/PIVOT |
-| **single work queue** | `tasks.md` (Setup/Build/Eval/Paper/Polish) | automated work plus explicitly selected `[USER-LED]` manuscript work | code, eval, claims, manuscript |
+For existing code/results, establish the proposal and record what the available
+evidence establishes in feasibility before planning remaining work. Existing code
+alone does not prove that the proposed study is feasible or its claims supported.
 
-The feasibility probe stays outside `claims.md`. `plan.md` has no tasks; `tasks.md` is the only full-study queue.
+No artifact paths change in this consolidation. Preserve old outputs; use the
+[current command routes](install.md#upgrading) when an older local template names
+one of the retired stages.
 
 ## Examples
 
-Measurement paper (minimal Build section):
+Run agent commands one per turn:
 
 ```text
-/research.proposal     LLM agents leak secrets via tool-call arguments; measure how often
-/research.relatedwork  group by attack vs defense; closest baseline is GuardAgent
-/research.feasibility  just find 5 real leak instances by hand first
-/research.plan
-/research.tasks
-/research.implement              # collection pipeline + baseline comparison, fill claims.md
-/research.implement paper intro  # explicit outline; user writes the prose
-/research.implement draft eval   # full prose, explicit opt-in
-/research.analyze
-/research.review evaluation      # one lens, or omit for the full panel
+/research.proposal use notes.md to develop the research argument
+/research.relatedwork focus on the closest competing approaches
+/research.feasibility test the central assumption on five examples
+/research.plan prioritize the experiment most likely to disprove the claim
+/research.implement eval
+/research.write draft evaluation
+/research.review evaluation
 ```
 
-Systems / defense paper (heavy Build section):
+For a paper already in progress:
 
 ```text
-/research.plan                   # architecture + eval design + code folder declaration
-/research.tasks
-/research.implement                      # build into ./src/, run evals, fill claims.md
-/research.implement paper system-design  # explicit outline sourced from plan.md
-/research.analyze sync           # after a plan change: what's stale + what to re-run
+/research.write style learn from .research/writing/samples/
+/research.write revise related-work using the comments
+/research.texreview
+/research.review
 ```

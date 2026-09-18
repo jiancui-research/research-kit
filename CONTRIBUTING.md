@@ -1,46 +1,59 @@
 # Contributing to research-kit
 
-Thanks for helping improve research-kit. It is a small, MIT-licensed toolkit: slash commands for AI coding agents (Claude Code, Codex CLI, GitHub Copilot CLI, and Oh My Pi) plus Markdown templates and a default research constitution. There is no Python CLI, no hooks, and no build step. Keep it that way.
+Research-kit is an MIT-licensed bundle of agent commands, guides, and templates,
+with two optional local review UIs. Keep changes focused and the public surface small.
 
-## Guiding principles
+## Conventions
 
-- **Simplicity first.** Markdown only. No new machinery, no speculative features. If a change adds a moving part, it needs a strong reason. The existing moving parts are `tools/mdreview.py` (the optional markdown review UI behind `/research.mdreview`) and `tools/texreview.py` (its LaTeX/PDF counterpart behind `/research.texreview`): leaf utilities, staged like the templates, that no pipeline command depends on. Test them with `uv run --with pytest,markdown-it-py pytest tools/test_mdreview.py` and `uv run --with pytest pytest tools/test_texreview.py`. After adding or renaming a command, run `python3 tools/gen_codex_skills.py` to regenerate the Codex plugin layout - `tools/test_codex_skills.py` fails if you forget.
-- **Original and generalizable.** Write guidance that works for any researcher. Never copy verbatim sentences, unpublished drafts, person names, or other identifying details from private notes. Distill principles and rewrite them cleanly.
-- **Stay consistent.** One namespace (`/research.*`), one working directory (`./.research/...`), one pipeline order, everywhere. A change in one place that contradicts another is a bug.
+- **One source:** author commands in `commands/research.<name>.md`. Generated Codex
+  skills and Copilot agents adapt those files; never maintain a second copy by hand.
+- **Nine public commands:** proposal, relatedwork, feasibility, plan, implement,
+  write, review, mdreview, texreview. Keep the two viewers separate.
+- **Internal work:** setup, task derivation, style learning, and consistency checks
+  live in `guides/` and are loaded by the public commands that own the work.
+- **User customization:** templates are copied into `.research/templates/` without
+  clobbering existing copies. Project preferences stay in
+  `.research/memory/constitution.md`; writing preferences stay in `.research/writing/style.md`.
+- **State preservation:** `plan` maintains design and queue in separate files.
+  Preserve task IDs, checkboxes, notes, and dependency history. Sample refreshes
+  preserve the style file's user-owned sections.
+- **Execution boundaries:** implementation runs automated queue tasks by default;
+  Paper tasks require explicit selection. Writing reads the whole manuscript first.
+  Review reads only the paper and venue context. Next-step suggestions never execute themselves.
+- **Original guidance:** distill general patterns, not private notes, identifiable
+  drafts, or someone else's sentences. Keep examples synthetic.
 
-## Repo conventions
+## Editing commands or guides
 
-- **Namespace.** Every command is invoked as `/research.<name>` and lives at `commands/research.<name>.md`. `install.sh` installs those files for Claude Code, Codex CLI, and Copilot CLI: copied (or symlinked) into `~/.claude/commands/` for Claude Code and `~/.codex/prompts/` for Codex CLI, or transformed into custom agents in `~/.copilot/agents/` for Copilot CLI. Claude Code and OMP can instead install the shared `.claude-plugin` bundle through their marketplaces, exposing namespaced `/research-kit:research.<name>` commands; Codex and Copilot cannot (see `docs/design.md`), so the script is their only path. Author each command once, in the Claude/Codex slash-command form; generated and plugin forms read that source directly.
-- **Working directory.** research-kit's tracking docs live under `./.research/` in the user's project. The actual work products live in sibling root folders — notably `implement` builds **code** in the folder `plan.md` declares (default `./src/`, legacy `./design/`). The project is one repo under `~/Projects`, outside the vault. Commands `mkdir -p` as needed and never overwrite user content without saying so.
-- **Pipeline order.** `constitution -> proposal -> relatedwork -> feasibility -> plan -> tasks -> implement -> analyze -> review (loop)`, plus `rebuttal` and `ae`. `implement` owns the single queue: automated work runs by default; `[USER-LED]` Paper tasks require explicit selection. `analyze` keeps artifacts in sync.
-- **Command contract.** Each command should: (1) read `./.research/memory/constitution.md` if it exists, skip silently otherwise; (2) read its upstream artifacts; (3) take user input via the `$ARGUMENTS` placeholder; (4) produce or update only its own artifact(s) and end by reporting the path(s) plus a one-line `Next: /research.<x>`; (5) be paper-type aware where relevant via `.research/templates/paper/<type>.md` (populated by `/research.init` from the bundled `templates/`); (6) stay focused and short - aim under ~120 lines, and reference templates instead of inlining long checklists.
+1. Use minimal YAML frontmatter with `description` and optional `argument-hint`.
+   User input arrives through `$ARGUMENTS` or the adapter's invoking message.
+2. Keep command files under about 120 lines and follow their Preparation step.
+   Internal guides come from the installed bundle; artifact templates come from
+   the user's local `.research/templates/` copies.
+3. Update the README command table, `docs/workflow.md`, `docs/design.md`, and any
+   affected templates or handoffs together. Do not leave references to removed commands.
+4. Bump `.claude-plugin/plugin.json` for meaningful bundle changes and run
+   `python3 tools/gen_codex_skills.py`. The generated Codex manifest follows it.
+5. Preserve command ownership: `plan` owns design and queue; `implement` updates
+   progress/evidence; `write` leaves the queue alone; `review` writes only a round
+   after automatic setup. See the workflow document for details.
 
-## Adding a new command
+## Validation
 
-1. Create `commands/research.<x>.md`. Start the file with minimal YAML frontmatter:
+```sh
+uv run --with pytest --with markdown-it-py --with pyyaml pytest tools
+```
 
-   ```markdown
-   ---
-   description: One line on what the command does.
-   argument-hint: what the user should type after the command name
-   ---
-   ```
+The tests cover viewer code and packaging, including generated skills and isolated
+installer upgrades. For manual install checks, point `CLAUDE_COMMANDS_DIR`,
+`CODEX_PROMPTS_DIR`, `COPILOT_AGENTS_DIR`, and `RESEARCH_KIT_HOME` at dedicated
+throwaway directories. Run install, repeat install, and uninstall there. Never
+uninstall a user's real tools as a test.
 
-   Then write the steps. Follow the command contract above. Read the user's free text from `$ARGUMENTS`.
-2. If the command needs a template, add it under `templates/` (e.g. `templates/<x>-template.md`) and have the command read it from `.research/templates/<x>-template.md` (where `/research.init` copies it) rather than inlining the structure.
-3. Add a row for the command to the **Commands** table in `README.md`, and slot it into the pipeline description if it belongs in the main flow.
-4. Run `./install.sh` (add `--codex` / `--copilot` / `--all` to cover the other agents) and try the command in a scratch paper repo to confirm it writes the right artifact to `./.research/` and prints the path and next step.
+For prompt changes, also exercise representative requests in a synthetic paper
+project: a new proposal, a plan with an existing queue, standalone writing/style
+work, a paper-only review, and both viewer launch paths. Automated packaging checks
+do not establish that an agent followed a prompt correctly.
 
-## Adding a paper-type skeleton
-
-Paper-type-aware commands look for `.research/templates/paper/<type>.md` at runtime - authored under `templates/paper/` in this repo and copied into the paper repo by `/research.init` (measurement, attack, defense, benchmark, systematization today).
-
-1. Add `templates/paper/<newtype>.md`. Mirror the existing skeletons: a short header noting which artifacts to read first, the core question and proof obligation for that paper type, and bracketed `[...]` placeholders for each section.
-2. Ensure paper-type inference recognizes the new type and explicit `/research.implement paper <section>` mode loads the skeleton.
-3. Note the new type in the **Paper types** section of `README.md`.
-
-## Before you open a PR
-
-- Keep the diff surgical: every changed line should trace to the change you intended.
-- Re-read the three guiding principles. If your change adds complexity, removes simplicity, or breaks namespace/path/pipeline consistency, rework it first.
-- Confirm `install.sh` still runs cleanly for every agent (it is POSIX `sh` and must stay idempotent): `./install.sh --all` then `./install.sh --uninstall`.
+Keep the optional viewers as leaf utilities. Pipeline commands must remain usable
+without either viewer, and no daemon or orchestration service is needed.

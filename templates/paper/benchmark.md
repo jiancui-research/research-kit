@@ -118,4 +118,4 @@ Under one column. Restate the headline number, name the broader implication, and
 - [ ] Contamination/leakage addressed in at least one paragraph.
 - [ ] Ethics/disclosure (or Broader Impacts) visible; public artifact linked in abstract and intro.
 
-**Next**: `/research.analyze` to keep `claims.md` in sync with the findings above.
+**Next**: `/research.implement check` to keep `claims.md` in sync with the findings above.
