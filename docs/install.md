@@ -43,6 +43,13 @@ remove the legacy standalone skill and uninstall the old `research-kit-codex`
 personal plugin. Also check for a separate custom-prompt installation before
 assuming the plugin still ships retired stages.
 
+Two marketplace listings do not necessarily mean two active installations. Check
+`codex plugin list`: an old `research-kit-codex@personal` entry may be listed as
+**not installed** while `research-kit@research-kit` is **installed, enabled**.
+The old entry can remain in `~/.agents/plugins/marketplace.json` after uninstalling.
+Distinguish that available listing from an active plugin or standalone skill before
+proposing cleanup; do not delete caches or user configuration just to hide a listing.
+
 You can also manage installed plugins through `/plugins`. Start a new session after
 installation before using the bundled skills. See the [official plugin documentation](https://learn.chatgpt.com/docs/plugins).
 

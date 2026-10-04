@@ -17,10 +17,13 @@
 
 **Choice:** [selected / skipped] · **Decided:** [YYYY-MM-DD]
 **Scope:** [this project and topic, or only the current request if the user said so]
+**Selection basis:** [user-selected, recovered with evidence, or agent-selected under delegated research]
 
-Record the user's choice. A skipped choice needs no justification and no sample
-analysis. A selected choice needs at least two papers read in full. A refresh
-preserves this decision unless the user changes it; an empty field is no decision.
+Record the choice and its basis, including the prior decision source or delegation
+when applicable. One relevant paper read in full is sufficient; record individual
+lessons until at least two support a shared pattern. A skipped choice requires an
+explicit skip, not a justification or sample analysis. Preserve scope during a
+refresh. An empty field calls for recovery, not an automatic approval request.
 
 | Paper and year | Source link or local path | Topic and paper-type fit | Writing lesson and section/page |
 |---|---|---|---|

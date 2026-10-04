@@ -15,9 +15,10 @@ from whatever happens to be in context produces a report, not a paper.
 
 Before OUTLINE, DRAFT, or REVISE, follow **Before section writing** in
 `<bundle>/guides/writing-style.md`. The calling command normally completes it
-first; reuse that result. Start section work only after relevant example papers
-have been selected and analyzed or the user explicitly skips. The same style file
-records the choice and its scope, so later sections do not repeat the question.
+first; reuse that result. Recover prior choices before asking, and honor delegated
+selection. One relevant, selected and analyzed paper is sufficient, or the user can
+explicitly skip. The same style file records the choice, its basis, and its scope,
+so later sections do not repeat the question.
 CRITIQUE does not require this step.
 
 ## 1. Read the whole paper, then say what it argues

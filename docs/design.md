@@ -63,14 +63,15 @@ Customizable templates and craft guides are copied with no clobber into
 local edits. It cannot attribute a diff to the user or an update without a baseline.
 Required missing guidance is a blocker; optional missing guidance is named.
 
-The example-paper decision is required before outlining, drafting, or revising;
-users can explicitly skip it. Both writing entry points load the bundled procedure
-directly, so an older local manuscript template cannot bypass the decision. The
-same `writing/style.md` records the choice, its scope, and the selected sources and
-lessons. A project-wide skip survives later runs and sample refreshes; a skip for
-one request does not become a permanent preference. Critiques and checks need no
-examples. Recommendations require verified sources and concrete writing lessons,
-and become selected examples only when the user chooses them.
+Both writing entry points resolve examples through the bundled procedure before
+section work. Recover prior choices from style files, project notes, or accessible
+conversation before asking. One relevant analyzed paper suffices; two are required
+only to infer shared patterns. A request to find and choose examples authorizes
+selection without another approval; a request only for suggestions does not.
+The same `writing/style.md` records the choice, selection basis, scope, sources, and
+lessons. Explicit scopes and skips survive refreshes; a request-only skip does not
+become a permanent preference. Critiques and checks need no examples. The bundled
+rules override outdated local gates without overriding the user's instructions.
 
 Old local templates can still mention retired stages. Setup translates those
 handoffs to current owners. It never deletes old project outputs or overrides
