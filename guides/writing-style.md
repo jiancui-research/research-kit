@@ -89,22 +89,31 @@ the manuscript beyond the requested section work.
    analysis or an explicit skip to record. Omit template usage notes and unfilled
    placeholders. Do not fill it with guessed preferences.
 2. Interpret the request, not just whether its arguments are empty. A bare `style`
-   request refreshes from the default samples directory and proposes preferences
-   from accessible conversation/edits; absent samples do not block recording an
-   explicit instruction. For a more specific request, do only that work:
+   request refreshes the selected sources for the applicable scope, including
+   recorded paths or links, and proposes preferences from accessible conversation
+   or edits. If no selection is recorded, recover it before using the default
+   samples directory. A file left in that directory is not automatically part of
+   a replacement selection. Absent samples do not block recording an explicit
+   instruction. For a more specific request, do only that work:
    - **Suggest or select examples:** follow the research routes above without
      requiring a manuscript; use the topic supplied in the request or project notes.
      Await selection for suggest-only work; choose and record when delegated.
      Neither route authorizes drafting unless the user also requested section work.
    - **Record an instruction:** append it in the user's words with date and context.
      An explicit request to remember it already authorizes that write.
-   - **Learn or refresh from samples:** read each supplied sample in full. Follow
+   - **Learn or refresh from samples:** read each selected sample in full. Follow
      LaTeX includes; count papers, not section files, as independent samples.
-     Report unreadable inputs. Distill patterns appearing in at least two samples,
-     naming the sample count supporting each pattern. With fewer than two, explain
-     the limit and leave the sample-derived sections unchanged. For a new selection,
-     record its sources and lessons under Example papers using the decision rules
-     above; a style-only analysis can satisfy the next section's prerequisite.
+     Report unreadable inputs. Record individual lessons under Example papers;
+     shared patterns require support from at least two currently selected papers,
+     with the source names and count stated. When the user replaces examples,
+     rebuild the affected sample-derived guidance from that selection. Remove or
+     mark inactive patterns supported only by retired sources; do not keep them
+     active just because the new selection has one paper. Keep that paper's
+     individual lessons without presenting them as shared patterns. A failed read
+     alone does not retire a source or invalidate its previously verified analysis;
+     preserve that analysis and report the refresh gap. For a new selection,
+     record its sources and lessons using the decision rules above; a style-only
+     analysis can satisfy the next section's prerequisite.
    - **Harvest this conversation or edits:** review only accessible conversation
      and attributable before/after versions. Do not assume every working-tree diff
      was the user's edit. Propose each inferred rule with its evidence; record it
@@ -113,6 +122,9 @@ the manuscript beyond the requested section work.
    and Learned from edits during a sample refresh. Preserve the latter two verbatim.
    Change the example choice only on the user's instruction or within delegated
    selection. Recovery fills missing records without inventing a new choice.
+   Limit replacement of sample-derived guidance to the requested scope; preserve
+   analysis for other scopes. This preservation does not keep retired-source
+   patterns active in the scope being refreshed.
    A reversal of an instruction is a new dated entry naming what it supersedes.
    Avoid duplicate entries. Keep research findings out of this file.
 4. Describe patterns and sentence shapes with slots. Never copy sample sentences
