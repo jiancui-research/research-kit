@@ -1,7 +1,7 @@
 {
   "name": "research-kit",
   "description": "Nine commands for the research loop, manuscript writing, and Markdown/LaTeX review; automatic setup, task planning, style learning, and consistency checks.",
-  "version": "0.45.1",
+  "version": "0.45.2",
   "author": {
     "name": "Jian Cui"
   }

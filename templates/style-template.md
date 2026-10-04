@@ -50,8 +50,12 @@ part that generalizes. Also never rewritten.
 
 ---
 
-*Everything below is rebuilt from `writing/samples/` on every refresh. Edit it if you like, but
-expect a refresh to overwrite it - put anything you want kept in the two sections above.*
+*Everything below is derived from the selected sources and applies only within their
+recorded scope. On refresh, rebuild the affected guidance from the current selection,
+including sources supplied by path or link. Shared patterns name at least two supporting
+papers in that selection. If one paper replaces an earlier set, keep its individual
+lessons under Example papers and remove or mark inactive the old shared patterns in
+that scope. Preserve other scopes, Standing instructions, and Learned from edits.*
 
 ## The register in one paragraph
 

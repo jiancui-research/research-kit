@@ -61,8 +61,10 @@ Automatic setup may first fill missing templates and seed project preferences.
   delegate finding and choosing examples, request suggestions first, or explicitly
   skip. Only unresolved decisions pause section work. The choice, basis, and scope
   stay in `writing/style.md` alongside analysis and user preferences. Reuse them
-  across sections and preserve them during refreshes. Critiques, checks, manuscript
-  setup, and preference-only requests do not require example selection.
+  across sections and preserve them during refreshes. Replacing examples rebuilds
+  the affected sample-derived guidance, including when only one new paper remains;
+  old sources must not continue supplying active shared patterns. Critiques, checks,
+  manuscript setup, and preference-only requests do not require example selection.
 - **Consistency:** `implement` and `write` load `guides/consistency.md` before
   finishing. Checks follow changed work and affected dependencies. An explicit
   `check` request audits available evidence without editing it and reports in chat.

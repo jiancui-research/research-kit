@@ -72,6 +72,9 @@ The same `writing/style.md` records the choice, selection basis, scope, sources,
 lessons. Explicit scopes and skips survive refreshes; a request-only skip does not
 become a permanent preference. Critiques and checks need no examples. The bundled
 rules override outdated local gates without overriding the user's instructions.
+Refreshes use the selected sources, including recorded paths and links. A replacement
+selection retires unsupported patterns in its scope; a single new example supplies
+individual lessons without retaining shared-pattern claims from the old selection.
 
 Old local templates can still mention retired stages. Setup translates those
 handoffs to current owners. It never deletes old project outputs or overrides
