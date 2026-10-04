@@ -56,12 +56,12 @@ Automatic setup may first fill missing templates and seed project preferences.
 - **Task planning:** `plan` loads `guides/task-planning.md`. `plan.md` holds the study
   design; `tasks.md` holds stable T-IDs, dependencies, done-when criteria, and progress.
 - **Writing style:** `write` and explicit manuscript work in `implement` load
-  `guides/writing-style.md` before outlining, drafting, or revising. Users choose
-  2–3 relevant example papers (the agent can suggest candidates with reasons) or
-  explicitly skip. An unanswered question pauses section work. The choice and its
-  scope stay in `writing/style.md` alongside sample analysis, standing instructions,
-  and confirmed edit preferences. Reuse the choice on later sections; preserve it
-  and the user's instructions during refreshes. Critiques, checks, manuscript
+  `guides/writing-style.md` before outlining, drafting, or revising. Recover prior
+  choices before asking; one relevant analyzed paper is sufficient. Users can
+  delegate finding and choosing examples, request suggestions first, or explicitly
+  skip. Only unresolved decisions pause section work. The choice, basis, and scope
+  stay in `writing/style.md` alongside analysis and user preferences. Reuse them
+  across sections and preserve them during refreshes. Critiques, checks, manuscript
   setup, and preference-only requests do not require example selection.
 - **Consistency:** `implement` and `write` load `guides/consistency.md` before
   finishing. Checks follow changed work and affected dependencies. An explicit

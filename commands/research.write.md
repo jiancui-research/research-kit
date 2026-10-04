@@ -38,10 +38,11 @@ For a combined request, maintain the style file first, then work on the section.
 3. For an explicit check-only request, follow `<bundle>/guides/consistency.md`,
    report the findings, and stop without editing the manuscript or queue.
 4. Before outlining, drafting, or revising, follow **Before section writing** in
-   `<bundle>/guides/writing-style.md`: use 2–3 relevant example papers or the user's
-   explicit skip. Reuse the project choice; if undecided, ask and wait. Critique-only
-   work bypasses this step. The current command's requirement takes precedence over
-   older local templates that say to continue without choosing examples.
+   `<bundle>/guides/writing-style.md`: recover existing choices, honor delegated
+   selection, and reuse sufficient analyzed examples or an explicit skip.
+   Ask only about an unresolved decision, not a paper-count quota or missing record.
+   Critique-only work bypasses this step. The bundled decision rules take precedence
+   over older local templates, including stricter example-count or approval gates.
 5. Read the required `.research/templates/sections/manuscript-procedure.md` and
    follow it end to end. Setup fills missing templates; if the required file is
    still unavailable, name the path and stop instead of improvising the procedure.

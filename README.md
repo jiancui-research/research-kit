@@ -84,13 +84,16 @@ work requires an explicit request.
 
 ## Keep your writing preferences
 
-Before your first outline, draft, or revision, choose **2–3 papers close to your
-topic and paper type**. Provide papers you like, or ask the agent to suggest some
-with reasons. Say **"skip examples"** to proceed without them. Your selection or
-skip is saved for the project, so later sections do not ask again.
+Writing reuses your saved examples, including choices recovered from earlier
+project notes. Aim for **2–3 papers close to your topic and paper type**; one
+analyzed paper is enough to start. Provide papers, ask for suggestions to review,
+or delegate finding and choosing them. Delegated selection needs no second approval.
+Say **"skip examples"** to proceed without them. The choice, its basis, and scope
+are saved for the project, so later sections do not ask again.
 
 ```text
 /research.write style suggest example papers for this project
+/research.write find and choose suitable examples, then draft the introduction
 /research.write style learn from the papers in .research/writing/samples/
 /research.write style remember: use direct sentences and keep our terminology
 ```

@@ -60,10 +60,11 @@ beyond the current work to `/research.plan`.
    Record the local path and optional URL in `.research/paper-repo`. A setup-only
    task finishes here after validating the layout and recording task status.
 3. Before outlining, drafting, or revising a section, follow **Before section writing**
-   in `<bundle>/guides/writing-style.md`: use 2–3 relevant example papers or an
-   explicit skip, reusing the project's choice. If undecided, ask and wait; do not
-   mark the Paper task complete. Critique-only work bypasses this step. This
-   requirement takes precedence over older local templates that omit it.
+   in `<bundle>/guides/writing-style.md`: recover existing choices, honor delegated
+   selection, and reuse sufficient analyzed examples or an explicit skip.
+   Ask only about an unresolved decision; a blocked choice leaves the Paper task
+   incomplete. Critique-only work bypasses this step. The bundled decision rules
+   take precedence over older local example-count or approval gates.
 4. For section work, read `.research/templates/sections/manuscript-procedure.md`
    (required). Follow the same procedure as `/research.write`: whole-paper reading,
    argument brief, three to five verbatim voice-sample sentences, section/type craft,

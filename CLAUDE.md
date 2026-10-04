@@ -49,9 +49,10 @@ queue, style, audit, rebuttal, or artifact-evaluation commands as public aliases
   `.research/writing/style.md`; the queue is untouched. Writing reads the whole
   paper and quotes real sentences before drafting. A drafting request must be explicit.
 - Before outlining, drafting, or revising, both writing paths load the bundled
-  writing-style guide and require selected example papers or an explicit skip.
-  Keep the choice and its scope in the same style file and reuse it across sections.
-  Critiques and checks do not require examples.
+  writing-style guide: recover prior choices, honor delegated selection, and use
+  sufficient analyzed examples or an explicit skip. One relevant paper suffices;
+  do not repeat approval for a missing record or a paper-count quota. Keep the
+  choice, basis, and scope in the same style file. Critiques and checks need no examples.
 - Both implementation and writing check consistency before finishing. Check-only
   requests report without modifying the inspected artifacts.
 - After setup, `review` writes only its round file. It reads only manuscript and

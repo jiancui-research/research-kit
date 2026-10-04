@@ -13,61 +13,68 @@ The persistent file stays at `./.research/writing/style.md`. Its three sources a
 | Explicit user instructions | Standing instructions | Preserve; append dated instructions |
 | Preferences inferred from the user's edits | Learned from edits | Preserve; propose inferred rules before recording |
 
-## Before section writing: choose example papers or explicitly skip
+## Before section writing: recover or resolve example papers
 
-This is a required decision with an opt-out. Resolve it before outlining, drafting,
-or revising, including small revisions. Critique-only, consistency checks,
-manuscript setup, and recording an instruction do not require this step.
+Ground section writing in relevant examples unless the user explicitly skips them.
+Resolve this before outlining, drafting, or revising. Critique-only, consistency
+checks, manuscript setup, and recording an instruction do not require this step.
 
-1. Read the **Example papers** section of `writing/style.md` when present, plus
-   enough of the manuscript or available project framing to identify the topic and
-   paper type. Reuse selected papers and their recorded analysis for this project;
-   do not ask again for every section or reread unchanged samples unnecessarily.
-   Honor a recorded project-wide skip. A request to skip only this time applies
-   only to that request. Revisit the choice when the user changes the research
-   topic or asks to change examples, not merely because they start a new section.
-2. Aim for **2–3 distinct papers close to this research topic and paper type**.
-   An existing collection of more than three suitable papers is fine. Reuse
-   samples already supplied for this project, including a legacy style file's
-   identifiable sources. The style file's existence alone is not evidence that
-   papers were chosen: instructions-only files and template placeholders do not
-   satisfy this step. Papers cited in related work are candidates, not automatically
-   approved writing examples. If supplied samples have a different topic or type,
-   explain the mismatch and let the user keep them deliberately or choose others.
-3. If there is no usable selection or explicit skip, ask once:
-   **"Which 2–3 papers on this topic should we learn from? Share titles, links, or
-   local paths, ask me to suggest papers with reasons, or say 'skip examples'."**
-   Wait for the answer before section work. Silence, urgency, or unavailable
-   papers do not mean skip. An explicit skip in the original request already
-   answers the question; do not ask again or require a reason.
-4. If asked to suggest papers, use the manuscript and any existing literature
-   survey as leads. Ask for the topic only when it cannot be established. Search
-   and verify primary sources (publisher/proceedings, author page, or preprint),
-   and inspect full text before recommending a paper for its writing. Suggest
-   2–3 candidates with title, year, source link, topic/type fit, and a concrete
-   lesson located in a section or page: how it motivates a gap, orders the
-   argument, explains a method, or presents evidence. Do not equate citation count
-   or venue prestige with good writing. Label inaccessible full text as unassessed;
-   an abstract alone cannot establish its writing quality. Ask the user to select
-   from the candidates or skip; suggestions alone are not their selection.
-5. Read the selected papers in full and distill their patterns as described below;
-   reuse full text already read in this run. At least two readable papers are needed
-   for sample-derived common patterns. If fewer are available, name the gap and
-   offer replacements or an explicit skip; never invent an analysis. A request to
-   proceed with one paper explicitly waives the two-paper requirement; retain its
-   individual lessons without calling them shared patterns. Record each
-   paper's source, topic/type fit, and specific writing lesson. A useful move seen
-   in only one paper may be recorded as that paper's example, not as a shared habit.
-6. Keep the decision, date, scope, selected papers, and analysis in the existing
-   `.research/writing/style.md` under **Example papers**. Add that section to older
-   files without rebuilding their other sections. Set the choice to `selected`
-   only after the usable papers have been chosen and analyzed, or to `skipped`
-   when the user explicitly declines. Preserve the user's stated scope; an
-   unqualified skip applies to this project. Identify a one-request skip by date
-   and the requested section/work so it cannot silently carry forward. Do not record a skip as an inferred
-   writing preference. With a skip, continue using the manuscript, standing
-   instructions, and craft guides; leave sample-derived sections empty if none
-   exist. Users can change their choice later.
+1. **Recover before asking.** Read **Example papers** in `writing/style.md` and
+   enough of the manuscript to identify the topic and paper type. If the record is
+   missing or incomplete, check `writing/samples/`, legacy style files, relevant
+   project notes, and accessible conversation for prior choices and analysis.
+   Reuse papers the user selected or demonstrably used as writing examples in
+   approved earlier work; record the evidence in the existing style file.
+   A citation or an unapproved candidate list is not a selection. Do not infer
+   approval merely because an earlier agent wrote an analysis. Report conflicts
+   that would change the topic, paper type, or scope; ask only about that conflict.
+   Preserve explicit scope: do not extend an explicit section-only choice to
+   unrelated work. Honor a project-wide skip. A request-only skip does not carry
+   forward. Missing bookkeeping alone is not a reason to repeat an answered question.
+2. **Use what is sufficient.** Aim for 2–3 relevant papers, not a mandatory quota.
+   One relevant, selected paper with full-text analysis is enough for section work.
+   Do not ask for a waiver or more papers merely to reach a count. Use its individual
+   lessons, not claims about a shared style. At least two papers are needed only to
+   infer shared patterns. Reuse recorded analysis without rereading unchanged papers
+   or asking again for every section. An existing collection of more than three
+   suitable papers is fine; respect any stricter requirement the user explicitly set.
+3. **Honor delegated research.** Distinguish the user's requested outcome:
+
+   - **Suggest only:** when asked to show candidates before deciding, present them
+     and await selection. Suggestions alone are not authorization to choose.
+   - **Find and choose:** when asked to find suitable writing examples for the
+     requested section or to use your judgment, search, choose, analyze, and record
+     appropriate papers without another selection approval. Keep any established
+     references and respect the requested topic, scope, and selection criteria.
+     An unrelated literature search does not delegate writing-example selection.
+
+   For either route, use existing surveys as leads and verify primary sources
+   (proceedings, author page, or preprint). Read full text before assessing writing.
+   Give each paper's title, year, source, topic/type fit, and a concrete lesson with
+   a section/page pointer. Prestige alone is not evidence of useful writing.
+   A request only to suggest or select examples does not authorize manuscript edits.
+4. **Ask only when unresolved.** If there is no applicable selection, explicit skip,
+   or delegated research, ask once: **"Do you have writing examples to reuse, should
+   I find and choose suitable papers, or should we skip examples?"** Wait for the
+   answer before section work. Silence and urgency do not mean skip or delegation.
+   If only the selection record is missing, finish the bounded recovery in step 1
+   first. Do not ask the user to repeat a decision supported by available evidence.
+5. **Analyze honestly.** Read selected papers in full if their analysis is not
+   already available. Unreadable or abstract-only papers do not count as analyzed
+   examples; name the gap without inventing lessons. Continue with any sufficient,
+   applicable analyzed example, or seek replacements under delegated research.
+   If none is usable and replacements are not authorized, offer replacements or
+   an explicit skip. A skipped choice permits writing from the manuscript,
+   standing instructions, and craft guides without sample-derived patterns.
+6. **Keep one record.** In `.research/writing/style.md`, record the date, scope,
+   sources, lessons, and selection basis (user-selected, recovered, or agent-selected
+   under delegated research). Include the source of a recovered decision or the
+   request that delegated selection. Set the choice to `selected` when usable
+   papers have been chosen and analyzed, or `skipped` only for an explicit skip.
+   Preserve other style sections and the user's stated scope. An unqualified skip
+   applies to the project; a request-only skip names its date and section/work.
+   Do not invent earlier approval or turn one-paper lessons into shared patterns.
+   Users can change the choice later.
 
 Learn argument structure, section organization, explanation, and sentence habits.
 Borrow patterns, never another paper's prose, findings, or novelty claims. The
@@ -85,9 +92,10 @@ the manuscript beyond the requested section work.
    request refreshes from the default samples directory and proposes preferences
    from accessible conversation/edits; absent samples do not block recording an
    explicit instruction. For a more specific request, do only that work:
-   - **Suggest examples:** follow the search and recommendation step above without
+   - **Suggest or select examples:** follow the research routes above without
      requiring a manuscript; use the topic supplied in the request or project notes.
-     Await the user's selection before recording candidates as selected or drafting.
+     Await selection for suggest-only work; choose and record when delegated.
+     Neither route authorizes drafting unless the user also requested section work.
    - **Record an instruction:** append it in the user's words with date and context.
      An explicit request to remember it already authorizes that write.
    - **Learn or refresh from samples:** read each supplied sample in full. Follow
@@ -103,8 +111,9 @@ the manuscript beyond the requested section work.
      once confirmed. Skip unavailable history rather than inventing it.
 3. Keep Example papers (including the choice and its scope), Standing instructions,
    and Learned from edits during a sample refresh. Preserve the latter two verbatim.
-   Update the example choice only when the user changes it or supplies replacement
-   papers. A reversal of an instruction is a new dated entry naming what it supersedes.
+   Change the example choice only on the user's instruction or within delegated
+   selection. Recovery fills missing records without inventing a new choice.
+   A reversal of an instruction is a new dated entry naming what it supersedes.
    Avoid duplicate entries. Keep research findings out of this file.
 4. Describe patterns and sentence shapes with slots. Never copy sample sentences
    into this file or the manuscript. Short before/after excerpts from the user's
